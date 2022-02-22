@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.12)
 
-project({{ProjectName}}Apps
-        VERSION {{Version}}
-        DESCRIPTION "{{ProjectName}} apps"
+project(KuafuApps
+        VERSION 0.1
+        DESCRIPTION "Kuafu apps"
         LANGUAGES C CXX
 )
 
@@ -37,7 +37,7 @@ if ("main" IN_LIST target_apps)
     PUBLIC
         Boost::boost
         Threads::Threads
-        {{ProjectName}}::{{ProjectName}}
+        Kuafu::Kuafu
     )
     install(TARGETS ${target_name} DESTINATION bin)
 endif()

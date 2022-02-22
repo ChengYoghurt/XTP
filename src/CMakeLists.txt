@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.12)
 
-project({{ProjectName}}Lib
-        VERSION {{Version}}
-        DESCRIPTION "{{ProjectName}}"
+project(KuafuLib
+        VERSION 0.1
+        DESCRIPTION "Kuafu"
         LANGUAGES C CXX
 )
 
@@ -15,25 +15,25 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_library({{ProjectName}})
+add_library(Kuafu)
 target_sources(
-    {{ProjectName}}
+    Kuafu
 PRIVATE
-    {{ProjectName}}.cpp
+    Kuafu.cpp
 )
 target_include_directories(
-    {{ProjectName}}
+    Kuafu
 PUBLIC
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(
-    {{ProjectName}}
+    Kuafu
 PUBLIC
     Threads::Threads
     Boost::boost
 )
-add_library({{ProjectName}}::{{ProjectName}} ALIAS {{ProjectName}})
+add_library(Kuafu::Kuafu ALIAS Kuafu)
 
-install(TARGETS {{ProjectName}} DESTINATION lib)
-install(FILES ${CMAKE_SOURCE_DIR}/include/{{ProjectName}}.h DESTINATION include)
+install(TARGETS Kuafu DESTINATION lib)
+install(FILES ${CMAKE_SOURCE_DIR}/include/Kuafu.h DESTINATION include)

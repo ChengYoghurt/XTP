@@ -1,19 +1,19 @@
 #!/bin/sh
 
 # set project init variables
-ProjectName="MyProjectName"
-Description="Description of project"
-Author="Author"
+ProjectName="Kuafu"
+Description="Simple and Fast Market Data Processor"
+Author="Fudan CS Group"
 Today=$(date '+%Y%m%d')
 Version="0.1"
 Machine="$(uname -s)"
 
 ReplaceItems="\
-s,{{ProjectName}},${ProjectName},g;\
-s,{{Description}},${Description},g;\
-s,{{Author}},${Author},g;\
-s,{{Today}},${Today},g;\
-s,{{Version}},${Version},g;\
+s,Kuafu,${ProjectName},g;\
+s,Simple and Fast Market Data Processor,${Description},g;\
+s,Fudan CS Group,${Author},g;\
+s,20220222,${Today},g;\
+s,0.1,${Version},g;\
 " 
 
 echo "Rendering file templates"

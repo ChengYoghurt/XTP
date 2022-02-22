@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.12)
 
-project({{ProjectName}}
-        VERSION {{Version}}
-        DESCRIPTION "{{Description}}"
+project(Kuafu
+        VERSION 0.1
+        DESCRIPTION "Simple and Fast Market Data Processor"
         LANGUAGES C CXX
 )
 

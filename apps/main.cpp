@@ -1,11 +1,11 @@
 /* main.cpp
  * 
- * Author: {{Author}}
- * Created: {{Today}}
- * Version: {{Version}}
+ * Author: Fudan CS Group
+ * Created: 20220222
+ * Version: 0.1
 */
 
-#include "{{ProjectName}}.h"
+#include "Kuafu.h"
 
 #include <iostream>
 
