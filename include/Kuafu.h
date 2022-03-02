@@ -7,6 +7,6 @@
 
 #pragma once
 
-namespace Kuafu {
+namespace kf {
 
 }

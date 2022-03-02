@@ -35,7 +35,7 @@ if ("main" IN_LIST target_apps)
     target_link_libraries(
         ${target_name}
     PUBLIC
-        Boost::boost
+        LogConfig::LogConfig
         Threads::Threads
         Kuafu::Kuafu
     )

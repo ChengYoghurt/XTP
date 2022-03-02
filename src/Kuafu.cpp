@@ -7,6 +7,6 @@
 
 #include "Kuafu.h"
 
-namespace Kuafu {
+namespace kf {
 
 }
