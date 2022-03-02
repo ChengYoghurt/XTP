@@ -144,33 +144,14 @@ int main(int argc, char* argv[]) {
         YAML_GET_FIELD(tdf_password   , tdf_account, password   );
     }
 
-    // TradeX Account Config
-    std::string tradex_config_file ; YAML_GET_FIELD(tradex_config_file , config, TradeXConfig );
-    std::string tradex_account_name; YAML_GET_FIELD(tradex_account_name, config, TradeXAccount);
     // Read Config
     std::string log_config_file        ; YAML_GET_FIELD(log_config_file        , config, LogConfig       );
     std::string calendar_file          ; YAML_GET_FIELD(calendar_file          , config, Calendar        );
     std::string all_stock_pool_file    ; YAML_GET_FIELD(all_stock_pool_file    , config, StockUniverse   );
-    // Risk Management
-    std::string risk_management_file   ; YAML_GET_FIELD(risk_management_file   , config, RiskManagement  );
-    // Dump Config
-    std::string order_log_folder       ; YAML_GET_FIELD(order_log_folder       , config, OrderLog        );
 
     check_file_exist(log_config_file);
     config_log(log_config_file);
     auto p_logger = spdlog::get("main");
-
-    // config account
-    YAML::Node tradex_config     = YAML::LoadFile(tradex_config_file);
-    YAML::Node tradex_account    = tradex_config[tradex_account_name];
-    if(!tradex_account) {
-        p_logger->error("Account {} is not in TradeXConfig file {}", tradex_account_name, tradex_config_file);
-        return -1;
-    }
-    uint32_t    trader_id                 ; YAML_GET_FIELD(trader_id                , tradex_account, trader_id        );
-    std::string tradex_user               ; YAML_GET_FIELD(tradex_user              , tradex_account, user             );
-    std::string tradex_password           ; YAML_GET_FIELD(tradex_password          , tradex_account, password         );
-    std::string tradex_server_socket      ; YAML_GET_FIELD(tradex_server_socket     , tradex_account, server_socket    );
 
     // show all parameters
     p_logger->info("Parameters Summary:");
@@ -189,11 +170,6 @@ int main(int argc, char* argv[]) {
     p_logger->info("ReplayIdleMS         = {}", replay_idle               );
     p_logger->info("ReplayListLength     = {}", replay_stock_list.size()  );
     }
-
-    p_logger->info("[[ TradeXConfig ]]");
-    p_logger->info("trader_id            = {}", trader_id                );
-    p_logger->info("user                 = {}", tradex_user              );
-    p_logger->info("server_socket        = {}", tradex_server_socket     );
 
     p_logger->info("[[ MainConfig ]]");
     p_logger->info("LogConfig            = {}", log_config_file           );

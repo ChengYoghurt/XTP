@@ -1,0 +1,20 @@
+%YAML 1.2
+---
+# TDF Config
+TDFConfig: Config/TdfHc.yaml
+TDFAccount: Test
+TDFReplayFromStart: true
+
+# LocalMarket Config
+ReplayLocalMarket: true
+LocalMarketLevelII: Data/LevelII
+ReplayIdle: 0
+ReplayStockList: all
+
+# Read
+LogConfig: Config/KuafuLogConfig.yaml
+StockUniverse: Data/Universe/${today}/all.csv
+Calendar: Data/Static/calendar.csv
+
+# Write
+DataDump: Data/Somewhere
