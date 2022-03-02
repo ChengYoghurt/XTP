@@ -21,9 +21,18 @@ find_package(Catch2 REQUIRED)
 
 # list and compile executable
 list(APPEND target_tests "KuafuTest")
+list(APPEND target_tests "NumericTimeTest")
 
 if ("KuafuTest" IN_LIST target_tests)
     set(test_name "KuafuTest")
+    add_executable(${test_name})
+    target_sources(${test_name} PUBLIC ${test_name}.cpp)
+    target_link_libraries(${test_name} PUBLIC Catch2::Catch2 Kuafu::Kuafu)
+    add_test("${test_name}" ${test_name})
+endif()
+
+if ("NumericTimeTest" IN_LIST target_tests)
+    set(test_name "NumericTimeTest")
     add_executable(${test_name})
     target_sources(${test_name} PUBLIC ${test_name}.cpp)
     target_link_libraries(${test_name} PUBLIC Catch2::Catch2 Kuafu::Kuafu)
