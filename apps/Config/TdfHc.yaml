@@ -1,0 +1,17 @@
+%YAML 1.2
+---
+#TDF information
+Test: 
+ server_ip: "119.3.103.38"
+ server_port: 6002
+ username: "253191000198"
+ password: "RnancU1F"
+ client_id: 3
+ path_linux: "/root/log/"
+ path: "D:\\test\\"
+ exchange_id: 1
+ instrument:
+  - "600120"
+ hb_interval: 15
+ quote_buffer_size: 128
+ quote_protocol: 1
