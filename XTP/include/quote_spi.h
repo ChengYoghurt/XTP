@@ -58,7 +58,7 @@ public:
 	virtual void OnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	virtual void OnUnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 
-	void MyQuoteSpi::print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, std::string file_path);
+	void print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, char* file_path);
 
 	std::vector<XTPMD> get_XTPMD(){
 		return vector_XTPMD;
@@ -66,7 +66,6 @@ public:
 
 private:
 
-	std::unordered_map<int, int> tick;
 	bool IsErrorRspInfo(XTPRI *pRspInfo);
 
 	std::vector<XTPMD> vector_XTPMD;

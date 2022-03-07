@@ -141,7 +141,7 @@ bool MyQuoteSpi::IsErrorRspInfo(XTPRI *pRspInfo)
 	return bResult;
 }
 
-void MyQuoteSpi::print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, string file_path){
+void MyQuoteSpi::print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, char* file_path){
 
 	char market_data_path[100] = {'\0'};
 	sprintf(market_data_path, "%s_market_data.csv", file_path);

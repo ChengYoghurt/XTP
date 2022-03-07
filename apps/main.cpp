@@ -298,6 +298,7 @@ int main(int argc, char* argv[]){
     std::vector<XTPMD> vec_xtpmd;
     vec_xtpmd = pQuoteSpi->get_XTPMD();
 
+    pQuoteSpi->print_vec_xtpmd(vec_xtpmd, "0307test");
     
 
     p_logger->info("dumping data to disk...");
