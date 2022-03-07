@@ -229,23 +229,23 @@ int main(int argc, char* argv[]){
     //TODO:此处如何用智能指针？析构函数protected
     //TODO:static_cast
     //初始化行情api
-	XTP::API::QuoteApi* pQuoteApi = XTP::API::QuoteApi::CreateQuoteApi(client_id, filepath.c_str(), XTP_LOG_LEVEL_DEBUG);//log日志级别可以调整
-    //std::unique_ptr<XTP::API::QuoteApi> pQuoteApi(XTP::API::QuoteApi::CreateQuoteApi(client_id, filepath.c_str(), XTP_LOG_LEVEL_DEBUG));
-    //std::shared_ptr<MyQuoteSpi> pQuoteSpi(nullptr);
-    //std::cout<< "After  pQuoteApi-------------"<<std::endl;
-    MyQuoteSpi* pQuoteSpi = new MyQuoteSpi();
-	pQuoteApi->RegisterSpi(pQuoteSpi);
+	XTP::API::QuoteApi* pquoteapi = XTP::API::QuoteApi::CreateQuoteApi(client_id, filepath.c_str(), XTP_LOG_LEVEL_DEBUG);//log日志级别可以调整
+    //std::unique_ptr<XTP::API::QuoteApi> pquoteapi(XTP::API::QuoteApi::CreateQuoteApi(client_id, filepath.c_str(), XTP_LOG_LEVEL_DEBUG));
+    //std::shared_ptr<MyQuoteSpi> pquotespi(nullptr);
+    //std::cout<< "After  pquoteapi-------------"<<std::endl;
+    MyQuoteSpi* pquotespi = new MyQuoteSpi();
+	pquoteapi->RegisterSpi(pquotespi);
     //TODO: 借助标准库STL! c_str()把string转换为char* 的指针
     //TODO: 要用等长度的数组 应该用array<char, k_max_len>
 	//设定行情服务器超时时间，单位为秒
-	pQuoteApi->SetHeartBeatInterval(heat_beat_interval); //此为1.1.16新增接口
+	pquoteapi->SetHeartBeatInterval(heat_beat_interval); //此为1.1.16新增接口
 	//设定行情本地缓存大小，单位为MB
-	pQuoteApi->SetUDPBufferSize(quote_buffer_size);//此为1.1.16新增接口
+	pquoteapi->SetUDPBufferSize(quote_buffer_size);//此为1.1.16新增接口
 
-	int loginResult_quote = -1;
+	int login_result_quote = -1;
 	//登录行情服务器,自1.1.16开始，行情服务器支持UDP连接，推荐使用UDP
-	loginResult_quote = pQuoteApi->Login(tdf_server_ip.c_str(), tdf_server_port, tdf_username.c_str(), tdf_password.c_str(), (XTP_PROTOCOL_TYPE)quote_protocol); 
-	if (loginResult_quote == 0)
+	login_result_quote = pquoteapi->Login(tdf_server_ip.c_str(), tdf_server_port, tdf_username.c_str(), tdf_password.c_str(), (XTP_PROTOCOL_TYPE)quote_protocol); 
+	if (login_result_quote == 0)
 	{
         std::cout << "--------------Login successfully----------------" << std::endl;
 		//登录行情服务器成功后，订阅行情
@@ -255,13 +255,12 @@ int main(int argc, char* argv[]){
 		char* *allInstruments = new char*[instrument_count];
 		for (int i = 0; i < instrument_count; i++) {
 			allInstruments[i] = new char[7];
-			std::string instrument =vec_instruments[i] ;
-			strcpy(allInstruments[i], instrument.c_str());
+			strcpy(allInstruments[i], vec_instruments[i].c_str());
 		}
 		
 		//开始订阅,注意公网测试环境仅支持TCP方式，如果使用UDP方式会没有行情数据，实盘大多数使用UDP连接
-		pQuoteApi->SubscribeMarketData(allInstruments, instrument_count, (XTP_EXCHANGE_TYPE)quote_exchange);
-		pQuoteApi->SubscribeTickByTick(allInstruments, instrument_count, (XTP_EXCHANGE_TYPE)quote_exchange);
+		pquoteapi->SubscribeMarketData(allInstruments, instrument_count, (XTP_EXCHANGE_TYPE)quote_exchange);
+		pquoteapi->SubscribeTickByTick(allInstruments, instrument_count, (XTP_EXCHANGE_TYPE)quote_exchange);
 
         for (int i = 0; i < instrument_count; i++) {
 			delete[] allInstruments[i];
@@ -295,8 +294,8 @@ int main(int argc, char* argv[]){
     //                    +. Save Stream Data                      //
     //=============================================================//
 
-    std::vector<XTPMD> vec_XTPMD;
-    vec_XTPMD=pQuoteSpi->get_XTPMD();
+    std::vector<XTPMD> vec_xtpmd;
+    vec_xtpmd=pquotespi->get_xtpmd();
 
     std::ofstream p;
     //TODO:output.csv硬编码，应该用yaml读进来
@@ -306,9 +305,9 @@ int main(int argc, char* argv[]){
     //TODO:.size()的类型是size_t 
     //TODO:range_based，而不用k auto& item : vec_xtpmd
     //TODO:for循环里面的10 constexpr std::size_t k_max_depth_level = 10
-    for(int k=0;k<vec_XTPMD.size();k++){
+    for(int k=0;k<vec_xtpmd.size();k++){
         //TODO:无必要复制
-        XTPMD market_data=vec_XTPMD[k];
+        XTPMD market_data=vec_xtpmd[k];
         p<<market_data.data_time<<","<<market_data.last_price<<","<<market_data.qty<<","<<market_data.turnover<<","; //TODO:不应该以','结尾
         for(int i=0;i<10;i++){
 		    p<<market_data.bid[i]<<' ';

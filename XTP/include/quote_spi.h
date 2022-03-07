@@ -1,9 +1,10 @@
 #pragma once
 #include "xtp_quote_api.h"
-#include <vector>
 #include <fstream>
 #include <time.h>
 #include <sys/timeb.h>
+#include <vector>
+#include <map>
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -12,7 +13,6 @@
 
 #define NUM_OF_ROUND 1
 
-using std::vector;
 using namespace XTP::API;
 
 class MyQuoteSpi : public QuoteSpi
@@ -21,16 +21,16 @@ public:
 	MyQuoteSpi();
 	~MyQuoteSpi();
 
-	///ï¿½ï¿½ï¿½Í»ï¿½ï¿½ï¿½ï¿½ë½»ï¿½×ºï¿½Ì¨Í¨ï¿½ï¿½ï¿½ï¿½ï¿½Ó¶Ï¿ï¿½Ê±ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½APIï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó£ï¿½ï¿½Í»ï¿½ï¿½Ë¿É²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-	///@param reason ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½
-	///        0x1001 ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½
-	///        0x1002 ï¿½ï¿½ï¿½ï¿½Ð´Ê§ï¿½ï¿½
-	///        0x2001 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±
-	///        0x2002 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½
-	///        0x2003 ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	///µ±¿Í»§¶ËÓë½»Ò×ºóÌ¨Í¨ÐÅÁ¬½Ó¶Ï¿ªÊ±£¬¸Ã·½·¨±»µ÷ÓÃ¡£µ±·¢ÉúÕâ¸öÇé¿öºó£¬API»á×Ô¶¯ÖØÐÂÁ¬½Ó£¬¿Í»§¶Ë¿É²»×ö´¦Àí¡£
+	///@param reason ´íÎóÔ­Òò
+	///        0x1001 ÍøÂç¶ÁÊ§°Ü
+	///        0x1002 ÍøÂçÐ´Ê§°Ü
+	///        0x2001 ½ÓÊÕÐÄÌø³¬Ê±
+	///        0x2002 ·¢ËÍÐÄÌøÊ§°Ü
+	///        0x2003 ÊÕµ½´íÎó±¨ÎÄ
 	virtual void OnDisconnected(int reason);
 
-///ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½
+///´íÎóÓ¦´ð
 	virtual void OnError(XTPRI *error_info,bool is_last);
 
 
@@ -57,15 +57,17 @@ public:
 	virtual void OnUnSubscribeAllOptionOrderBook(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	virtual void OnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	virtual void OnUnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
-
-	vector <XTPMD> get_XTPMD(){
-		return vector_XTPMD;
-	}
+	std::unordered_map<char, std::vector<XTPMD>> &get_ticker_xtpmd(){
+		return ticker_xtpmd;
+	};
+	const std::unordered_map<char, std::vector<XTPMD>> &const_get_ticker_xtpmd(){
+		return ticker_xtpmd;
+	};
 
 private:
 
-	bool IsErrorRspInfo(XTPRI *pRspInfo);
+	std::unordered_map<char, std::vector<XTPMD>> ticker_xtpmd;
 
-	vector <XTPMD> vector_XTPMD;
+	bool IsErrorRspInfo(XTPRI *pRspInfo);	
 
 };
