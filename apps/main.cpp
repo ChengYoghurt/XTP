@@ -295,40 +295,10 @@ int main(int argc, char* argv[]){
     //                    +. Save Stream Data                      //
     //=============================================================//
 
-    std::vector<XTPMD> vec_XTPMD;
-    vec_XTPMD=pQuoteSpi->get_XTPMD();
+    std::vector<XTPMD> vec_xtpmd;
+    vec_xtpmd = pQuoteSpi->get_XTPMD();
 
-    std::ofstream p;
-    //TODO:output.csv硬编码，应该用yaml读进来
-	p.open("output.csv",std::ios::out|std::ios::trunc);
-	p<<"data_time,last_price,qty,turnover,bid,bit_qty,ask,ask_qty,trades_count"<<std::endl;
     
-    //TODO:.size()的类型是size_t 
-    //TODO:range_based，而不用k auto& item : vec_xtpmd
-    //TODO:for循环里面的10 constexpr std::size_t k_max_depth_level = 10
-    for(int k=0;k<vec_XTPMD.size();k++){
-        //TODO:无必要复制
-        XTPMD market_data=vec_XTPMD[k];
-        p<<market_data.data_time<<","<<market_data.last_price<<","<<market_data.qty<<","<<market_data.turnover<<","; //TODO:不应该以','结尾
-        for(int i=0;i<10;i++){
-		    p<<market_data.bid[i]<<' ';
-	    }
-	    p<<",";
-	    for(int i=0;i<10;i++){
-		    p<<market_data.bid_qty[i]<<' ';
-	    }
-	    p<<",";
-	    for(int i=0;i<10;i++){
-		    p<<market_data.ask[i]<<' ';
-	    }
-	    p<<",";
-	    for(int i=0;i<10;i++){
-		    p<<market_data.ask_qty[i]<<' ';
-	    }
-	    p<<",";
-	    p<<market_data.trades_count<<","<<std::endl;
-	    //cout<<1<<endl;*/
-    }
 
     p_logger->info("dumping data to disk...");
 
