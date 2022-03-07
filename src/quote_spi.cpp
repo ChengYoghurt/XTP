@@ -157,10 +157,13 @@ void MyQuoteSpi::print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, string file_path
 	<< "bit_qty" << ","
 	<< "ask" << ","
 	<< "ask_qty" << ","
-	<< "trades_count" << std::endl;
+	<< "trades_count" << ","
+	<< "local_time" << std::endl;
 
     constexpr std::size_t k_max_depth_level = 10;
 	size_t index;
+	time_t local_time = time(NULL);
+	tm *tm_local_time = localtime(&local_time);
     for(auto& vec_xtpmd_item : vec_xtpmd){
         
         XTPMD market_data = vec_xtpmd_item;
@@ -189,7 +192,8 @@ void MyQuoteSpi::print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, string file_path
 		    market_data_outfile<<market_data.ask_qty[index] << ' ';
 	    }
 	    market_data_outfile << ",";
-	    market_data_outfile << market_data.trades_count << "," << std::endl;
+	    market_data_outfile << market_data.trades_count << "," 
+		<< asctime(tm_local_time) << std::endl;
     }
 
 	market_data_outfile.close();
