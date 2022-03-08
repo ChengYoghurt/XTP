@@ -263,11 +263,6 @@ int main(int argc, char* argv[]){
 		pQuoteApi->SubscribeMarketData(allInstruments, instrument_count, (XTP_EXCHANGE_TYPE)quote_exchange);
 		pQuoteApi->SubscribeTickByTick(allInstruments, instrument_count, (XTP_EXCHANGE_TYPE)quote_exchange);
 
-        for (int i = 0; i < instrument_count; i++) {
-			delete[] allInstruments[i];
-			allInstruments[i] = NULL;
-		}
-
 		delete[] allInstruments;
 		allInstruments = NULL;
 

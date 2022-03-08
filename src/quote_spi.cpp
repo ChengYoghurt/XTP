@@ -24,22 +24,13 @@ void MyQuoteSpi::OnDisconnected(int reason)
 {
 	cout << "--->>> " << "OnDisconnected quote" << endl;
 	cout << "--->>> Reason = " << reason << endl;
-<<<<<<< HEAD
-	//¶ÏÏßºó£¬¿ÉÒÔÖØÐÂÁ¬½Ó
-	//ÖØÐÂÁ¬½Ó³É¹¦ºó£¬ÐèÒªÖØÐÂÏò·þÎñÆ÷·¢Æð¶©ÔÄÇëÇó
-=======
 	//ï¿½ï¿½ï¿½ßºó£¬¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó³É¹ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿?
->>>>>>> f964950fa8f3d85c2f2bd6ef20201fd5fa01912b
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó³É¹ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½?
 }
 
 void MyQuoteSpi::OnSubMarketData(XTPST *ticker, XTPRI *error_info, bool is_last)
 {
 	cout << "OnRspSubMarketData -----" << endl;
-<<<<<<< HEAD
-=======
-
->>>>>>> f964950fa8f3d85c2f2bd6ef20201fd5fa01912b
 }
 
 void MyQuoteSpi::OnUnSubMarketData(XTPST *ticker, XTPRI *error_info, bool is_last)
@@ -50,36 +41,8 @@ void MyQuoteSpi::OnUnSubMarketData(XTPST *ticker, XTPRI *error_info, bool is_las
 void MyQuoteSpi::OnDepthMarketData(XTPMD * market_data, int64_t bid1_qty[], int32_t bid1_count, int32_t max_bid1_count, int64_t ask1_qty[], int32_t ask1_count, int32_t max_ask1_count)
 {
 	
-<<<<<<< HEAD
-	/*p<<market_data->data_time<<","<<market_data->last_price<<","<<market_data->qty<<","<<market_data->turnover<<",";
-	for(int i=0;i<10;i++){
-		p<<market_data->bid[i]<<' ';
-	}
-	p<<",";
-	for(int i=0;i<10;i++){
-		p<<market_data->bid_qty[i]<<' ';
-	}
-	p<<",";
-	for(int i=0;i<10;i++){
-		p<<market_data->ask[i]<<' ';
-	}
-	p<<",";
-	for(int i=0;i<10;i++){
-		p<<market_data->ask_qty[i]<<' ';
-	}
-	p<<",";
-	p<<market_data->trades_count<<","<<endl;
-	//cout<<1<<endl;*/
-
-		
-
 	vector_XTPMD.push_back(*market_data);
 	
-
-=======
-	vector_XTPMD.push_back(*market_data);
-	
->>>>>>> f964950fa8f3d85c2f2bd6ef20201fd5fa01912b
 }
 
 void MyQuoteSpi::OnSubOrderBook(XTPST *ticker, XTPRI *error_info, bool is_last)
@@ -170,19 +133,13 @@ void MyQuoteSpi::OnUnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id,
 
 bool MyQuoteSpi::IsErrorRspInfo(XTPRI *pRspInfo)
 {
-<<<<<<< HEAD
-	// Èç¹ûErrorID != 0, ËµÃ÷ÊÕµ½ÁË´íÎóµÄÏìÓ¦
-=======
-	// ï¿½ï¿½ï¿½ErrorID != 0, Ëµï¿½ï¿½ï¿½Õµï¿½ï¿½Ë´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó?
->>>>>>> f964950fa8f3d85c2f2bd6ef20201fd5fa01912b
+	// ï¿½ï¿½ï¿½ErrorID != 0, Ëµï¿½ï¿½ï¿½Õµï¿½ï¿½Ë´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½?
 	bool bResult = ((pRspInfo) && (pRspInfo->error_id != 0));
 	if (bResult)
 		cout << "--->>> ErrorID=" << pRspInfo->error_id << ", ErrorMsg=" << pRspInfo->error_msg << endl;
 	return bResult;
 }
 
-<<<<<<< HEAD
-=======
 void MyQuoteSpi::print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, char* file_path){
 
 	char market_data_path[100] = {'\0'};
@@ -241,4 +198,3 @@ void MyQuoteSpi::print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, char* file_path)
 	market_data_outfile.close();
 }
 
->>>>>>> f964950fa8f3d85c2f2bd6ef20201fd5fa01912b
