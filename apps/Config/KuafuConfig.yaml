@@ -13,7 +13,7 @@ ReplayStockList: all
 
 # Read
 LogConfig: Config/KuafuLogConfig.yaml
-StockUniverse: Data/Universe/${today}/
+StockUniverse: ./Data/Universe/${today}
 Calendar: Data/Static/calendar.csv
 
 # Write

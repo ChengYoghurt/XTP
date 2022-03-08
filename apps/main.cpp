@@ -194,6 +194,10 @@ int main(int argc, char* argv[]){
     p_logger->info("TDFAccount           = {}", tdf_username              );
     p_logger->info("TDFServer            = {}", tdf_server_ip             );
     p_logger->info("TDFPort              = {}", tdf_server_port           );
+
+    p_logger->info("filepath             = {}", filepath);
+    p_logger->info("instrument_count     = {}", instrument_count);
+
     } else {
     p_logger->info("[[ LocalFakeMarket ]]");
     p_logger->info("LevelDataFolder      = {}", local_market_levelII      );
@@ -254,9 +258,7 @@ int main(int argc, char* argv[]){
 		//从配置文件中读取需要订阅的股票
 		char* *allInstruments = new char*[instrument_count];
 		for (int i = 0; i < instrument_count; i++) {
-			allInstruments[i] = new char[7];
-			std::string instrument =vec_instruments[i] ;
-			strcpy(allInstruments[i], instrument.c_str());
+			strcpy(allInstruments[i], vec_instruments[i].c_str());
 		}
 		
 		//开始订阅,注意公网测试环境仅支持TCP方式，如果使用UDP方式会没有行情数据，实盘大多数使用UDP连接
@@ -290,13 +292,15 @@ int main(int argc, char* argv[]){
     //                    +. Save Stream Data                      //
     //=============================================================//
 
+    p_logger->info("dumping data to disk...");
+
     std::vector<XTPMD> vec_xtpmd;
     vec_xtpmd = pQuoteSpi->get_XTPMD();
 
-    pQuoteSpi->print_vec_xtpmd(vec_xtpmd, "0307test");
+    pQuoteSpi->print_vec_xtpmd(vec_xtpmd, all_stock_pool_file.c_str());
     
 
-    p_logger->info("dumping data to disk...");
+
 
     p_logger->info("Stop Market spi");
 

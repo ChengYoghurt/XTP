@@ -1,4 +1,5 @@
 #include "quote_spi.h"
+#include "KuafuUtils.h"
 #include <iostream>
 #include <stdio.h>
 #include <fstream>
@@ -24,8 +25,6 @@ void MyQuoteSpi::OnDisconnected(int reason)
 {
 	cout << "--->>> " << "OnDisconnected quote" << endl;
 	cout << "--->>> Reason = " << reason << endl;
-	//���ߺ󣬿�����������
-	//�������ӳɹ�����Ҫ���������������������?
 }
 
 void MyQuoteSpi::OnSubMarketData(XTPST *ticker, XTPRI *error_info, bool is_last)
@@ -41,7 +40,7 @@ void MyQuoteSpi::OnUnSubMarketData(XTPST *ticker, XTPRI *error_info, bool is_las
 void MyQuoteSpi::OnDepthMarketData(XTPMD * market_data, int64_t bid1_qty[], int32_t bid1_count, int32_t max_bid1_count, int64_t ask1_qty[], int32_t ask1_count, int32_t max_ask1_count)
 {
 	
-	vector_XTPMD.push_back(*market_data);
+	vector_xtpmd.push_back(*market_data);
 	
 }
 
@@ -133,31 +132,33 @@ void MyQuoteSpi::OnUnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id,
 
 bool MyQuoteSpi::IsErrorRspInfo(XTPRI *pRspInfo)
 {
-	// ���ErrorID != 0, ˵���յ��˴�������?
 	bool bResult = ((pRspInfo) && (pRspInfo->error_id != 0));
 	if (bResult)
 		cout << "--->>> ErrorID=" << pRspInfo->error_id << ", ErrorMsg=" << pRspInfo->error_msg << endl;
 	return bResult;
 }
 
-void MyQuoteSpi::print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, char* file_path){
+void MyQuoteSpi::print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, const char* file_path){
 
 	char market_data_path[100] = {'\0'};
-	sprintf(market_data_path, "%s_market_data.csv", file_path);
+	sprintf(market_data_path, "%s/_market_data.csv", file_path);
+	mkdir_if_not_exist(file_path);
     std::ofstream market_data_outfile;
 	market_data_outfile.open(market_data_path, std::ios::out); 
+
+//	std::cout<<market_data_path<<endl; //文件写入路径
 	
 	market_data_outfile << "data_time" << ","
-	<< "ticker" << ","
-	<< "last_price" << ","
-	<< "qty" << ","
-	<< "turnover" << ","
-	<< "bid" << ","
-	<< "bit_qty" << ","
-	<< "ask" << ","
-	<< "ask_qty" << ","
+	<< "ticker"       << ","
+	<< "last_price"   << ","
+	<< "qty"          << ","
+	<< "turnover"     << ","
+	<< "bid"          << ","
+	<< "bit_qty"      << ","
+	<< "ask"          << ","
+	<< "ask_qty"      << ","
 	<< "trades_count" << ","
-	<< "local_time" << std::endl;
+	<< "local_time"   << std::endl;
 
     constexpr std::size_t k_max_depth_level = 10;
 	size_t index;
@@ -167,30 +168,31 @@ void MyQuoteSpi::print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, char* file_path)
         
         XTPMD market_data = vec_xtpmd_item;
         market_data_outfile << market_data.data_time << "," 
-		<< market_data.ticker << ","
+		<< market_data.ticker     << ","
         << market_data.last_price << ","
-        << market_data.qty << "," 
-        << market_data.turnover << ","; 
+        << market_data.qty        << "," 
+        << market_data.turnover   << ","; 
         
         for(index = 0; index < k_max_depth_level; index++){
-		    market_data_outfile << market_data.bid[index] << ' ';
+		    market_data_outfile << market_data.bid[index]     << ' ';
 	    }
 	    market_data_outfile << ",";
 
 	    for(index = 0; index < k_max_depth_level; index++){
-		    market_data_outfile<<market_data.bid_qty[index] << ' ';
+		    market_data_outfile << market_data.bid_qty[index] << ' ';
 	    }
 	    market_data_outfile<<",";
 
 	    for(index = 0; index < k_max_depth_level; index++){
-		    market_data_outfile<<market_data.ask[index] << ' ';
+		    market_data_outfile << market_data.ask[index]     << ' ';
 	    }
 	    market_data_outfile<<",";
 
 	    for(index = 0; index < k_max_depth_level; index++){
-		    market_data_outfile<<market_data.ask_qty[index] << ' ';
+		    market_data_outfile << market_data.ask_qty[index] << ' ';
 	    }
 	    market_data_outfile << ",";
+
 	    market_data_outfile << market_data.trades_count << "," 
 		<< asctime(tm_local_time) << std::endl;
     }
