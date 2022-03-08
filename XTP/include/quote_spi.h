@@ -4,6 +4,10 @@
 #include <time.h>
 #include <sys/timeb.h>
 #include <vector>
+<<<<<<< HEAD
+=======
+#include <ctime>
+>>>>>>> f964950fa8f3d85c2f2bd6ef20201fd5fa01912b
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -57,6 +61,11 @@ public:
 	virtual void OnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	virtual void OnUnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 
+<<<<<<< HEAD
+=======
+	void print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, char* file_path);
+
+>>>>>>> f964950fa8f3d85c2f2bd6ef20201fd5fa01912b
 	std::vector<XTPMD> get_XTPMD(){
 		return vector_XTPMD;
 	}
