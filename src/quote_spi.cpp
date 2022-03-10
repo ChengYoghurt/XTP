@@ -38,10 +38,8 @@ void MyQuoteSpi::OnUnSubMarketData(XTPST *ticker, XTPRI *error_info, bool is_las
 }
 
 void MyQuoteSpi::OnDepthMarketData(XTPMD * market_data, int64_t bid1_qty[], int32_t bid1_count, int32_t max_bid1_count, int64_t ask1_qty[], int32_t ask1_count, int32_t max_ask1_count)
-{
-	
-	vector_xtpmd.push_back(*market_data);
-	
+{	
+	vec_xtpmd.push_back(*market_data);
 }
 
 void MyQuoteSpi::OnSubOrderBook(XTPST *ticker, XTPRI *error_info, bool is_last)
@@ -70,7 +68,7 @@ void MyQuoteSpi::OnOrderBook(XTPOB *order_book)
 
 void MyQuoteSpi::OnTickByTick(XTPTBT *tbt_data)
 {
-	//cout<<tbt_data->data_time<<endl;
+	
 }
 
 void MyQuoteSpi::OnQueryAllTickers(XTPQSI * ticker_info, XTPRI * error_info, bool is_last)
@@ -146,7 +144,7 @@ void MyQuoteSpi::print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, const char* file
     std::ofstream market_data_outfile;
 	market_data_outfile.open(market_data_path, std::ios::out); 
 
-//	std::cout<<market_data_path<<endl; //文件写入路径
+//	std::cout<<market_data_path<<endl; //文件写入�?�?
 	
 	market_data_outfile << "data_time" << ","
 	<< "ticker"       << ","
