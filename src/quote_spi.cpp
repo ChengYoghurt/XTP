@@ -1,4 +1,5 @@
 #include "quote_spi.h"
+#include "KuafuUtils.h"
 #include <iostream>
 #include <stdio.h>
 #include <fstream>
@@ -24,8 +25,6 @@ void MyQuoteSpi::OnDisconnected(int reason)
 {
 	cout << "--->>> " << "OnDisconnected quote" << endl;
 	cout << "--->>> Reason = " << reason << endl;
-	//断线后，可以重新连接
-	//重新连接成功后，需要重新向服务器发起订阅请求
 }
 
 void MyQuoteSpi::OnSubMarketData(XTPST *ticker, XTPRI *error_info, bool is_last)
@@ -131,10 +130,71 @@ void MyQuoteSpi::OnUnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id,
 
 bool MyQuoteSpi::IsErrorRspInfo(XTPRI *pRspInfo)
 {
-	// 如果ErrorID != 0, 说明收到了错误的响应
 	bool bResult = ((pRspInfo) && (pRspInfo->error_id != 0));
 	if (bResult)
 		cout << "--->>> ErrorID=" << pRspInfo->error_id << ", ErrorMsg=" << pRspInfo->error_msg << endl;
 	return bResult;
+}
+
+void MyQuoteSpi::print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, const char* file_path){
+
+	char market_data_path[100] = {'\0'};
+	sprintf(market_data_path, "%s/_market_data.csv", file_path);
+	mkdir_if_not_exist(file_path);
+    std::ofstream market_data_outfile;
+	market_data_outfile.open(market_data_path, std::ios::out); 
+
+//	std::cout<<market_data_path<<endl; //鏂囦欢鍐欏叆璺?寰?
+	
+	market_data_outfile << "data_time" << ","
+	<< "ticker"       << ","
+	<< "last_price"   << ","
+	<< "qty"          << ","
+	<< "turnover"     << ","
+	<< "bid"          << ","
+	<< "bit_qty"      << ","
+	<< "ask"          << ","
+	<< "ask_qty"      << ","
+	<< "trades_count" << ","
+	<< "local_time"   << std::endl;
+
+    constexpr std::size_t k_max_depth_level = 10;
+	size_t index;
+	time_t local_time = time(NULL);
+	tm *tm_local_time = localtime(&local_time);
+    for(auto& vec_xtpmd_item : vec_xtpmd){
+        
+        XTPMD market_data = vec_xtpmd_item;
+        market_data_outfile << market_data.data_time << "," 
+		<< market_data.ticker     << ","
+        << market_data.last_price << ","
+        << market_data.qty        << "," 
+        << market_data.turnover   << ","; 
+        
+        for(index = 0; index < k_max_depth_level; index++){
+		    market_data_outfile << market_data.bid[index]     << ' ';
+	    }
+	    market_data_outfile << ",";
+
+	    for(index = 0; index < k_max_depth_level; index++){
+		    market_data_outfile << market_data.bid_qty[index] << ' ';
+	    }
+	    market_data_outfile<<",";
+
+	    for(index = 0; index < k_max_depth_level; index++){
+		    market_data_outfile << market_data.ask[index]     << ' ';
+	    }
+	    market_data_outfile<<",";
+
+	    for(index = 0; index < k_max_depth_level; index++){
+		    market_data_outfile << market_data.ask_qty[index] << ' ';
+	    }
+	    market_data_outfile << ",";
+
+	    market_data_outfile << market_data.trades_count << "," 
+		<< asctime(tm_local_time) << std::endl;
+    }
+
+	market_data_outfile.close();
 }
 

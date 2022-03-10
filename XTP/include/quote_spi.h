@@ -5,6 +5,7 @@
 #include <sys/timeb.h>
 #include <vector>
 #include <map>
+#include <ctime>
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -57,17 +58,15 @@ public:
 	virtual void OnUnSubscribeAllOptionOrderBook(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	virtual void OnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	virtual void OnUnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
-	std::unordered_map<char, std::vector<XTPMD>> &get_ticker_xtpmd(){
-		return ticker_xtpmd;
-	};
-	const std::unordered_map<char, std::vector<XTPMD>> &const_get_ticker_xtpmd(){
-		return ticker_xtpmd;
-	};
+	void print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, const char* file_path);
+
+	const std::vector<XTPMD>&get_XTPMD(){
+		return vec_xtpmd;
+	}
 
 private:
 
-	std::unordered_map<char, std::vector<XTPMD>> ticker_xtpmd;
-
+	std::vector<XTPMD> vec_xtpmd;
 	bool IsErrorRspInfo(XTPRI *pRspInfo);	
 
 };
