@@ -258,12 +258,21 @@ int main(int argc, char* argv[]){
 		//从配置文件中读取需要订阅的股票
 		char* *allInstruments = new char*[instrument_count];
 		for (int i = 0; i < instrument_count; i++) {
-			strcpy(allInstruments[i], vec_instruments[i].c_str());
+			allInstruments[i] = new char[7];
+			std::string instrument =vec_instruments[i] ;
+			strcpy(allInstruments[i], instrument.c_str());
 		}
 		
+
+
 		//开始订阅,注意公网测试环境仅支持TCP方式，如果使用UDP方式会没有行情数据，实盘大多数使用UDP连接
 		pQuoteApi->SubscribeMarketData(allInstruments, instrument_count, (XTP_EXCHANGE_TYPE)quote_exchange);
 		pQuoteApi->SubscribeTickByTick(allInstruments, instrument_count, (XTP_EXCHANGE_TYPE)quote_exchange);
+
+        for (int i = 0; i < instrument_count; i++) {
+			delete[] allInstruments[i];
+			allInstruments[i] = NULL;
+		}
 
 		delete[] allInstruments;
 		allInstruments = NULL;

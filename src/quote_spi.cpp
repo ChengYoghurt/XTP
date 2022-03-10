@@ -29,12 +29,12 @@ void MyQuoteSpi::OnDisconnected(int reason)
 
 void MyQuoteSpi::OnSubMarketData(XTPST *ticker, XTPRI *error_info, bool is_last)
 {
-	cout << "OnRspSubMarketData -----" << endl;
+	//cout << "OnRspSubMarketData -----" << endl;
 }
 
 void MyQuoteSpi::OnUnSubMarketData(XTPST *ticker, XTPRI *error_info, bool is_last)
 {
- 	cout << "OnRspUnSubMarketData -----------" << endl;
+ 	//cout << "OnRspUnSubMarketData -----------" << endl;
 }
 
 void MyQuoteSpi::OnDepthMarketData(XTPMD * market_data, int64_t bid1_qty[], int32_t bid1_count, int32_t max_bid1_count, int64_t ask1_qty[], int32_t ask1_count, int32_t max_ask1_count)
@@ -194,7 +194,7 @@ void MyQuoteSpi::print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, const char* file
 	    market_data_outfile << ",";
 
 	    market_data_outfile << market_data.trades_count << "," 
-		<< asctime(tm_local_time) << std::endl;
+		<< asctime(tm_local_time) ;
     }
 
 	market_data_outfile.close();
