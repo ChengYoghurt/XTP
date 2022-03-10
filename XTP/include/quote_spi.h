@@ -59,13 +59,11 @@ public:
 	virtual void OnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	virtual void OnUnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	void print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, const char* file_path);
-
 	const std::vector<XTPMD>&get_XTPMD(){
 		return vec_xtpmd;
 	}
 
 private:
-
 	std::vector<XTPMD> vec_xtpmd;
 	bool IsErrorRspInfo(XTPRI *pRspInfo);	
 

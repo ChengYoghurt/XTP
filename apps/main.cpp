@@ -212,6 +212,7 @@ int main(int argc, char* argv[]){
     //=============================================================//
     //                      +. Init DataBase                       //
     //=============================================================//
+    
     std::vector<kf::instrument_id_t> sub_instruments;
     std::pair<std::size_t, std::size_t> num_stocks_in_exchange {0, 0}; // (num in SZ, num in SH)
     try {
@@ -230,17 +231,10 @@ int main(int argc, char* argv[]){
     //                      +. Data Segment 
     //=============================================================//
 
-    //TODO:此处如何用智能指针？析构函数protected
-    //TODO:static_cast
     //初始化行情api
 	XTP::API::QuoteApi* pquoteapi = XTP::API::QuoteApi::CreateQuoteApi(client_id, filepath.c_str(), XTP_LOG_LEVEL_DEBUG);//log日志级别可以调整
-    //std::unique_ptr<XTP::API::QuoteApi> pquoteapi(XTP::API::QuoteApi::CreateQuoteApi(client_id, filepath.c_str(), XTP_LOG_LEVEL_DEBUG));
-    //std::shared_ptr<MyQuoteSpi> pquotespi(nullptr);
-    //std::cout<< "After  pquoteapi-------------"<<std::endl;
     MyQuoteSpi* pquotespi = new MyQuoteSpi();
 	pquoteapi->RegisterSpi(pquotespi);
-    //TODO: 借助标准库STL! c_str()把string转换为char* 的指针
-    //TODO: 要用等长度的数组 应该用array<char, k_max_len>
 	//设定行情服务器超时时间，单位为秒
 	pquoteapi->SetHeartBeatInterval(heat_beat_interval); //此为1.1.16新增接口
 	//设定行情本地缓存大小，单位为MB
@@ -275,6 +269,7 @@ int main(int argc, char* argv[]){
 		allInstruments = NULL;
 
     }
+
     //=============================================================//
     //                      +. start market                        //
     //=============================================================//
@@ -283,6 +278,7 @@ int main(int argc, char* argv[]){
     //                    +. Wait to Quit                          //
     //=============================================================//
     // wait for SIGINT to continue
+
     p_logger->info("Start Working and wait SIGINT to stop");
     sigset_t zeromask;
     sigemptyset(&zeromask);
@@ -298,16 +294,13 @@ int main(int argc, char* argv[]){
     //                    +. Save Stream Data                      //
     //=============================================================//
 
-
     p_logger->info("dumping data to disk...");
 
     std::vector<XTPMD> vec_xtpmd;
     vec_xtpmd = pquotespi->get_XTPMD();
-
     pquotespi->print_vec_xtpmd(vec_xtpmd, all_stock_pool_file.c_str());
 
     p_logger->info("Stop Market spi");
-
     p_logger->info("All Done!");
 
     return 0;
