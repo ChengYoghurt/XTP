@@ -12,7 +12,7 @@ Test:
  exchange_id_sh: 1
  exchange_id_sz: 0
  instrument_sh:
-   - "600601"
+  - "600601"
   - "600602"
   - "600651"
   - "600652"
