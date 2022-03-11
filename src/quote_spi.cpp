@@ -29,19 +29,20 @@ void MyQuoteSpi::OnDisconnected(int reason)
 
 void MyQuoteSpi::OnSubMarketData(XTPST *ticker, XTPRI *error_info, bool is_last)
 {
-	cout << "OnRspSubMarketData -----" << endl;
+	//cout << "OnRspSubMarketData -----" << endl;
 }
 
 void MyQuoteSpi::OnUnSubMarketData(XTPST *ticker, XTPRI *error_info, bool is_last)
 {
- 	cout << "OnRspUnSubMarketData -----------" << endl;
+ 	//cout << "OnRspUnSubMarketData -----------" << endl;
 }
 
 void MyQuoteSpi::OnDepthMarketData(XTPMD * market_data, int64_t bid1_qty[], int32_t bid1_count, int32_t max_bid1_count, int64_t ask1_qty[], int32_t ask1_count, int32_t max_ask1_count)
-{
-	
-	vector_xtpmd.push_back(*market_data);
-	
+{	
+	vec_xtpmd.push_back(*market_data);
+	time_t local_time = time(NULL);
+	tm *tm_local_time = localtime(&local_time);
+	vec_localtime.push_back(asctime(tm_local_time));
 }
 
 void MyQuoteSpi::OnSubOrderBook(XTPST *ticker, XTPRI *error_info, bool is_last)
@@ -70,7 +71,7 @@ void MyQuoteSpi::OnOrderBook(XTPOB *order_book)
 
 void MyQuoteSpi::OnTickByTick(XTPTBT *tbt_data)
 {
-	//cout<<tbt_data->data_time<<endl;
+	
 }
 
 void MyQuoteSpi::OnQueryAllTickers(XTPQSI * ticker_info, XTPRI * error_info, bool is_last)
@@ -146,7 +147,7 @@ void MyQuoteSpi::print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, const char* file
     std::ofstream market_data_outfile;
 	market_data_outfile.open(market_data_path, std::ios::out); 
 
-//	std::cout<<market_data_path<<endl; //文件写入路径
+//	std::cout<<market_data_path<<endl; //文件写入�?�?
 	
 	market_data_outfile << "data_time" << ","
 	<< "ticker"       << ","
@@ -164,9 +165,12 @@ void MyQuoteSpi::print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, const char* file
 	size_t index;
 	time_t local_time = time(NULL);
 	tm *tm_local_time = localtime(&local_time);
-    for(auto& vec_xtpmd_item : vec_xtpmd){
+	std::vector<XTPMD>::iterator iter_xtpmd;
+	std::vector<std::string>::iterator iter_time;
+    for(iter_xtpmd = vec_xtpmd.begin(), iter_time = vec_localtime.begin();
+		iter_xtpmd < vec_xtpmd.end(); iter_xtpmd++, iter_time++){
         
-        XTPMD market_data = vec_xtpmd_item;
+        XTPMD market_data = *iter_xtpmd;
         market_data_outfile << market_data.data_time << "," 
 		<< market_data.ticker     << ","
         << market_data.last_price << ","
@@ -194,7 +198,7 @@ void MyQuoteSpi::print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, const char* file
 	    market_data_outfile << ",";
 
 	    market_data_outfile << market_data.trades_count << "," 
-		<< asctime(tm_local_time) << std::endl;
+		<< *iter_time;
     }
 
 	market_data_outfile.close();
