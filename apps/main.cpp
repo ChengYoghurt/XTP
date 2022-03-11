@@ -117,12 +117,15 @@ int main(int argc, char* argv[]){
     // tdf account config addtional 
     std::string filepath; 
     uint32_t client_id;
-    uint32_t tdf_exchange;
+    uint32_t tdf_exchange_sh;
+    uint32_t tdf_exchange_sz;
     uint32_t heat_beat_interval;
     uint32_t quote_buffer_size;
     uint32_t quote_protocol;
-    uint32_t instrument_count;
-    std::vector<std::string> vec_instruments;
+    uint32_t instrument_count_sh;
+    uint32_t instrument_count_sz;
+    std::vector<std::string> vec_instruments_sh;
+    std::vector<std::string> vec_instruments_sz;
     // risk config
     kf::price_t account_threshold;
     uint32_t    count_threshold  ;
@@ -162,16 +165,27 @@ int main(int argc, char* argv[]){
         // yaml 初始化 additional
         YAML_GET_FIELD(client_id         , tdf_account, client_id        );
         YAML_GET_FIELD(filepath          , tdf_account, path             );
-        YAML_GET_FIELD(tdf_exchange      , tdf_account, exchange_id      );
+        
         YAML_GET_FIELD(heat_beat_interval, tdf_account, hb_interval      );
         YAML_GET_FIELD(quote_buffer_size , tdf_account, quote_buffer_size);
         YAML_GET_FIELD(quote_protocol    , tdf_account, quote_protocol   );  
-        YAML::Node node_instruments   = tdf_account["instrument"];
-        instrument_count         = node_instruments.size();
-        for(int i = 0 ; i < instrument_count ; i++ ){
+
+        YAML::Node node_instruments   = tdf_account["instrument_sh"];
+        instrument_count_sh         = node_instruments.size();
+        YAML_GET_FIELD(tdf_exchange_sh      , tdf_account, exchange_id_sh      );
+        for(int i = 0 ; i < instrument_count_sh ; i++ ){
             std::string temp_instrument   = node_instruments[i].as<std::string>();
-            vec_instruments.push_back(temp_instrument);
+            vec_instruments_sh.push_back(temp_instrument);
         }
+
+        node_instruments   = tdf_account["instrument_sz"];
+        instrument_count_sz         = node_instruments.size();
+        YAML_GET_FIELD(tdf_exchange_sz      , tdf_account, exchange_id_sz      );
+        for(int i = 0 ; i < instrument_count_sz ; i++ ){
+            std::string temp_instrument   = node_instruments[i].as<std::string>();
+            vec_instruments_sz.push_back(temp_instrument);
+        }
+       
     }
 
     // Read Config
@@ -196,7 +210,7 @@ int main(int argc, char* argv[]){
     p_logger->info("TDFPort              = {}", tdf_server_port           );
     
     p_logger->info("filepath             = {}", filepath);
-    p_logger->info("instrument_count     = {}", instrument_count);
+    p_logger->info("instrument_count     = {}", instrument_count_sh + instrument_count_sz);
 
     } else {
     p_logger->info("[[ LocalFakeMarket ]]");
@@ -247,28 +261,37 @@ int main(int argc, char* argv[]){
 	{
         std::cout << "--------------Login successfully----------------" << std::endl;
 		//登录行情服务器成功后，订阅行情
-		int quote_exchange = tdf_exchange;
+		int quote_exchange = tdf_exchange_sh;
 
 		//从配置文件中读取需要订阅的股票
-		char* *allInstruments = new char*[instrument_count];
-		for (int i = 0; i < instrument_count; i++) {
+		char* *allInstruments = new char*[instrument_count_sh];
+		for (int i = 0; i < instrument_count_sh; i++) {
 			allInstruments[i] = new char[7];
-			std::string instrument =vec_instruments[i] ;
+			std::string instrument =vec_instruments_sh[i] ;
 			strcpy(allInstruments[i], instrument.c_str());
 		}
-		
 
+        //开始订阅,注意公网测试环境仅支持TCP方式，如果使用UDP方式会没有行情数据，实盘大多数使用UDP连接
+		pquoteapi->SubscribeMarketData(allInstruments, instrument_count_sh, (XTP_EXCHANGE_TYPE)quote_exchange);
+		pquoteapi->SubscribeTickByTick(allInstruments, instrument_count_sh, (XTP_EXCHANGE_TYPE)quote_exchange);
 
-		//开始订阅,注意公网测试环境仅支持TCP方式，如果使用UDP方式会没有行情数据，实盘大多数使用UDP连接
-		pquoteapi->SubscribeMarketData(allInstruments, instrument_count, (XTP_EXCHANGE_TYPE)quote_exchange);
-		pquoteapi->SubscribeTickByTick(allInstruments, instrument_count, (XTP_EXCHANGE_TYPE)quote_exchange);
-
-        for (int i = 0; i < instrument_count; i++) {
-			delete[] allInstruments[i];
+        for (int i = 0; i < instrument_count_sh; i++) {
+		    delete[] allInstruments[i];
 			allInstruments[i] = NULL;
 		}
 
-        for (int i = 0; i < instrument_count; i++) {
+        allInstruments = new char*[instrument_count_sz];
+		for (int i = 0; i < instrument_count_sz; i++) {
+			allInstruments[i] = new char[7];
+			std::string instrument =vec_instruments_sz[i] ;
+			strcpy(allInstruments[i], instrument.c_str());
+		}
+		
+        quote_exchange = tdf_exchange_sz;
+        pquoteapi->SubscribeMarketData(allInstruments, instrument_count_sz, (XTP_EXCHANGE_TYPE)quote_exchange);
+		pquoteapi->SubscribeTickByTick(allInstruments, instrument_count_sz, (XTP_EXCHANGE_TYPE)quote_exchange);
+
+        for (int i = 0; i < instrument_count_sz; i++) {
 			delete[] allInstruments[i];
 			allInstruments[i] = NULL;
 		}

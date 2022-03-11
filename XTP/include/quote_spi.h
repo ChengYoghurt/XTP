@@ -64,6 +64,7 @@ public:
 
 private:
 	std::vector<XTPMD> vec_xtpmd;
+	std::vector<std::string> vec_localtime;
 	bool IsErrorRspInfo(XTPRI *pRspInfo);	
 
 };
