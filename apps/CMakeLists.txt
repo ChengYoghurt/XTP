@@ -18,6 +18,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # list and compile executable
 list(APPEND target_apps "main")
 
+set(XTP_DIR "${CMAKE_SOURCE_DIR}/XTP/")
+find_package(XTP REQUIRED)
+
+
 if ("main" IN_LIST target_apps)
     set(target_name "main")
     add_executable(${target_name})
@@ -25,6 +29,7 @@ if ("main" IN_LIST target_apps)
         ${target_name}
     PUBLIC
         ${target_name}.cpp
+        ${CMAKE_SOURCE_DIR}/src/quote_spi.cpp
     )
     target_include_directories(
         ${target_name}
@@ -38,6 +43,7 @@ if ("main" IN_LIST target_apps)
         LogConfig::LogConfig
         Threads::Threads
         Kuafu::Kuafu
+        XTP::XTP
     )
     install(TARGETS ${target_name} DESTINATION bin)
 endif()

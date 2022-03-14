@@ -6,14 +6,14 @@ TDFAccount: Test
 TDFReplayFromStart: true
 
 # LocalMarket Config
-ReplayLocalMarket: true
+ReplayLocalMarket: false
 LocalMarketLevelII: Data/LevelII
 ReplayIdle: 0
 ReplayStockList: all
 
 # Read
 LogConfig: Config/KuafuLogConfig.yaml
-StockUniverse: Data/Universe/${today}/all.csv
+StockUniverse: ./Data/Universe/${today}
 Calendar: Data/Static/calendar.csv
 
 # Write

@@ -10,6 +10,10 @@
 #include "LogConfig.h"
 #include "TypeDefs.h"
 #include "YAMLGetField.h"
+#include "xtp_quote_api.h"
+#include "quote_spi.h"
+#include "xquote_api_struct.h"
+#include "xtp_trader_api.h"
 
 #include <ctime>
 #include <errno.h>
@@ -26,6 +30,10 @@
 #include <unistd.h>
 #include <unordered_map>
 #include <vector>
+#include <fstream>
+#include <stdio.h>
+
+#include <memory>
 
 std::atomic<bool> quit_flag = false;
 
@@ -41,7 +49,7 @@ void usage(const char* call_name) {
               << "       [-f configure_file] \\ \n";
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]){
     // register signal function 
     struct sigaction act;
     struct sigaction oact;
@@ -106,6 +114,18 @@ int main(int argc, char* argv[]) {
     std::string tdf_username ;
     std::string tdf_password ;
 
+    // tdf account config addtional 
+    std::string filepath; 
+    uint32_t client_id;
+    uint32_t tdf_exchange_sh;
+    uint32_t tdf_exchange_sz;
+    uint32_t heat_beat_interval;
+    uint32_t quote_buffer_size;
+    uint32_t quote_protocol;
+    uint32_t instrument_count_sh;
+    uint32_t instrument_count_sz;
+    std::vector<std::string> vec_instruments_sh;
+    std::vector<std::string> vec_instruments_sz;
     // risk config
     kf::price_t account_threshold;
     uint32_t    count_threshold  ;
@@ -142,6 +162,30 @@ int main(int argc, char* argv[]) {
         YAML_GET_FIELD(tdf_server_port, tdf_account, server_port);
         YAML_GET_FIELD(tdf_username   , tdf_account, username   );
         YAML_GET_FIELD(tdf_password   , tdf_account, password   );
+        // yaml 初始化 additional
+        YAML_GET_FIELD(client_id         , tdf_account, client_id        );
+        YAML_GET_FIELD(filepath          , tdf_account, path             );
+        
+        YAML_GET_FIELD(heat_beat_interval, tdf_account, hb_interval      );
+        YAML_GET_FIELD(quote_buffer_size , tdf_account, quote_buffer_size);
+        YAML_GET_FIELD(quote_protocol    , tdf_account, quote_protocol   );  
+
+        YAML::Node node_instruments   = tdf_account["instrument_sh"];
+        instrument_count_sh         = node_instruments.size();
+        YAML_GET_FIELD(tdf_exchange_sh      , tdf_account, exchange_id_sh      );
+        for(int i = 0 ; i < instrument_count_sh ; i++ ){
+            std::string temp_instrument   = node_instruments[i].as<std::string>();
+            vec_instruments_sh.push_back(temp_instrument);
+        }
+
+        node_instruments   = tdf_account["instrument_sz"];
+        instrument_count_sz         = node_instruments.size();
+        YAML_GET_FIELD(tdf_exchange_sz      , tdf_account, exchange_id_sz      );
+        for(int i = 0 ; i < instrument_count_sz ; i++ ){
+            std::string temp_instrument   = node_instruments[i].as<std::string>();
+            vec_instruments_sz.push_back(temp_instrument);
+        }
+       
     }
 
     // Read Config
@@ -164,6 +208,10 @@ int main(int argc, char* argv[]) {
     p_logger->info("TDFAccount           = {}", tdf_username              );
     p_logger->info("TDFServer            = {}", tdf_server_ip             );
     p_logger->info("TDFPort              = {}", tdf_server_port           );
+    
+    p_logger->info("filepath             = {}", filepath);
+    p_logger->info("instrument_count     = {}", instrument_count_sh + instrument_count_sz);
+
     } else {
     p_logger->info("[[ LocalFakeMarket ]]");
     p_logger->info("LevelDataFolder      = {}", local_market_levelII      );
@@ -178,6 +226,7 @@ int main(int argc, char* argv[]) {
     //=============================================================//
     //                      +. Init DataBase                       //
     //=============================================================//
+    
     std::vector<kf::instrument_id_t> sub_instruments;
     std::pair<std::size_t, std::size_t> num_stocks_in_exchange {0, 0}; // (num in SZ, num in SH)
     try {
@@ -196,6 +245,62 @@ int main(int argc, char* argv[]) {
     //                      +. Data Segment 
     //=============================================================//
 
+    //初始化行情api
+	XTP::API::QuoteApi* pquoteapi = XTP::API::QuoteApi::CreateQuoteApi(client_id, filepath.c_str(), XTP_LOG_LEVEL_DEBUG);//log日志级别可以调整
+    MyQuoteSpi* pquotespi = new MyQuoteSpi();
+	pquoteapi->RegisterSpi(pquotespi);
+	//设定行情服务器超时时间，单位为秒
+	pquoteapi->SetHeartBeatInterval(heat_beat_interval); //此为1.1.16新增接口
+	//设定行情本地缓存大小，单位为MB
+	pquoteapi->SetUDPBufferSize(quote_buffer_size);//此为1.1.16新增接口
+
+	int login_result_quote = -1;
+	//登录行情服务器,自1.1.16开始，行情服务器支持UDP连接，推荐使用UDP
+	login_result_quote = pquoteapi->Login(tdf_server_ip.c_str(), tdf_server_port, tdf_username.c_str(), tdf_password.c_str(), (XTP_PROTOCOL_TYPE)quote_protocol); 
+	if (login_result_quote == 0)
+	{
+        std::cout << "--------------Login successfully----------------" << std::endl;
+		//登录行情服务器成功后，订阅行情
+		int quote_exchange = tdf_exchange_sh;
+
+		//从配置文件中读取需要订阅的股票
+		char* *allInstruments = new char*[instrument_count_sh];
+		for (int i = 0; i < instrument_count_sh; i++) {
+			allInstruments[i] = new char[7];
+			std::string instrument =vec_instruments_sh[i] ;
+			strcpy(allInstruments[i], instrument.c_str());
+		}
+
+        //开始订阅,注意公网测试环境仅支持TCP方式，如果使用UDP方式会没有行情数据，实盘大多数使用UDP连接
+		pquoteapi->SubscribeMarketData(allInstruments, instrument_count_sh, (XTP_EXCHANGE_TYPE)quote_exchange);
+		pquoteapi->SubscribeTickByTick(allInstruments, instrument_count_sh, (XTP_EXCHANGE_TYPE)quote_exchange);
+
+        for (int i = 0; i < instrument_count_sh; i++) {
+		    delete[] allInstruments[i];
+			allInstruments[i] = NULL;
+		}
+
+        allInstruments = new char*[instrument_count_sz];
+		for (int i = 0; i < instrument_count_sz; i++) {
+			allInstruments[i] = new char[7];
+			std::string instrument =vec_instruments_sz[i] ;
+			strcpy(allInstruments[i], instrument.c_str());
+		}
+		
+        quote_exchange = tdf_exchange_sz;
+        pquoteapi->SubscribeMarketData(allInstruments, instrument_count_sz, (XTP_EXCHANGE_TYPE)quote_exchange);
+		pquoteapi->SubscribeTickByTick(allInstruments, instrument_count_sz, (XTP_EXCHANGE_TYPE)quote_exchange);
+
+        for (int i = 0; i < instrument_count_sz; i++) {
+			delete[] allInstruments[i];
+			allInstruments[i] = NULL;
+		}
+
+		delete[] allInstruments;
+		allInstruments = NULL;
+
+    }
+
     //=============================================================//
     //                      +. start market                        //
     //=============================================================//
@@ -204,6 +309,7 @@ int main(int argc, char* argv[]) {
     //                    +. Wait to Quit                          //
     //=============================================================//
     // wait for SIGINT to continue
+
     p_logger->info("Start Working and wait SIGINT to stop");
     sigset_t zeromask;
     sigemptyset(&zeromask);
@@ -218,10 +324,14 @@ int main(int argc, char* argv[]) {
     //=============================================================//
     //                    +. Save Stream Data                      //
     //=============================================================//
+
     p_logger->info("dumping data to disk...");
 
-    p_logger->info("Stop Market spi");
+    std::vector<XTPMD> vec_xtpmd;
+    vec_xtpmd = pquotespi->get_XTPMD();
+    pquotespi->print_vec_xtpmd(vec_xtpmd, all_stock_pool_file.c_str());
 
+    p_logger->info("Stop Market spi");
     p_logger->info("All Done!");
 
     return 0;
