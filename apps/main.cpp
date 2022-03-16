@@ -28,12 +28,10 @@
 #include <sys/stat.h>
 #include <thread>
 #include <unistd.h>
-#include <unordered_map>
 #include <vector>
-#include <fstream>
-#include <stdio.h>
+#include <cstdio>
+// #include <filesystem>
 
-#include <memory>
 
 std::atomic<bool> quit_flag = false;
 
@@ -131,6 +129,8 @@ int main(int argc, char* argv[]){
     uint32_t    count_threshold  ;
     uint32_t    count_duration   ;
 
+    bool use_yaml = false;
+
     check_file_exist(config_file);
     YAML::Node config = YAML::LoadFile(config_file);
 
@@ -170,22 +170,26 @@ int main(int argc, char* argv[]){
         YAML_GET_FIELD(quote_buffer_size , tdf_account, quote_buffer_size);
         YAML_GET_FIELD(quote_protocol    , tdf_account, quote_protocol   );  
 
-        YAML::Node node_instruments   = tdf_account["instrument_sh"];
-        instrument_count_sh         = node_instruments.size();
         YAML_GET_FIELD(tdf_exchange_sh      , tdf_account, exchange_id_sh      );
-        for(int i = 0 ; i < instrument_count_sh ; i++ ){
-            std::string temp_instrument   = node_instruments[i].as<std::string>();
-            vec_instruments_sh.push_back(temp_instrument);
-        }
-
-        node_instruments   = tdf_account["instrument_sz"];
-        instrument_count_sz         = node_instruments.size();
         YAML_GET_FIELD(tdf_exchange_sz      , tdf_account, exchange_id_sz      );
-        for(int i = 0 ; i < instrument_count_sz ; i++ ){
-            std::string temp_instrument   = node_instruments[i].as<std::string>();
-            vec_instruments_sz.push_back(temp_instrument);
-        }
-       
+
+        if (use_yaml) {
+            YAML::Node node_instruments   = tdf_account["instrument_sh"];
+            instrument_count_sh         = node_instruments.size();
+            node_instruments   = tdf_account["instrument_sz"];
+            instrument_count_sz         = node_instruments.size();
+        
+            for (int i = 0 ; i < instrument_count_sh ; i++ ) {
+                std::string temp_instrument   = node_instruments[i].as<std::string>();
+                vec_instruments_sh.push_back(temp_instrument);
+            }
+            
+            for (int i = 0 ; i < instrument_count_sz ; i++ ) {
+                std::string temp_instrument   = node_instruments[i].as<std::string>();
+                vec_instruments_sz.push_back(temp_instrument);
+            }
+
+        } 
     }
 
     // Read Config
@@ -210,7 +214,7 @@ int main(int argc, char* argv[]){
     p_logger->info("TDFPort              = {}", tdf_server_port           );
     
     p_logger->info("filepath             = {}", filepath);
-    p_logger->info("instrument_count     = {}", instrument_count_sh + instrument_count_sz);
+    // p_logger->info("instrument_count     = {}", instrument_count_sh + instrument_count_sz);
 
     } else {
     p_logger->info("[[ LocalFakeMarket ]]");
@@ -261,6 +265,56 @@ int main(int argc, char* argv[]){
 	{
         std::cout << "--------------Login successfully----------------" << std::endl;
 		//登录行情服务器成功后，订阅行情
+        //TODO: 读onquery写的文件，将ticker分别存到vec_sh&&vec_sz 
+        std::string query_ticker_sh_path = "sh_ticker.txt";
+        std::string query_ticker_sz_path = "sz_ticker.txt";
+
+		std::remove(query_ticker_sh_path.c_str());
+        std::remove(query_ticker_sz_path.c_str());
+        pquoteapi->QueryAllTickers(XTP_EXCHANGE_SH);
+        std::cout << "Querying_SH" << std::endl;
+        pquoteapi->QueryAllTickers(XTP_EXCHANGE_SZ);
+        std::cout << "Querying_SZ" << std::endl;
+        
+        //std::cout << "Current working directory: " << std::filesystem::current_path() << '\n'; 
+        sleep(5);
+        
+
+        if (!use_yaml) {
+            std::ifstream query_ticker_sh_infile(query_ticker_sh_path.c_str());
+            std::ifstream query_ticker_sz_infile(query_ticker_sz_path.c_str());
+            bool has_ticker_input = false;
+            if (query_ticker_sh_infile) {
+                // std::cout << "SH FINE" << std::endl;
+                has_ticker_input = true;
+                std::string ticker_sh;
+                while (getline(query_ticker_sh_infile, ticker_sh)) {
+                    vec_instruments_sh.push_back(ticker_sh);
+                }
+                query_ticker_sh_infile.close();
+                instrument_count_sh = vec_instruments_sh.size();
+                std::cout << "SZ SIZE" << instrument_count_sh << std::endl;
+            }
+
+            if (query_ticker_sz_infile) {
+                // std::cout << "SZ FINE" << std::endl;
+                has_ticker_input = true;
+                std::string ticker_sz;
+                while (getline(query_ticker_sz_infile, ticker_sz)) {
+                    vec_instruments_sz.push_back(ticker_sz);
+                }
+                query_ticker_sz_infile.close();
+                instrument_count_sz = vec_instruments_sz.size();
+                std::cout << "SZ SIZE" << instrument_count_sz << std::endl;
+            }
+
+            if (has_ticker_input == false) {
+                std::cout << "--------------No ticker input--------------" << std::endl;
+                return 0;
+            }
+
+        }
+
 		int quote_exchange = tdf_exchange_sh;
 
 		//从配置文件中读取需要订阅的股票
@@ -287,9 +341,8 @@ int main(int argc, char* argv[]){
 			strcpy(allInstruments[i], instrument.c_str());
 		}
 		
-        quote_exchange = tdf_exchange_sz;
-        pquoteapi->SubscribeMarketData(allInstruments, instrument_count_sz, (XTP_EXCHANGE_TYPE)quote_exchange);
-		pquoteapi->SubscribeTickByTick(allInstruments, instrument_count_sz, (XTP_EXCHANGE_TYPE)quote_exchange);
+        pquoteapi->SubscribeMarketData(allInstruments, instrument_count_sz, (XTP_EXCHANGE_TYPE)tdf_exchange_sh);
+		pquoteapi->SubscribeTickByTick(allInstruments, instrument_count_sz, (XTP_EXCHANGE_TYPE)tdf_exchange_sz);
 
         for (int i = 0; i < instrument_count_sz; i++) {
 			delete[] allInstruments[i];

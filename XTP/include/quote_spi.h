@@ -57,7 +57,8 @@ public:
 	virtual void OnUnSubscribeAllOptionOrderBook(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	virtual void OnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	virtual void OnUnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
-	void print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, const char* file_path);
+	virtual void print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, const char* file_path);
+	virtual void print_ticker_info(std::vector<XTPQSI> &vec_ticker_info, const char* query_ticker_path);
 	const std::vector<XTPMD>&get_XTPMD(){
 		return vec_xtpmd;
 	}
