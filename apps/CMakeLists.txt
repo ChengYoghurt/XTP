@@ -15,12 +15,14 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# list and compile executable
-list(APPEND target_apps "main")
+# add directory of FindHdf5.cmake
+include(${CMAKE_SOURCE_DIR}/cmake/FindHdf5.cmake)
 
 set(XTP_DIR "${CMAKE_SOURCE_DIR}/XTP/")
 find_package(XTP REQUIRED)
 
+# list and compile executable
+list(APPEND target_apps "main")
 
 if ("main" IN_LIST target_apps)
     set(target_name "main")
@@ -30,7 +32,7 @@ if ("main" IN_LIST target_apps)
     PUBLIC
         ${target_name}.cpp
         ${CMAKE_SOURCE_DIR}/src/quote_spi.cpp
-        ${CMAKE_SOURCE_DIR}/src/H5Test.cpp
+        ${CMAKE_SOURCE_DIR}/src/H5diff.cpp
     )
     target_include_directories(
         ${target_name}
@@ -45,6 +47,7 @@ if ("main" IN_LIST target_apps)
         Threads::Threads
         Kuafu::Kuafu
         XTP::XTP
+        Hdf5::Hdf5
     )
     install(TARGETS ${target_name} DESTINATION bin)
 endif()

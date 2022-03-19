@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <fstream>
+
 using namespace std;
 
 void MyQuoteSpi::OnError(XTPRI *error_info, bool is_last)
@@ -160,7 +161,7 @@ bool MyQuoteSpi::IsErrorRspInfo(XTPRI *pRspInfo)
 	return bResult;
 }
 
-void MyQuoteSpi::print_vec_xtpmd(std::vector<XTPMD> &vec_xtpmd, const char *file_path)
+void MyQuoteSpi::print_vec_xtpmd(std::vector <XTPMD> &vec_xtpmd, const char *file_path)
 {
 
 	char market_data_path[100] = {'\0'};

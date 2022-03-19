@@ -293,7 +293,7 @@ int main(int argc, char* argv[]){
                 }
                 query_ticker_sh_infile.close();
                 instrument_count_sh = vec_instruments_sh.size();
-                std::cout << "SZ SIZE" << instrument_count_sh << std::endl;
+                std::cout << "SH SIZE" << instrument_count_sh << std::endl;
             }
 
             if (query_ticker_sz_infile) {
