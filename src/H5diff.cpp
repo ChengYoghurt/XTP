@@ -15,6 +15,7 @@ void diff (std::vector<std::string> vec_query_ticker, const char* hdf5_file_name
     H5G_info_t ginfo;
     herr_t status;
 
+    // bool flag1 = true;
     for(auto ticker : vec_query_ticker) {
         if ((ticker_group_id = H5Gopen(group_id, ticker.c_str(), H5P_DEFAULT)) >= 0) {
             // std::cout << "=============" << "OPEN" << ticker << "SUCCESSFULLY!" << std::endl;
@@ -28,10 +29,25 @@ void diff (std::vector<std::string> vec_query_ticker, const char* hdf5_file_name
                 H5Sget_simple_extent_dims(ticker_dataspace_id, &dims, NULL);
                 // std::cout << "=============" << "DIMS" << dims << "TYPE" << datatype << std::endl;
                 
-                // Start read from hdf5
-                double* data = (double* )malloc(sizeof(double) *dims);
-                H5Dread(ticker_dataset_id, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-                std::cout << data << std::endl;
+                // Start read from hdf5       
+                if(i == 0 || i == 56){
+                    uint32_t* data = (uint32_t* )malloc(sizeof(uint32_t) *dims);
+                    H5Dread(ticker_dataset_id, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                }
+                else if((i == 1) || (i >= 17 && i<=26) || (i >= 37 && i <= 48) || (i == 50) || (i == 51)){
+                    int32_t* data = (int32_t* )malloc(sizeof(int32_t) *dims);
+                    H5Dread(ticker_dataset_id, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    // if (flag1) {
+                    //     for(int k = 0; k < 10; k++)
+                    //         std::cout<<data[k]<<"\t";
+                    //     std::cout<<std::endl;
+                    //     flag1 = false;
+                    // }
+                }
+                else{
+                    double* data = (double* )malloc(sizeof(double) *dims);
+                    H5Dread(ticker_dataset_id, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                }
                 
                 // Release and close
                 H5Sclose(ticker_dataspace_id);
