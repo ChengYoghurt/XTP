@@ -14,6 +14,7 @@
 #include "quote_spi.h"
 #include "xquote_api_struct.h"
 #include "xtp_trader_api.h"
+#include "H5diff.h"
 
 #include <ctime>
 #include <errno.h>
@@ -30,7 +31,8 @@
 #include <unistd.h>
 #include <vector>
 #include <cstdio>
-// #include <filesystem>
+
+
 
 
 std::atomic<bool> quit_flag = false;
@@ -314,6 +316,9 @@ int main(int argc, char* argv[]){
             }
 
         }
+
+        //TEST HDF5
+        diff (vec_instruments_sh, "depth_market.h5");
 
 		int quote_exchange = tdf_exchange_sh;
 
