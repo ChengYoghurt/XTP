@@ -327,9 +327,8 @@ int main(int argc, char* argv[]){
 
     p_logger->info("dumping data to disk...");
 
-    std::vector<XTPMD> vec_xtpmd;
-    vec_xtpmd = pquotespi->get_XTPMD();
-    pquotespi->print_vec_xtpmd(vec_xtpmd, all_stock_pool_file.c_str());
+
+    pquotespi->print_vec_xtpdmet(pquotespi->get_xtpdmet(), all_stock_pool_file);
 
     p_logger->info("Stop Market spi");
     p_logger->info("All Done!");
