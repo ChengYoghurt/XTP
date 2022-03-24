@@ -9,8 +9,10 @@ Test:
  client_id: 1
  path_linux: "/root/log/"
  path: "D:\\test\\"
- exchange_id_sh: XTP_EXCHANGE_SH
- exchange_id_sz: XTP_EXCHANGE_SZ
+ exchange_id_sh: 1
+ exchange_id_sz: 2
+ query_tickers_path_sh: "tickers_sh.txt"
+ query_tickers_path_sz: "tickers_sz.txt"
  hb_interval: 15
  quote_buffer_size: 128
  quote_protocol: 1

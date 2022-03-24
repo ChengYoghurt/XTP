@@ -137,14 +137,14 @@ test/fast: test
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/chengyg/Kuafu/CMakeFiles /home/chengyg/Kuafu/CMakeFiles/progress.marks
-	$(MAKE) -f CMakeFiles/Makefile2 all
+	cd /home/chengyg/Kuafu && $(CMAKE_COMMAND) -E cmake_progress_start /home/chengyg/Kuafu/CMakeFiles /home/chengyg/Kuafu/apps/CMakeFiles/progress.marks
+	cd /home/chengyg/Kuafu && $(MAKE) -f CMakeFiles/Makefile2 apps/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/chengyg/Kuafu/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	$(MAKE) -f CMakeFiles/Makefile2 clean
+	cd /home/chengyg/Kuafu && $(MAKE) -f CMakeFiles/Makefile2 apps/clean
 .PHONY : clean
 
 # The main clean target
@@ -154,83 +154,60 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	$(MAKE) -f CMakeFiles/Makefile2 preinstall
+	cd /home/chengyg/Kuafu && $(MAKE) -f CMakeFiles/Makefile2 apps/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	$(MAKE) -f CMakeFiles/Makefile2 preinstall
+	cd /home/chengyg/Kuafu && $(MAKE) -f CMakeFiles/Makefile2 apps/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/chengyg/Kuafu && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
-#=============================================================================
-# Target rules for targets named Kuafu
+# Convenience name for target.
+apps/CMakeFiles/main.dir/rule:
+	cd /home/chengyg/Kuafu && $(MAKE) -f CMakeFiles/Makefile2 apps/CMakeFiles/main.dir/rule
+.PHONY : apps/CMakeFiles/main.dir/rule
 
-# Build rule for target.
-Kuafu: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 Kuafu
-.PHONY : Kuafu
+# Convenience name for target.
+main: apps/CMakeFiles/main.dir/rule
 
-# fast build rule for target.
-Kuafu/fast:
-	$(MAKE) -f src/CMakeFiles/Kuafu.dir/build.make src/CMakeFiles/Kuafu.dir/build
-.PHONY : Kuafu/fast
-
-#=============================================================================
-# Target rules for targets named LogConfig
-
-# Build rule for target.
-LogConfig: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 LogConfig
-.PHONY : LogConfig
-
-# fast build rule for target.
-LogConfig/fast:
-	$(MAKE) -f src/CMakeFiles/LogConfig.dir/build.make src/CMakeFiles/LogConfig.dir/build
-.PHONY : LogConfig/fast
-
-#=============================================================================
-# Target rules for targets named NumericTimeTest
-
-# Build rule for target.
-NumericTimeTest: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 NumericTimeTest
-.PHONY : NumericTimeTest
-
-# fast build rule for target.
-NumericTimeTest/fast:
-	$(MAKE) -f tests/CMakeFiles/NumericTimeTest.dir/build.make tests/CMakeFiles/NumericTimeTest.dir/build
-.PHONY : NumericTimeTest/fast
-
-#=============================================================================
-# Target rules for targets named KuafuTest
-
-# Build rule for target.
-KuafuTest: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 KuafuTest
-.PHONY : KuafuTest
-
-# fast build rule for target.
-KuafuTest/fast:
-	$(MAKE) -f tests/CMakeFiles/KuafuTest.dir/build.make tests/CMakeFiles/KuafuTest.dir/build
-.PHONY : KuafuTest/fast
-
-#=============================================================================
-# Target rules for targets named main
-
-# Build rule for target.
-main: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 main
 .PHONY : main
 
 # fast build rule for target.
 main/fast:
-	$(MAKE) -f apps/CMakeFiles/main.dir/build.make apps/CMakeFiles/main.dir/build
+	cd /home/chengyg/Kuafu && $(MAKE) -f apps/CMakeFiles/main.dir/build.make apps/CMakeFiles/main.dir/build
 .PHONY : main/fast
+
+main.o: main.cpp.o
+
+.PHONY : main.o
+
+# target to build an object file
+main.cpp.o:
+	cd /home/chengyg/Kuafu && $(MAKE) -f apps/CMakeFiles/main.dir/build.make apps/CMakeFiles/main.dir/main.cpp.o
+.PHONY : main.cpp.o
+
+main.i: main.cpp.i
+
+.PHONY : main.i
+
+# target to preprocess a source file
+main.cpp.i:
+	cd /home/chengyg/Kuafu && $(MAKE) -f apps/CMakeFiles/main.dir/build.make apps/CMakeFiles/main.dir/main.cpp.i
+.PHONY : main.cpp.i
+
+main.s: main.cpp.s
+
+.PHONY : main.s
+
+# target to generate assembly for a file
+main.cpp.s:
+	cd /home/chengyg/Kuafu && $(MAKE) -f apps/CMakeFiles/main.dir/build.make apps/CMakeFiles/main.dir/main.cpp.s
+.PHONY : main.cpp.s
 
 # Help Target
 help:
@@ -245,11 +222,10 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... test"
-	@echo "... Kuafu"
-	@echo "... LogConfig"
-	@echo "... NumericTimeTest"
-	@echo "... KuafuTest"
 	@echo "... main"
+	@echo "... main.o"
+	@echo "... main.i"
+	@echo "... main.s"
 .PHONY : help
 
 
@@ -261,6 +237,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/chengyg/Kuafu && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

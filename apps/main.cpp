@@ -119,6 +119,8 @@ int main(int argc, char* argv[]){
     uint32_t client_id;
     uint32_t tdf_exchange_sh;
     uint32_t tdf_exchange_sz;
+    std::string query_path_sh;
+    std::string query_path_sz;
     uint32_t heat_beat_interval;
     uint32_t quote_buffer_size;
     uint32_t quote_protocol;
@@ -172,8 +174,10 @@ int main(int argc, char* argv[]){
         YAML_GET_FIELD(quote_buffer_size , tdf_account, quote_buffer_size);
         YAML_GET_FIELD(quote_protocol    , tdf_account, quote_protocol   );  
 
-        YAML_GET_FIELD(tdf_exchange_sh      , tdf_account, exchange_id_sh      );
-        YAML_GET_FIELD(tdf_exchange_sz      , tdf_account, exchange_id_sz      );
+        YAML_GET_FIELD(tdf_exchange_sh      , tdf_account, exchange_id_sh       );
+        YAML_GET_FIELD(tdf_exchange_sz      , tdf_account, exchange_id_sz       );
+        YAML_GET_FIELD(query_path_sh     , tdf_account, query_tickers_path_sh);
+        YAML_GET_FIELD(query_path_sz     , tdf_account, query_tickers_path_sz);
 
         if (use_yaml) {
             YAML::Node node_instruments   = tdf_account["instrument_sh"];
@@ -267,24 +271,27 @@ int main(int argc, char* argv[]){
 	{
         std::cout << "--------------Login successfully----------------" << std::endl;
 		//登录行情服务器成功后，订阅行情
-        //TODO: 读onquery写的文件，将ticker分别存到vec_sh&&vec_sz 
-        std::string query_ticker_sh_path = "sh_ticker.txt";
-        std::string query_ticker_sz_path = "sz_ticker.txt";
-
-		std::remove(query_ticker_sh_path.c_str());
-        std::remove(query_ticker_sz_path.c_str());
+		std::remove(query_path_sh.c_str());
+        std::remove(query_path_sz.c_str());
         pquoteapi->QueryAllTickers(XTP_EXCHANGE_SH);
         std::cout << "Querying_SH" << std::endl;
         pquoteapi->QueryAllTickers(XTP_EXCHANGE_SZ);
         std::cout << "Querying_SZ" << std::endl;
         
         //std::cout << "Current working directory: " << std::filesystem::current_path() << '\n'; 
+        //Wait till all queries done
         sleep(5);
         
+        //Print query tickers to .txt
+        const int print_sh = 0;
+        const int print_sz = 1;
+        pquotespi->print_ticker_info(print_sh, query_path_sh.c_str());
+        pquotespi->print_ticker_info(print_sz, query_path_sz.c_str());
 
+        //Store tickers to vec
         if (!use_yaml) {
-            std::ifstream query_ticker_sh_infile(query_ticker_sh_path.c_str());
-            std::ifstream query_ticker_sz_infile(query_ticker_sz_path.c_str());
+            std::ifstream query_ticker_sh_infile(query_path_sh.c_str());
+            std::ifstream query_ticker_sz_infile(query_path_sz.c_str());
             bool has_ticker_input = false;
             if (query_ticker_sh_infile) {
                 // std::cout << "SH FINE" << std::endl;
@@ -316,9 +323,6 @@ int main(int argc, char* argv[]){
             }
 
         }
-
-        //TEST HDF5
-        diff (vec_instruments_sh, "depth_market.h5");
 
 		int quote_exchange = tdf_exchange_sh;
 
@@ -378,7 +382,9 @@ int main(int argc, char* argv[]){
     std::cout << std::endl;
     std::cerr << std::endl;
     p_logger->warn("Get SIGINT");
-
+    
+    //TEST HDF5
+    //diff (vec_instruments_sh, "depth_market.h5", pquotespi);
     //=============================================================//
     //                    +. Save Stream Data                      //
     //=============================================================//
@@ -386,8 +392,8 @@ int main(int argc, char* argv[]){
     p_logger->info("dumping data to disk...");
 
     std::vector<XTPMD> vec_xtpmd;
-    vec_xtpmd = pquotespi->get_XTPMD();
-    pquotespi->print_vec_xtpmd(vec_xtpmd, all_stock_pool_file.c_str());
+    //vec_xtpmd = pquotespi->get_XTPMD();
+    //pquotespi->print_vec_xtpmd(vec_xtpmd, all_stock_pool_file.c_str());
 
     p_logger->info("Stop Market spi");
     p_logger->info("All Done!");

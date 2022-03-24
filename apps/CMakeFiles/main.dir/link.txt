@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/main.dir/main.cpp.o  -o main  -Wl,-rpath,/usr/local/lib: ../src/libLogConfig.a ../src/libKuafu.a /usr/local/lib/libyaml-cpp.so.0.6.3 /usr/local/lib/libspdlog.a /usr/local/lib/libfmt.a -pthread 

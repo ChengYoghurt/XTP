@@ -1,0 +1,2 @@
+/usr/bin/ar qc libKuafu.a  CMakeFiles/Kuafu.dir/Kuafu.cpp.o
+/usr/bin/ranlib libKuafu.a
