@@ -1,0 +1,2 @@
+/usr/bin/ar qc libLogConfig.a  CMakeFiles/LogConfig.dir/LogConfig.cpp.o
+/usr/bin/ranlib libLogConfig.a

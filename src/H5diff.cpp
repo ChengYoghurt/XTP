@@ -1,80 +1,28 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include "hdf5.h"
+#include "quote_spi.h"
 #include "H5diff.h"
+#include "Typedefs.h"
 
+#define MAX_DATA_ATTR 43
+#define TICKER_NO -1
 
-using namespace std;
+using std::cout;
+using std::endl;
+using std::string;
 
-void compare_time(uint32_t* data_h5, string& ticker, MyQuoteSpi* spi, 
-                    map<uint32_t,uint32_t> &map_index, hid_t dims){
-    freopen("timewrong.txt","w",stdout);
-    map<string, XTPDMET> map_xtpdmd = spi->get_xtpdmet();
-    size_t numoftime= map_xtpdmd[ticker].vec_depthtime.size();
-    for(hsize_t i = 0, j=0; i < dims, j < numoftime; i++, j++){
-        while(map_xtpdmd[ticker].vec_depthtime[j] != data_h5[i]){
-            j++;
-        }
-        if(j < numoftime){
-            map_index[i] = j;
-        }
-    }
+extern struct DepthMarketField dmfeild;
+void prepare_diff (const char* market_data_path, const char* hdf5_file_path){
 
-}
-
-template<class T>
-void compare_uint(T* data_h5, string& ticker, MyQuoteSpi* spi, 
-                    hsize_t dims, map<uint32_t,uint32_t> &map_index, vector<uint32_t>& vec){ 
-    freopen("wrongdata.txt","w",stdout);
-    map<string, XTPDMET> map_xtpdmd = spi->get_xtpdmet();
-
-    for(hsize_t i = 0, j = 0; i < map_index.size(); i++){
-        j = map_index[i];
-        if(data_h5[i] != vec[j]){
-            cout <<"Time: " << map_xtpdmd[ticker].vec_depthtime[i] << ": index: (" 
-            << i << "," << j << ") Right: " << data_h5[i] << "Wrong: " << vec[j] <<endl;  
-        }
-    }
-
-}
-
-template<class T>
-void compare_int(T* data_h5, string& ticker, MyQuoteSpi* spi, 
-                    hsize_t dims, map<uint32_t,uint32_t> &map_index, vector<int32_t>& vec){ 
-
-    freopen("wrongdata.txt","w",stdout);
-    map<string, XTPDMET> map_xtpdmd = spi->get_xtpdmet();
-
-    for(hsize_t i = 0, j = 0; i < map_index.size(); i++){
-        j = map_index[i];
-        if(data_h5[i] != vec[j]){
-            cout <<"Time: " << map_xtpdmd[ticker].vec_depthtime[i] << ": index: (" 
-            << i << "," << j << ") Right: " << data_h5[i] << "Wrong: " << vec[j] <<endl;  
-        }
-    }
-
-}
-
-template<class T>
-void compare_double(T* data_h5, string& ticker, MyQuoteSpi* spi, 
-                    hsize_t dims, map<uint32_t,uint32_t> &map_index, vector<double>& vec){ 
-
-    freopen("wrongdata.txt","w",stdout);
-    map<string, XTPDMET> map_xtpdmd = spi->get_xtpdmet();
-
-    for(hsize_t i = 0, j = 0; i < map_index.size(); i++){
-        j = map_index[i];
-        if(data_h5[i] != vec[j]){
-            cout <<"Time: " << map_xtpdmd[ticker].vec_depthtime[i] << ": index: (" 
-            << i << "," << j << ") Right: " << data_h5[i] << "Wrong: " << vec[j] <<endl;  
-        }
-    }
-
-}
-
-void diff (std::vector<std::string> vec_query_ticker, const char* hdf5_file_name, MyQuoteSpi* spi) {
-
-    hid_t file_id = H5Fopen(hdf5_file_name, H5F_ACC_RDONLY, H5P_DEFAULT);
+    hid_t file_id = H5Fopen(hdf5_file_path, H5F_ACC_RDONLY, H5P_DEFAULT);
     hsize_t dims;
 
-    // only open the first group "FeaturesDB" in the file
+    // Only open the first group "FeaturesDB" in the file
     hid_t group_id = H5Gopen(file_id, "FeaturesDB", H5P_DEFAULT);
     hid_t ticker_group_id; 
     hid_t ticker_dataset_id;
@@ -82,88 +30,110 @@ void diff (std::vector<std::string> vec_query_ticker, const char* hdf5_file_name
     hid_t datatype;
     H5G_info_t ginfo;
     herr_t status;
-    map<uint32_t,uint32_t> map_index;
-    map<string, XTPDMET> map_xtpdmd = spi->get_xtpdmet();
 
-    // bool flag1 = true;
-    for(auto ticker : vec_query_ticker) {
-        if ((ticker_group_id = H5Gopen(group_id, ticker.c_str(), H5P_DEFAULT)) >= 0) {
-            status = H5Gget_info(ticker_group_id, &ginfo);
-
-            for (hsize_t i = 0; i < ginfo.nlinks - 1; i++) {
-                ticker_dataset_id = H5Dopen(ticker_group_id, std::to_string(i).c_str(), H5P_DEFAULT);
-                ticker_dataspace_id = H5Dget_space(ticker_dataset_id);
-                datatype = H5Dget_type(ticker_dataset_id);
-                H5Sget_simple_extent_dims(ticker_dataspace_id, &dims, NULL);
-                
-                // Start read from hdf5  
-                if(i == 0){
-                    uint32_t* data = (uint32_t* )malloc(sizeof(uint32_t) *dims);
-                    H5Dread(ticker_dataset_id, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-                    compare_time(data, ticker, spi, map_index, dims);
-                }     
-                else if(i == 56){
-                    uint32_t* data = (uint32_t* )malloc(sizeof(uint32_t) *dims);
-                    H5Dread(ticker_dataset_id, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-                    compare_uint(data, ticker, spi, dims, map_index, map_xtpdmd[ticker].vec_localtime);
+    // Open market_data file
+    std::ifstream market_data_infile;
+    string data_line;
+    string ticker_id;
+    int data_attrno = TICKER_NO; 
+    market_data_infile.open(market_data_path, std::ios::in);
+    if (!market_data_infile)  
+        cout << "Failed to open market data file" << endl;
+    else {
+        //TODO:Read from .csv 
+        // Assume tickers id increase by each line 
+        // 1.read ticker and compare with the group name, if the same
+        // 2.push the depthmarket_time into a vector
+        // 3.compare the time_vec with standard_time_vec using A FUNCTION, and return a int index[]
+        // Use the index[] and compare other data from .csv
+        //market_data_infile
+        bool jump_flag = false;
+        while (getline(market_data_infile, data_line)) {
+            if (jump_flag == true) {
+                if (data_line!= "#") continue;
+                else {
+                data_attrno = -1;
+                jump_flag = false;
+                continue;
                 }
-                else if((i == 1) || (i >= 17 && i<=26) || (i >= 37 && i <= 48) || (i == 50) || (i == 51)){
-                    int32_t* data = (int32_t* )malloc(sizeof(int32_t) *dims);
-                    H5Dread(ticker_dataset_id, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+            } 
+            // Read ticker_id from the second column
+            if (data_attrno == TICKER_NO) {
+                // cout << data_line << endl;
+                std::stringstream ss(data_line);
+                string data;
+                std::vector<string> data_vec;
 
-                    if(i==1)
-                        compare_int(data, ticker, spi, dims, map_index,map_xtpdmd[ticker].vec_status);
-                    else if(i >= 17 && i <= 26){
-                        compare_int(data, ticker, spi, dims, map_index,map_xtpdmd[ticker].vec_askvolume[i-17]);
-                    }
-                    else if(i >= 37 && i <= 48){
-                        compare_int(data, ticker, spi, dims, map_index,map_xtpdmd[ticker].vec_bidvolume[i-37]);
-                    }
-                    else if(i == 50){
-                        compare_int(data, ticker, spi, dims, map_index,map_xtpdmd[ticker].vec_totalbidvol);
-                    }
-                    else if(i == 51){
-                        compare_int(data, ticker, spi, dims, map_index,map_xtpdmd[ticker].vec_totalaskvol);
-                    }
+                while (getline(ss, data, ',')) 
+                    data_vec.push_back(data);
 
-                    // if (flag1) {
-                    //     for(int k = 0; k < 10; k++)
-                    //         std::cout<<data[k]<<"\t";
-                    //     std::cout<<std::endl;
-                    //     flag1 = false;
-                    // }
+                ticker_id = data_vec.back();
+                cout << ticker_id << endl;
+
+                if ((ticker_group_id = H5Gopen(group_id, ticker_id.c_str(), H5P_DEFAULT)) >= 0) {
+                    status = H5Gget_info(ticker_group_id, &ginfo);
                 }
-                else{
-                    double* data = (double* )malloc(sizeof(double) *dims);
-                    H5Dread(ticker_dataset_id, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-
-                    if(i >= 2 && i <= 6)
-                        compare_double(data, ticker, spi, dims, map_index,map_xtpdmd[ticker].vec_overall_price[i-2]);
-                    else if(i >= 7 && i <= 16){
-                        compare_double(data, ticker, spi, dims, map_index,map_xtpdmd[ticker].vec_askprice[i-7]);
-                    }
-                    else if(i >= 27 && i <= 36)
-                        compare_double(data, ticker, spi, dims, map_index,map_xtpdmd[ticker].vec_bidprice[i-27]);
-                    else if(i == 49)
-                        compare_double(data, ticker, spi, dims, map_index,map_xtpdmd[ticker].turnover);
-                    else if(i == 52)
-                        compare_double(data, ticker, spi, dims, map_index,map_xtpdmd[ticker].vec_WeightedAvgBidPrice);
-                    else if(i == 53)
-                        compare_double(data, ticker, spi, dims, map_index,map_xtpdmd[ticker].vec_WeightedAvgAskPrice);
-                    else if(i == 54)
-                        compare_double(data, ticker, spi, dims, map_index,map_xtpdmd[ticker].vec_HighLimit);
-                    else if(i == 55)
-                        compare_double(data, ticker, spi, dims, map_index,map_xtpdmd[ticker].vec_LowLimit);
+                else {
+                    jump_flag = true;
+                    continue;
                 }
-                
-                // Release and close
-                H5Sclose(ticker_dataspace_id);
-                H5Dclose(ticker_dataset_id);
             }
-            H5Gclose(ticker_group_id);
+            else {  
+                // Only open ticker_group once per ticker
+                for (size_t i = 0; i < MAX_DATA_ATTR; i++) {
+                    // Start read from hdf5  
+                    if(i == l2agg::dmfeild.DepthMarketTime){
+                        ticker_dataset_id = H5Dopen(ticker_group_id, std::to_string(l2agg::dmfeild.DepthMarketTime).c_str(), H5P_DEFAULT);
+                        
+                        
+                        ticker_dataspace_id = H5Dget_space(ticker_dataset_id);
+                        datatype = H5Dget_type(ticker_dataset_id);
+                        H5Sget_simple_extent_dims(ticker_dataspace_id, &dims, NULL);
+                        std::vector <l2agg::timestamp_t> vec_depth_market_time;
+                        vec_depth_market_time.resize(dims);
+                        H5Dread(ticker_dataset_id, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, vec_depth_market_time.data());
+                        H5Tclose(datatype);
+                        H5Sclose(ticker_dataspace_id);
+                        H5Dclose(ticker_dataset_id);
+                        
+                    } 
+                    /*    
+                    else if(i == 56){
+                        uint32_t* data = (uint32_t* )malloc(sizeof(uint32_t) *dims);
+                        H5Dread(ticker_dataset_id, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+
+                    }
+                    else if((i == 1) || (i >= 17 && i<=26) || (i >= 37 && i <= 48) || (i == 50) || (i == 51)){
+                        int32_t* data = (int32_t* )malloc(sizeof(int32_t) *dims);
+                        H5Dread(ticker_dataset_id, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+
+
+                    }
+                    else{
+                        double* data = (double* )malloc(sizeof(double) *dims);
+                        H5Dread(ticker_dataset_id, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+
+                        
+                    }
+                    */
+  
+                }               
+            }
+            data_attrno += 1;
+            // After read every data attr, reset data_attrno
+            // Be careful with uint vs int
+            if ((data_attrno != -1) && (data_attrno > MAX_DATA_ATTR)) {
+                // cout << "I M BIGGER-------------------------" << endl;
+                data_attrno = -1;
+                H5Gclose(ticker_group_id);
+            }
         }
+        // Release and close
+        H5Gclose(group_id);
+        H5Fclose(file_id);
     }
-    H5Tclose(datatype);
-    H5Gclose(group_id);
-    H5Fclose(file_id);    
+        
+    market_data_infile.close();  
+    
+    
 }

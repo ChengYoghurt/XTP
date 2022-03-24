@@ -384,7 +384,7 @@ int main(int argc, char* argv[]){
     p_logger->warn("Get SIGINT");
     
     //TEST HDF5
-    //diff (vec_instruments_sh, "depth_market.h5", pquotespi);
+    prepare_diff("depth_market_data.csv", "depth_market.h5");
     //=============================================================//
     //                    +. Save Stream Data                      //
     //=============================================================//

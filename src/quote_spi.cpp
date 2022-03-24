@@ -102,7 +102,7 @@ void MyQuoteSpi::OnQueryAllTickers(XTPQSI *ticker_info, XTPRI *error_info, bool 
 
 	if (ticker_info) {
 		if (ticker_info->exchange_id == XTP_EXCHANGE_SH) {
-			// If starts with ‘0’
+			// If starts with ‘6’, sh
 			if (ticker_info->ticker[0] == '6')
 				ticker_sh.push_back(*ticker_info);
 
@@ -112,7 +112,7 @@ void MyQuoteSpi::OnQueryAllTickers(XTPQSI *ticker_info, XTPRI *error_info, bool 
 			}
 		} 
 		else if (ticker_info->exchange_id == XTP_EXCHANGE_SZ) {
-
+			// If starts with ‘0|3’, sz
 			if (ticker_info->ticker[0] == '0' || ticker_info->ticker[0] == '3') 
 				ticker_sz.push_back(*ticker_info);
 			
