@@ -27,7 +27,7 @@ typedef struct XTPDepthMarketEveryTicker{
 	std::vector<int32_t>     vec_bidvolume[10];
 	std::vector<double>      vec_trades;
 	std::vector<int32_t>     vec_volume;
-	std::vector<double>      turnover;
+	std::vector<double>      vec_turnover;
 	std::vector<int32_t>     vec_totalbidvol;
 	std::vector<int32_t>     vec_totalaskvol;
     std::vector<double>      vec_WeightedAvgBidPrice;
@@ -79,7 +79,7 @@ public:
 	virtual void OnUnSubscribeAllOptionOrderBook(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	virtual void OnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	virtual void OnUnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
-	virtual void print_vec_xtpdmet(const std::map<std::string, XTPDMET> &map_xtpdmet, const std::string file_path) const;
+	virtual void print_vec_xtpdmet(const std::map<std::string, XTPDMET> &map_xtpdmet, const std::string &file_path) const;
 	virtual void print_ticker_info(std::vector<XTPQSI> &vec_ticker_info, const char* query_ticker_path);
 	const std::map<std::string, XTPDMET>&get_xtpdmet(){
 		return map_xtpdmet;

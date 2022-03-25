@@ -64,7 +64,7 @@ void MyQuoteSpi::OnDepthMarketData(XTPMD *market_data, int64_t bid1_qty[], int32
 	}
 	map_xtpdmet[ticker_info].vec_trades.emplace_back(market_data->trades_count);
 	map_xtpdmet[ticker_info].vec_volume.emplace_back(market_data->qty);
-	map_xtpdmet[ticker_info].turnover.emplace_back(market_data->turnover);
+	map_xtpdmet[ticker_info].vec_turnover.emplace_back(market_data->turnover);
 	time_t local_time = time(NULL);
 	tm *tm_local_time = localtime(&local_time);
 
@@ -186,7 +186,7 @@ bool MyQuoteSpi::IsErrorRspInfo(XTPRI *pRspInfo)
 	return bResult;
 }
  //TODO
-void MyQuoteSpi::print_vec_xtpdmet(const std::map<std::string, XTPDMET> &map_xtpdmet, const string file_path) const
+void MyQuoteSpi::print_vec_xtpdmet(const std::map<std::string, XTPDMET> &map_xtpdmet, const string &file_path) const
 {
 
 	char market_data_path[100] = {'\0'};
@@ -196,32 +196,7 @@ void MyQuoteSpi::print_vec_xtpdmet(const std::map<std::string, XTPDMET> &map_xtp
 	market_data_outfile.open(market_data_path, std::ios::out);
 	constexpr std::size_t k_max_depth_level = 10;
 	size_t index;
-	//	std::cout<<market_data_path<<endl; //文件写入�?�?
-	/*
-	market_data_outfile << "ticker"
-						<< ","
-						<< "data_time"
-						<< ","
-						<< "qty"
-						<< ","
-						<< "turnover"
-						<< ","
-						<< "bid"
-						<< ","
-						<< "bit_qty"
-						<< ","
-						<< "ask"
-						<< ","
-						<< "ask_qty"
-						<< ","
-						<< "trades_count"
-						<< ","
-						<< "local_time" << std::endl;
-
 	
-	
-//	time_t local_time = time(NULL);
-//	tm *tm_local_time = localtime(&local_time);	*/
 	for(auto&item_xtpdmet : map_xtpdmet){
 		market_data_outfile << "ticker" << ","
 							<< item_xtpdmet.first <<std::endl
@@ -231,7 +206,7 @@ void MyQuoteSpi::print_vec_xtpdmet(const std::map<std::string, XTPDMET> &map_xtp
 		}
 		market_data_outfile << std::endl
 							<< "turnover";
-		for(auto &item_vec : item_xtpdmet.second.turnover){
+		for(auto &item_vec : item_xtpdmet.second.vec_turnover){
 			market_data_outfile << "," << item_vec ;
 		}
 		market_data_outfile << std::endl
