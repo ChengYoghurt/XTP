@@ -15,6 +15,12 @@
 #define MAX_DATA_ATTR 43
 #define TICKER_NO -1
 
+// define offsets between my data's index and standard tuple
+#define TOV_OFF_SET 47
+#define QTY_OFF_SET 46
+#define BID_OFF_SET 23
+#define ASK_OFF_SET -17
+
 using std::cout;
 using std::endl;
 using std::string;
@@ -52,8 +58,11 @@ void prepare_diff (const char* market_data_path, const char* hdf5_file_path) {
 
     int data_attrno = TICKER_NO;
     unsigned long long lino_no = 0; 
+    vector <l2agg::timestamp_t> depth_market_time_vec;
     std::map <l2agg::timestamp_t, int> time_index_map;
+    vector <int> time_index_vec;
     vector <int> repeatime_index_vec;
+    vector <int> isrepeat_correct_vec;
     
     // Open market_data file
     std::ifstream market_data_infile;
@@ -117,29 +126,75 @@ void prepare_diff (const char* market_data_path, const char* hdf5_file_path) {
                         ticker_dataspace_id = H5Dget_space(ticker_dataset_id);
                         datatype = H5Dget_type(ticker_dataset_id);
                         H5Sget_simple_extent_dims(ticker_dataspace_id, &dims, NULL);
-                        vector <l2agg::timestamp_t> depth_market_time_vec;
                         depth_market_time_vec.resize(dims);
                         H5Dread(ticker_dataset_id, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, depth_market_time_vec.data());
 
                         // Eliminate wrong time data
                         eliminate_wrong_time(data_vec, depth_market_time_vec, ticker_id);
-                        cout << "ELIMINATE WRONG TIME successfully-------" << endl;
+                        // cout << "ELIMINATE WRONG TIME successfully-------" << endl;
                         
                         // Create time-index map and repeattime index vec
                         create_index(data_vec, time_index_map, repeatime_index_vec);
-                        cout << "CREATE INDEX successfully-------" << endl;
+                        // cout << "CREATE INDEX successfully-------" << endl;
+                        
+                        // Initiate time_index_vec
+                        for (auto time_index_pair : time_index_map) {
+                            time_index_vec.push_back(time_index_pair.second);
+                            // cout << time_index_pair.first << endl;
+                        }
+                        time_index_map.clear();
+
+                        // Initiate isrepeat_correct_vec
+                        for (auto repeatime_index : repeatime_index_vec) {
+                            isrepeat_correct_vec.push_back(1);
+                        }
+
                         H5Tclose(datatype);
                         H5Sclose(ticker_dataspace_id);
                         H5Dclose(ticker_dataset_id);
                         
                     } 
-                    /*    
-                    else if(i == 56){
-                        uint32_t* data = (uint32_t* )malloc(sizeof(uint32_t) *dims);
-                        H5Dread(ticker_dataset_id, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    // If is last attr
+                    else if(data_attrno + ASK_OFF_SET == l2agg::dmfeild.AskVol10){
+                        vector<l2agg::volume_t> data_vec;
+                        while (getline(ss, data, ',')) 
+                            data_vec.push_back(atoi(data.c_str()));
 
-                        //TODO:ticker_first_record SET TO TRUE
+                        // Start read from hdf5 
+                        ticker_dataset_id = H5Dopen(ticker_group_id, std::to_string(l2agg::dmfeild.AskVol10).c_str(), H5P_DEFAULT);
+                        ticker_dataspace_id = H5Dget_space(ticker_dataset_id);
+                        datatype = H5Dget_type(ticker_dataset_id);
+                        H5Sget_simple_extent_dims(ticker_dataspace_id, &dims, NULL);
+                        vector <l2agg::volume_t> ask_volume10_vec;
+                        ask_volume10_vec.resize(dims);
+                        H5Dread(ticker_dataset_id, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, ask_volume10_vec.data());
+
+                        // TODO: use COMPARE on data_vec and ask_volume10_vec
+
+                        // Compare repeat data with standard data
+                        for (auto repeat_index : repeatime_index_vec) {
+                            if (data_vec[repeat_index] != ask_volume10_vec[repeat_index])
+                                isrepeat_correct_vec[repeat_index] = 0;
+                        }
+
+                        // Use set to record data with correct repeat time
+                        std::set <l2agg::timestamp_t> correct_repeat_s;
+                        int is_correct_index = 0;
+                        for (auto is_correct : isrepeat_correct_vec) {
+                            if (!is_correct) {
+                                // TODO: Record this piece of data to wrong data
+                            }
+                            else {
+                                int correct_index = repeatime_index_vec[is_correct_index];
+                                auto ret = correct_repeat_s.insert(depth_market_time_vec[correct_index]);
+                                if (!ret.second) {
+                                    // TODO: Record this piece of data to repeat data
+                                }
+                            }
+                            ++is_correct_index;
+                        }
                     }
+                    /*
                     else if((i == 1) || (i >= 17 && i<=26) || (i >= 37 && i <= 48) || (i == 50) || (i == 51)){
                         int32_t* data = (int32_t* )malloc(sizeof(int32_t) *dims);
                         H5Dread(ticker_dataset_id, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
@@ -153,15 +208,23 @@ void prepare_diff (const char* market_data_path, const char* hdf5_file_path) {
                         
                     }
                     */
-  
+
                 }               
             }
             data_attrno += 1;
-            // After read every data attr, reset data_attrno
+            // After comparing all attr...
             // Be careful with uint vs int
             if ((data_attrno != -1) && (data_attrno > MAX_DATA_ATTR)) {
                 // cout << "I M BIGGER-------------------------" << endl;
+                // Reset data_attrno
                 data_attrno = -1;
+                // Reset ticker_first_record
+                ticker_first_record = true;
+                // Clear used vectors
+                depth_market_time_vec.clear();
+                time_index_vec.clear();
+                repeatime_index_vec.clear();
+                isrepeat_correct_vec.clear();
                 H5Gclose(ticker_group_id);
             }
         }
@@ -212,8 +275,7 @@ void record_wrong (string& wrong_ticker, const char* wrong_attr, T const& wrong_
 
 // time_index_map indicates the index of the records that we will conduct further comparison on
 // repeatime_index_vec indicates the index of the records whose data_time occurs more than once
-void create_index (vector <l2agg::timestamp_t>& data_vec, std::map <l2agg::timestamp_t, int>& time_index_m, 
-vector <int> &repeatime_index_vec) {
+void create_index (vector <l2agg::timestamp_t>& data_vec, std::map <l2agg::timestamp_t, int>& time_index_m, vector <int> &repeatime_index_vec) {
     int index = 0;
     l2agg::timestamp_t data_time;
     std::set <l2agg::timestamp_t> repeat_key_s;
