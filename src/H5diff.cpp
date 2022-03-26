@@ -70,10 +70,6 @@ void prepare_diff (const char* market_data_path, const char* hdf5_file_path) {
         cout << "Failed to open market data file" << endl;
     else {
         // Assume tickers id increase by each line 
-        // 1.read ticker and compare with the group name, if the same
-        // 2.push the depthmarket_time into a vector
-        // 3.compare the time_vec with standard_time_vec using A FUNCTION, and return a int index[]
-        // Use the index[] and compare other data from .csv
         bool jump_flag = false;
         while (getline(market_data_infile, data_line)) {
             ++lino_no;
@@ -98,6 +94,7 @@ void prepare_diff (const char* market_data_path, const char* hdf5_file_path) {
                 ticker_id = data_vec.back();
                 cout << ticker_id << endl;
 
+                // If open successfully
                 if ((ticker_group_id = H5Gopen(group_id, ticker_id.c_str(), H5P_DEFAULT)) >= 0) {
                     status = H5Gget_info(ticker_group_id, &ginfo);
                 }
@@ -127,11 +124,9 @@ void prepare_diff (const char* market_data_path, const char* hdf5_file_path) {
 
                         // Eliminate wrong time data
                         eliminate_wrong_time(data_vec, depth_market_time_vec, ticker_id);
-                        // cout << "ELIMINATE WRONG TIME successfully-------" << endl;
                         
                         // Create time-index map and repeattime index vec
                         create_index(data_vec, time_index_map, repeatime_index_vec);
-                        // cout << "CREATE INDEX successfully-------" << endl;
                         
                         // Find absent
                         eliminate_absent (data_vec, depth_market_time_vec, ticker_id);
@@ -159,9 +154,26 @@ void prepare_diff (const char* market_data_path, const char* hdf5_file_path) {
                         vector<l2agg::price_t> data_vec;
                         while (getline(ss, data, ',')) 
                             data_vec.push_back(atof(data.c_str()));
-                        
-                        // Start read from hdf5 
-                        ticker_dataset_id = H5Dopen(ticker_group_id, std::to_string(data_attrno + TOV_OFF_SET).c_str(), H5P_DEFAULT);
+
+                        // Before compare, set attr_name
+                        if (data_attrno + TOV_OFF_SET == dmfeild.Turnover) {
+                            attr_name = "Turnover";
+                            // Start read from hdf5 
+                            ticker_dataset_id = H5Dopen(ticker_group_id, std::to_string(data_attrno + TOV_OFF_SET).c_str(), H5P_DEFAULT);
+                        }
+                        else if ((data_attrno + BID_OFF_SET) >= dmfeild.BidPrice1 && (data_attrno + BID_OFF_SET) <= dmfeild.BidPrice10) {
+                            bid_or_ask = "Bid";
+                            bid_ask_no = std::to_string((data_attrno + BID_OFF_SET) - dmfeild.BidPrice1);
+                            attr_name = bid_or_ask + "Price" + bid_ask_no;
+                            // Start read from hdf5 
+                            ticker_dataset_id = H5Dopen(ticker_group_id, std::to_string(data_attrno + BID_OFF_SET).c_str(), H5P_DEFAULT);
+                        }
+                        else {
+                            bid_or_ask = "Ask";
+                            bid_ask_no = std::to_string((data_attrno + ASK_OFF_SET) - dmfeild.BidPrice1);
+                            attr_name = bid_or_ask + "Price" + bid_ask_no;
+                            ticker_dataset_id = H5Dopen(ticker_group_id, std::to_string(data_attrno + ASK_OFF_SET).c_str(), H5P_DEFAULT);
+                        }
                         ticker_dataspace_id = H5Dget_space(ticker_dataset_id);
                         datatype = H5Dget_type(ticker_dataset_id);
                         H5Sget_simple_extent_dims(ticker_dataspace_id, &dims, NULL);
@@ -169,18 +181,6 @@ void prepare_diff (const char* market_data_path, const char* hdf5_file_path) {
                         price_vec.resize(dims);
                         H5Dread(ticker_dataset_id, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, price_vec.data());
 
-                        // Before compare, set attr_name
-                        if (data_attrno + TOV_OFF_SET == dmfeild.Turnover) attr_name = "Turnover";
-                        else if ((data_attrno + BID_OFF_SET) >= dmfeild.BidPrice1 && (data_attrno + BID_OFF_SET) <= dmfeild.BidPrice10) {
-                            bid_or_ask = "Bid";
-                            bid_ask_no = std::to_string((data_attrno + BID_OFF_SET) - dmfeild.BidPrice1);
-                            attr_name = bid_or_ask + "Price" + bid_ask_no;
-                        }
-                        else {
-                            bid_or_ask = "Ask";
-                            bid_ask_no = std::to_string((data_attrno + BID_OFF_SET) - dmfeild.BidPrice1);
-                            attr_name = bid_or_ask + "Price" + bid_ask_no;
-                        }
                         // Use COMPARE on data_vec and price_vec
                         eliminate_wrong_attr (ticker_id, attr_name, data_vec, price_vec, time_index_vec);
 
@@ -189,35 +189,42 @@ void prepare_diff (const char* market_data_path, const char* hdf5_file_path) {
                             if (data_vec[repeat_index] != price_vec[repeat_index])
                                 isrepeat_correct_vec[repeat_index] = 0;
                         }
+                        H5Tclose(datatype);
+                        H5Sclose(ticker_dataspace_id);
+                        H5Dclose(ticker_dataset_id);
                     }
                     else if ((data_attrno + QTY_OFF_SET == dmfeild.Volume)
                     || ((data_attrno + BID_OFF_SET) >= dmfeild.BidVol1 && (data_attrno + BID_OFF_SET) <= dmfeild.BidVol10)
                     || ((data_attrno + ASK_OFF_SET) >= dmfeild.AskVol1 && (data_attrno + ASK_OFF_SET) < dmfeild.AskVol10)) {
+                        getchar();
                         vector<l2agg::volume_t> data_vec;
                         while (getline(ss, data, ',')) 
                             data_vec.push_back(atoi(data.c_str()));
 
                         // Start read from hdf5 
-                        ticker_dataset_id = H5Dopen(ticker_group_id, std::to_string(data_attrno + BID_OFF_SET).c_str(), H5P_DEFAULT);
+                        // Before compare, set attr_name
+                        if (data_attrno + QTY_OFF_SET == dmfeild.Volume) {
+                            attr_name = "Volume";
+                            ticker_dataset_id = H5Dopen(ticker_group_id, std::to_string(data_attrno + QTY_OFF_SET).c_str(), H5P_DEFAULT);
+                        }
+                        else if ((data_attrno + BID_OFF_SET) >= dmfeild.BidVol1 && (data_attrno + BID_OFF_SET) <= dmfeild.BidVol10) {
+                            bid_or_ask = "Bid";
+                            bid_ask_no = std::to_string((data_attrno + BID_OFF_SET) - dmfeild.BidVol1);
+                            attr_name = bid_or_ask + "Vol" + bid_ask_no;
+                            ticker_dataset_id = H5Dopen(ticker_group_id, std::to_string(data_attrno + BID_OFF_SET).c_str(), H5P_DEFAULT);
+                        }
+                        else {
+                            bid_or_ask = "Ask";
+                            bid_ask_no = std::to_string((data_attrno + ASK_OFF_SET) - dmfeild.BidVol1);
+                            attr_name = bid_or_ask + "Vol" + bid_ask_no;
+                            ticker_dataset_id = H5Dopen(ticker_group_id, std::to_string(data_attrno + ASK_OFF_SET).c_str(), H5P_DEFAULT);
+                        }
                         ticker_dataspace_id = H5Dget_space(ticker_dataset_id);
                         datatype = H5Dget_type(ticker_dataset_id);
                         H5Sget_simple_extent_dims(ticker_dataspace_id, &dims, NULL);
                         vector <l2agg::volume_t> volume_vec;
                         volume_vec.resize(dims);
                         H5Dread(ticker_dataset_id, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, volume_vec.data());
-
-                        // Before compare, set attr_name
-                        if (data_attrno + QTY_OFF_SET == dmfeild.Volume) attr_name = "Volume";
-                        else if ((data_attrno + BID_OFF_SET) >= dmfeild.BidVol1 && (data_attrno + BID_OFF_SET) <= dmfeild.BidVol10) {
-                            bid_or_ask = "Bid";
-                            bid_ask_no = std::to_string((data_attrno + BID_OFF_SET) - dmfeild.BidVol1);
-                            attr_name = bid_or_ask + "Vol" + bid_ask_no;
-                        }
-                        else {
-                            bid_or_ask = "Ask";
-                            bid_ask_no = std::to_string((data_attrno + BID_OFF_SET) - dmfeild.BidVol1);
-                            attr_name = bid_or_ask + "Vol" + bid_ask_no;
-                        }
                         // Use COMPARE on data_vec and volume_vec
                         eliminate_wrong_attr (ticker_id, attr_name, data_vec, volume_vec, time_index_vec);
 
@@ -226,6 +233,9 @@ void prepare_diff (const char* market_data_path, const char* hdf5_file_path) {
                             if (data_vec[repeat_index] != volume_vec[repeat_index])
                                 isrepeat_correct_vec[repeat_index] = 0;
                         }
+                        H5Tclose(datatype);
+                        H5Sclose(ticker_dataspace_id);
+                        H5Dclose(ticker_dataset_id);
                     }
                     // If is last attr
                     else if(data_attrno + ASK_OFF_SET == dmfeild.AskVol10){
@@ -251,6 +261,9 @@ void prepare_diff (const char* market_data_path, const char* hdf5_file_path) {
                             if (data_vec[repeat_index] != ask_volume10_vec[repeat_index])
                                 isrepeat_correct_vec[repeat_index] = 0;
                         }
+                        H5Tclose(datatype);
+                        H5Sclose(ticker_dataspace_id);
+                        H5Dclose(ticker_dataset_id);
 
                         // Use set to record data with correct repeat time
                         std::set <l2agg::timestamp_t> correct_repeat_s;
