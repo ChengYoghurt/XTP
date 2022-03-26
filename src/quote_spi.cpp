@@ -3,7 +3,6 @@
 #include <iostream>
 #include <stdio.h>
 #include <fstream>
-
 using namespace std;
 
 void MyQuoteSpi::OnError(XTPRI *error_info, bool is_last)
@@ -38,12 +37,38 @@ void MyQuoteSpi::OnUnSubMarketData(XTPST *ticker, XTPRI *error_info, bool is_las
 	// cout << "OnRspUnSubMarketData -----------" << endl;
 }
 
-void MyQuoteSpi::OnDepthMarketData(XTPMD *market_data, int64_t bid1_qty[], int32_t bid1_count, int32_t max_bid1_count, int64_t ask1_qty[], int32_t ask1_count, int32_t max_ask1_count)
+void MyQuoteSpi::OnDepthMarketData(XTPMD *market_data, int32_t bid1_qty[], int32_t bid1_count, int32_t max_bid1_count, int32_t ask1_qty[], int32_t ask1_count, int32_t max_ask1_count)
 {
-	vec_xtpmd.push_back(*market_data);
+	string ticker_info(market_data->ticker);
+	XTPDMET xtpdmet_single_data;
+	constexpr std::size_t k_max_depth_level = 10;
+
+	map_xtpdmet[ticker_info].vec_depthtime.emplace_back(market_data->data_time);
+	//map_xtpdmet[ticker_info].vec_status.emplace_back(market_data->ticker_status);
+	map_xtpdmet[ticker_info].vec_overall_price[0].emplace_back(market_data->pre_close_price);
+	map_xtpdmet[ticker_info].vec_overall_price[1].emplace_back(market_data->open_price);
+	map_xtpdmet[ticker_info].vec_overall_price[2].emplace_back(market_data->high_price);
+	map_xtpdmet[ticker_info].vec_overall_price[3].emplace_back(market_data->low_price);
+	map_xtpdmet[ticker_info].vec_overall_price[4].emplace_back(market_data->close_price);
+	for(std::size_t index = 0; index < k_max_depth_level; index++){
+		map_xtpdmet[ticker_info].vec_bidprice[index].emplace_back(market_data->bid[index]);
+	}
+	for(std::size_t index = 0; index < k_max_depth_level; index++){
+		map_xtpdmet[ticker_info].vec_bidvolume[index].emplace_back(market_data->bid_qty[index]);
+	}
+	for(std::size_t index = 0; index < k_max_depth_level; index++){
+		map_xtpdmet[ticker_info].vec_askprice[index].emplace_back(market_data->ask[index]);
+	}
+	for(std::size_t index = 0; index < k_max_depth_level; index++){
+		map_xtpdmet[ticker_info].vec_askvolume[index].emplace_back(market_data->ask_qty[index]);
+	}
+	map_xtpdmet[ticker_info].vec_trades.emplace_back(market_data->trades_count);
+	map_xtpdmet[ticker_info].vec_volume.emplace_back(market_data->qty);
+	map_xtpdmet[ticker_info].turnover.emplace_back(market_data->turnover);
 	time_t local_time = time(NULL);
 	tm *tm_local_time = localtime(&local_time);
-	vec_localtime.push_back(asctime(tm_local_time));
+
+	//map_xtpdmet[ticker_info].vec_localtime.emplace_back();
 }
 
 void MyQuoteSpi::OnSubOrderBook(XTPST *ticker, XTPRI *error_info, bool is_last)
@@ -160,11 +185,11 @@ bool MyQuoteSpi::IsErrorRspInfo(XTPRI *pRspInfo)
 		cout << "--->>> ErrorID=" << pRspInfo->error_id << ", ErrorMsg=" << pRspInfo->error_msg << endl;
 	return bResult;
 }
+ //TODO
+void MyQuoteSpi::print_vec_xtpdmet(const std::map<std::string, XTPDMET> map_xtpdmet, const string file_path) const
+{}
 
-void MyQuoteSpi::print_vec_xtpmd(std::vector <XTPMD> &vec_xtpmd, const char *file_path)
-{
-
-	char market_data_path[100] = {'\0'};
+/*	char market_data_path[100] = {'\0'};
 	sprintf(market_data_path, "%s/_market_data.csv", file_path);
 	mkdir_if_not_exist(file_path);
 	std::ofstream market_data_outfile;
@@ -241,7 +266,7 @@ void MyQuoteSpi::print_vec_xtpmd(std::vector <XTPMD> &vec_xtpmd, const char *fil
 
 	market_data_outfile.close();
 }
-
+*/
 void MyQuoteSpi::print_ticker_info(std::vector<XTPQSI> &vec_ticker_info, const char* query_ticker_path){
 	std::ofstream query_ticker_outfile;
 	// 每次print时已把旧文件删除，故用app

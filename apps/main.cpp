@@ -318,7 +318,7 @@ int main(int argc, char* argv[]){
         }
 
         //TEST HDF5
-        diff (vec_instruments_sh, "depth_market.h5");
+        
 
 		int quote_exchange = tdf_exchange_sh;
 
@@ -379,6 +379,8 @@ int main(int argc, char* argv[]){
     std::cerr << std::endl;
     p_logger->warn("Get SIGINT");
 
+    diff (vec_instruments_sh, "depth_market.h5", pquotespi);
+
     //=============================================================//
     //                    +. Save Stream Data                      //
     //=============================================================//
@@ -386,8 +388,8 @@ int main(int argc, char* argv[]){
     p_logger->info("dumping data to disk...");
 
     std::vector<XTPMD> vec_xtpmd;
-    vec_xtpmd = pquotespi->get_XTPMD();
-    pquotespi->print_vec_xtpmd(vec_xtpmd, all_stock_pool_file.c_str());
+    //vec_xtpmd = pquotespi->get_XTPMD();
+    //pquotespi->print_vec_xtpmd(vec_xtpmd, all_stock_pool_file.c_str());
 
     p_logger->info("Stop Market spi");
     p_logger->info("All Done!");
