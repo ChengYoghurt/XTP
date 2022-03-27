@@ -10,9 +10,11 @@ Test:
  path_linux: "/root/log/"
  path: "D:\\test\\"
  exchange_id_sh: 1
- exchange_id_sz: 0
+ exchange_id_sz: 2
+ query_tickers_path_sh: "tickers_sh.txt"
+ query_tickers_path_sz: "tickers_sz.txt"
  instrument_sh:
-   - "600601"
+  - "600601"
   - "600602"
   - "600651"
   - "600652"
