@@ -119,12 +119,12 @@ namespace wct {
     };
 
     struct WCOrderRequest {
-        order_id_t      client_order_id ;
+        order_id_t      client_order_id ;//自己生成的，要自己记下来，需要与回报的时候匹配（才能证明是我报的）
         instrument_id_t instrument      ;
-        market_t        market          ;
+        market_t        market          ;//sh or sz
         price_t         price           ;
         volume_t        volume          ;
-        side_t          side            ;
+        side_t          side            ;//委托方向
         price_type_t    price_type      ;
     };
 

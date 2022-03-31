@@ -121,7 +121,7 @@ namespace wct {
             , curr_uniq_id_(0)
         {}
 
-        OrderID create_single() {
+        OrderID create_single() { //创建没有母单的子单
             timestamp_t timestamp = timestamp_t::now();
             uint32_t uniq_id;
             {
@@ -133,7 +133,7 @@ namespace wct {
                  + static_cast<uint64_t>(timestamp ) *            1'0'000'000 
                  + static_cast<uint64_t>(uniq_id   );
         }
-        OrderID create_parent() {
+        OrderID create_parent() { //创建母单
             timestamp_t timestamp = timestamp_t::now();
             uint32_t uniq_id;
             {
@@ -148,6 +148,7 @@ namespace wct {
 
         }
 
+        // 创建母单的子单
         // throw if prev_child is not a valid child_id or parent_id
         // pass parent_id if first child
         OrderID create_child (OrderID const& prev_child, ChildFlag child_flag = ChildFlag::ChildOrder) {
