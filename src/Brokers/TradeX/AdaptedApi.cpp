@@ -264,7 +264,7 @@ namespace api     {
         else {
             string ticker = std::to_string(request.instrument);
             if (ticker[0] == '6') {
-                int ret = p_broker_api_->QueryPosition(ticker.c_str(), session_id_, get_request_id(), XTP_MKT_SH_A);
+                int ret = p_broker_api_->QueryPosition(ticker.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SH_A);
                 if (ret) {
                 unique_ptr<ApiText> error_info(new ApiText(p_broker_api->GetApiLastError()));
                 p_logger_->error("QueryPosition of sh market failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
@@ -272,7 +272,7 @@ namespace api     {
                 }
             }
             else if (ticker[0] == '0' || ticker[0] == '3') {
-                int ret = p_broker_api_->QueryPosition(ticker.c_str(), session_id_, get_request_id(), XTP_MKT_SZ_A);
+                int ret = p_broker_api_->QueryPosition(ticker.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SZ_A);
                 if (ret) {
                 unique_ptr<ApiText> error_info(new ApiText(p_broker_api->GetApiLastError()));
                 p_logger_->error("QueryPosition of sz market failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
