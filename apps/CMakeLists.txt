@@ -30,7 +30,7 @@ if ("main" IN_LIST target_apps)
     PUBLIC
         ${target_name}.cpp
         ${CMAKE_SOURCE_DIR}/src/quote_spi.cpp
-        ${CMAKE_SOURCE_DIR}/scr/H5diff.cpp
+        ${CMAKE_SOURCE_DIR}/src/H5diff.cpp
     )
     target_include_directories(
         ${target_name}

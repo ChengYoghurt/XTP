@@ -5,7 +5,7 @@
 */
 #pragma once
 
-#include "TradeX/AdaptedTypes.h"
+#include "AdaptedTypes.h"
 #include "TraderTypes.h"
 #include "WCApi.h"
 #include "spdlog/spdlog.h"

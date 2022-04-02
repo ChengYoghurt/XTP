@@ -58,7 +58,7 @@ namespace api     {
         p_spi_->on_disconnected(error_id_t::not_connected_to_server);
     }
 
-    void AdaptedSpi::OnOrderEvent(const ApiOrderReport *orderReport) {
+    void AdaptedSpi::OnOrderEvent(const ApiOrderReport *orderReport) {//quanshangfangfa
         if(orderReport->is_child_order) {
             return; // skip all child order
         }
@@ -224,7 +224,7 @@ namespace api     {
         single_order.algo_parameters = nullptr; // not use algorithms trading
 
         int ret = p_broker_api_->PlaceOrder(&single_order);
-        return error_id_t::success;
+        return error_id_t::success;//panduan
     }
 
     error_id_t AdaptedApi::cancel_order(WCOrderCancelRequest const& request) {
