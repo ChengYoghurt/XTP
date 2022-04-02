@@ -281,17 +281,17 @@ void MyQuoteSpi::print_vec_xtpdmet(const std::string &file_path) const
 	market_data_outfile.close();
 }
 
-void MyQuoteSpi::print_ticker_info(const int& print_type, const char* query_ticker_path) const{
+void MyQuoteSpi::print_ticker_info(XTP_EXCHANGE_TYPE exchange_id, string& query_ticker_path) const {
 	std::ofstream query_ticker_outfile;
 	// Old ticker file has been deleted
 	// So we can use 'app' to append new query results
 	query_ticker_outfile.open(query_ticker_path, std::ios::app);
 	
-	if(!print_type)
+	if(exchange_id == XTP_EXCHANGE_SZ)
 		for (auto ticker_info : ticker_sh) {
 			query_ticker_outfile << ticker_info.ticker << std::endl;
 		}
-	else
+	else if(exchange_id == XTP_EXCHANGE_SZ)
 		for (auto ticker_info : ticker_sz) {
 			query_ticker_outfile << ticker_info.ticker << std::endl;
 		}

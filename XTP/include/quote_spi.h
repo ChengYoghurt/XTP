@@ -7,6 +7,7 @@
 #include <ctime>
 #include <map>
 #include <Typedefs.h>
+#include <mutex>
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -17,6 +18,9 @@
 
 using namespace XTP::API;
 using instrument_id_t = std::string;
+
+extern std::timed_mutex mutex_sh;
+extern std::timed_mutex mutex_sz;
 
 struct XTPDepthMarketEveryTicker{
 	std::vector<uint32_t>	         vec_depthtime;
@@ -77,7 +81,7 @@ public:
 	virtual void OnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	virtual void OnUnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	virtual void print_vec_xtpdmet(const std::string &file_path) const;
-	void print_ticker_info(const int& print_type, const char* query_ticker_path) const;
+	virtual void print_ticker_info(XTP_EXCHANGE_TYPE exchange_id, string &query_ticker_path) const;
 
 private:
 	std::vector <XTPQSI> ticker_sh;
