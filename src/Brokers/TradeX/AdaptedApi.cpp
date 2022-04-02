@@ -167,39 +167,42 @@ namespace api     {
     }
     error_id_t AdaptedApi::register_spi(std::unique_ptr<WCSpi> p_spi) {
         p_spi_ = std::make_unique<AdaptedSpi>(std::move(p_spi));
+        // RegisterSpi return value is void
         p_broker_api_->RegisterSpi(p_spi_.get());
         return error_id_t::success;
     }
     std::string AdaptedApi::version() const noexcept {
-        return "0.0.0";
+        std::string version_no =  p_broker_api_->GetApiVersion();
+        return version_no;
     }
 
     ApiRequestID AdaptedApi::get_request_id() {
-        return 0;
+        return ++request_id_;
     }
 
     error_id_t AdaptedApi::login(WCLoginRequest const& request) {
-        ApiLoginRequest login_req;
-        std::memset(&login_req, 0, sizeof(login_req));
-        login_req.client_id = std::stoi(request.username);
-        std::strncpy(login_req.password  , request.password.c_str()     , sizeof(login_req.password  ));
-        std::string login_url = request.server_ip + ":" + std::to_string(request.server_port);
-        std::strncpy(login_req.login_url , login_url.c_str(), sizeof(login_req.login_url ));
-        std::strncpy(login_req.ip, 
-            request.agent_fingerprint.local_ip.c_str(), 
-            sizeof(login_req.ip));
-        std::strncpy(login_req.mac, 
-            request.agent_fingerprint.mac.c_str(), 
-            sizeof(login_req.mac));
-        std::strncpy(login_req.hard_drive, 
-            request.agent_fingerprint.disk.c_str(), 
-            sizeof(login_req.hard_drive));
-        int ret = p_broker_api_->Login(&login_req);
-        return error_id_t::success;
+        std::string ip              = request.server_ip; 
+        int port                    = request.server_port;
+        std::string user            = request.username;
+        std::string password        = request.password;
+        XTP_PROTOCOL_TYPE sock_type = XTP_PROTOCOL_TCP;
+        std::string local_ip        = request.agent_fingerprint.local_ip;
+
+        session_id_                 = p_broker_api_->Login(ip.c_str(), port, user.c_str(), password.c_str(), sock_type, local_ip.c_str());
+        if(session_id_ == 0) {
+            XTPRI *reason = p_broker_api_->GetApiLastError();
+            p_logger_->error("Login failed, error_id = {}, error_message = {}",reason->error_id, reason->error_msg);
+            return error_id_t::not_login;
+        }
+        else {
+            return error_id_t::success;
+        }
     }
+
     int AdaptedApi::get_trading_day() {
         return 0;
     }
+    
     error_id_t AdaptedApi::place_order(WCOrderRequest const& request) {
         ApiSingleOrder single_order;
         std::memset(&single_order, 0, sizeof(single_order));
@@ -235,24 +238,48 @@ namespace api     {
         int ret = p_broker_api_->CancelOrder(&cancel_order);
         return error_id_t::success;
     }
+
     error_id_t AdaptedApi::query_balance() {
-        ApiBalanceQueryRequest balance_request;
-        std::memset(&balance_request, 0, sizeof(balance_request));
-        balance_request.request_id = get_request_id();
-        balance_request.trade_unit = trade_unit_;
-        int ret = p_broker_api_->QueryBalance(&balance_request);
-        return error_id_t::success;
-    }
-    error_id_t AdaptedApi::query_position(WCPositionQueryRequest const& request) {
-        ApiPositionQueryRequest position_request;
-        std::memset(&position_request, 0, sizeof(position_request));
-        position_request.request_id = get_request_id();
-        position_request.trade_unit = trade_unit_;
-        if (request.query_all) {
-        } else {
-            std::snprintf(position_request.symbol, std::strlen(position_request.symbol), "%06d", request.instrument);
+
+        int ret = p_broker_api_->QueryAsset(session_id_, get_request_id());
+        if (ret) {
+            unique_ptr<ApiText> error_info(new ApiText(p_broker_api->GetApiLastError()));
+            p_logger_->error("QueryAsset failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+            return error_id_t::unknown;
         }
-        int ret = p_broker_api_->QueryPosition(&position_request);
+        else return error_id_t::success;
+    }
+
+    error_id_t AdaptedApi::query_position(WCPositionQueryRequest const& request) {
+        if (request.query_all) {
+            // Ticker being NULL means querying all
+            // QueryPos only use MARKET_TYPE when ticker isn't NULL
+            int ret = p_broker_api_->QueryPosition(NULL, session_id_, get_request_id());
+            if (ret) {
+                unique_ptr<ApiText> error_info(new ApiText(p_broker_api->GetApiLastError()));
+                p_logger_->error("QueryPosition of all tickers failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+                return error_id_t::unknown;
+            }
+        }
+        else {
+            string ticker = std::to_string(request.instrument);
+            if (ticker[0] == '6') {
+                int ret = p_broker_api_->QueryPosition(ticker.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SH_A);
+                if (ret) {
+                unique_ptr<ApiText> error_info(new ApiText(p_broker_api->GetApiLastError()));
+                p_logger_->error("QueryPosition of sh market failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+                return error_id_t::unknown;
+                }
+            }
+            else if (ticker[0] == '0' || ticker[0] == '3') {
+                int ret = p_broker_api_->QueryPosition(ticker.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SZ_A);
+                if (ret) {
+                unique_ptr<ApiText> error_info(new ApiText(p_broker_api->GetApiLastError()));
+                p_logger_->error("QueryPosition of sz market failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+                return error_id_t::unknown;
+                }
+            }
+        }
         return error_id_t::success;
     }
     error_id_t AdaptedApi::query_credit_balance() {

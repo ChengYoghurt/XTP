@@ -34,8 +34,10 @@
 
 
 
-
 std::atomic<bool> quit_flag = false;
+
+std::timed_mutex mutex_sh;
+std::timed_mutex mutex_sz;
 
 static void sig_int(int signo) {
     if (signo == SIGINT) {
@@ -133,7 +135,7 @@ int main(int argc, char* argv[]){
     uint32_t    count_threshold  ;
     uint32_t    count_duration   ;
 
-    bool use_yaml = false;
+    bool use_yaml = true;
 
     check_file_exist(config_file);
     YAML::Node config = YAML::LoadFile(config_file);
@@ -273,25 +275,34 @@ int main(int argc, char* argv[]){
 		//登录行情服务器成功后，订阅行情
 		std::remove(query_path_sh.c_str());
         std::remove(query_path_sz.c_str());
+        mutex_sh.lock();
         pquoteapi->QueryAllTickers(XTP_EXCHANGE_SH);
         std::cout << "Querying_SH" << std::endl;
+        mutex_sz.lock();
         pquoteapi->QueryAllTickers(XTP_EXCHANGE_SZ);
         std::cout << "Querying_SZ" << std::endl;
         
         //std::cout << "Current working directory: " << std::filesystem::current_path() << '\n'; 
         //Wait till all queries done
-        sleep(5);
+        //sleep(5);
         
-        //Print query tickers to .txt
-        const int print_sh = 0;
-        const int print_sz = 1;
-        pquotespi->print_ticker_info(print_sh, query_path_sh.c_str());
-        pquotespi->print_ticker_info(print_sz, query_path_sz.c_str());
+        //Wait and print query tickers to .txt        
+        if (!mutex_sh.try_lock_for(std::chrono::microseconds(5000000)) 
+        || !mutex_sz.try_lock_for(std::chrono::microseconds(5000000))) {
+            p_logger->info("QueryAllTickers for too long, print tickers failed.");
+        }
+        else {
+            pquotespi->print_ticker_info(XTP_EXCHANGE_SH, query_path_sh);
+            pquotespi->print_ticker_info(XTP_EXCHANGE_SZ, query_path_sz);
+            mutex_sh.unlock();
+            mutex_sz.unlock();
+        }
+        
 
         //Store tickers to vec
         if (!use_yaml) {
-            std::ifstream query_ticker_sh_infile(query_path_sh.c_str());
-            std::ifstream query_ticker_sz_infile(query_path_sz.c_str());
+            std::ifstream query_ticker_sh_infile(query_path_sh);
+            std::ifstream query_ticker_sz_infile(query_path_sz);
             bool has_ticker_input = false;
             if (query_ticker_sh_infile) {
                 // std::cout << "SH FINE" << std::endl;
@@ -384,7 +395,7 @@ int main(int argc, char* argv[]){
     p_logger->warn("Get SIGINT");
     
     //TEST HDF5
-    prepare_diff("depth_market_data.csv", "depth_market.h5");
+    //prepare_diff("depth_market_data.csv", "depth_market.h5");
     //=============================================================//
     //                    +. Save Stream Data                      //
     //=============================================================//

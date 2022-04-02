@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AdaptedTypes.h"
 #include "TraderTypes.h"
 #include "WCApi.h"
 #include "spdlog/spdlog.h"
@@ -47,6 +48,8 @@ protected:
 protected:
     BrokerApi * p_trader_api_;
     uint32_t trade_id_;
+    size_t request_id_ = 0;
+    uint64_t session_id_;
     ApiTradeUnitID trade_unit_;
     std::unique_ptr<AdaptedSpi> p_spi_;
     std::shared_ptr<spdlog::logger> p_logger_;
