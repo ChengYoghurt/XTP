@@ -56,8 +56,16 @@ namespace api     {
         p_spi_->on_query_balance(balance_rsp);
     }
 
+    error_id_t AdaptedApi::register_spi(std::unique_ptr<WCSpi> p_spi) {
+        p_spi_ = std::make_unique<AdaptedSpi>(std::move(p_spi));
+        // RegisterSpi return value is void
+        p_broker_api_->RegisterSpi(p_spi_.get());
+        return error_id_t::success;
+    }
+    
     std::string AdaptedApi::version() const noexcept {
-        return "0.0.0";
+        std::string version_no =  p_broker_api_->GetApiVersion();
+        return version_no;
     }
 
     error_id_t AdaptedApi::login(WCLoginRequest const& request) {
