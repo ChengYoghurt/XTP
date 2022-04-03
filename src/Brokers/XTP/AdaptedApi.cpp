@@ -76,13 +76,55 @@ namespace api     {
         }
         else {
             return error_id_t::success;
-            //session_id表明此资金账号登录是否成功，“0”表示登录失败，可以调用GetApiLastError()来获取错误代码，非“0”表示登录成功，此时需要记录下这个返回值session_id，与登录的资金账户对应
         }
     }
 
     ApiRequestID AdaptedApi::get_request_id() {
-        return 0;
+        return ++request_id_;
+    }
+    
+    error_id_t AdaptedApi::query_balance() {
+
+        int ret = p_broker_api_->QueryAsset(session_id_, get_request_id());
+        if (ret) {
+            unique_ptr<ApiText> error_info(new ApiText(p_broker_api->GetApiLastError()));
+            p_logger_->error("QueryAsset failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+            return error_id_t::unknown;
+        }
+        else return error_id_t::success;
     }
 
+    error_id_t AdaptedApi::query_position(WCPositionQueryRequest const& request) {
+        if (request.query_all) {
+            // Ticker being NULL means querying all
+            // QueryPos only use MARKET_TYPE when ticker isn't NULL
+            int ret = p_broker_api_->QueryPosition(NULL, session_id_, get_request_id());
+            if (ret) {
+                unique_ptr<ApiText> error_info(new ApiText(p_broker_api->GetApiLastError()));
+                p_logger_->error("QueryPosition of all tickers failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+                return error_id_t::unknown;
+            }
+        }
+        else {
+            string ticker = std::to_string(request.instrument);
+            if (ticker[0] == '6') {
+                int ret = p_broker_api_->QueryPosition(ticker.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SH_A);
+                if (ret) {
+                unique_ptr<ApiText> error_info(new ApiText(p_broker_api->GetApiLastError()));
+                p_logger_->error("QueryPosition of sh market failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+                return error_id_t::unknown;
+                }
+            }
+            else if (ticker[0] == '0' || ticker[0] == '3') {
+                int ret = p_broker_api_->QueryPosition(ticker.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SZ_A);
+                if (ret) {
+                unique_ptr<ApiText> error_info(new ApiText(p_broker_api->GetApiLastError()));
+                p_logger_->error("QueryPosition of sz market failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+                return error_id_t::unknown;
+                }
+            }
+        }
+        return error_id_t::success;
+    }
 } /* namespace api     */
 } /* namespace wct     */

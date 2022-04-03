@@ -6,7 +6,7 @@ namespace wct     {
 namespace api     {
 
 using BrokerApi                      = XTP::API::TraderApi                     ;
-using BrokerSpi                      = XTP::API::TraderSpi                    ;
+using BrokerSpi                      = XTP::API::TraderSpi                     ;
 
 // Export Spi Types
 using ApiBalance                     = XTPQueryAssetRsp                                  ;   //asset include balance   
@@ -14,30 +14,30 @@ using ApiBalance                     = XTPQueryAssetRsp                         
 //using ApiCreditAsset                 = com::tradex::api::TRXCreditAsset                ;
 //using ApiFinancingLiability          = com::tradex::api::TRXFinancingLiability         ;
 //using ApiLoginResponse               = com::tradex::api::TRXLoginResponse              ;
-using ApiOrderCancelReject           = XTPOrderCancelInfo         ;
-using ApiOrderReport                 = XTPOrderInfo               ;
-using ApiOrderStatus                 = XTP_ORDER_STATUS_TYPE                ;
-using ApiPosition                    = XTPQueryStkPositionRsp                ;   ;
+using ApiOrderCancelReject           = XTPOrderCancelInfo                      ;
+using ApiOrderReport                 = XTPOrderInfo                            ;
+using ApiOrderStatus                 = XTP_ORDER_STATUS_TYPE                   ;
+using ApiPosition                    = XTPQueryStkPositionRsp                  ;
 //using ApiSecurityLiability           = com::tradex::api::TRXSecurityLiability          ;
 //using ApiServerType                  = com::tradex::api::TRXServerType                 ;
 //using ApiSide                        = com::tradex::api::TRXSide                       ;
-using ApiTradeReport                 = XTPTradeReport                ;
+using ApiTradeReport                 = XTPTradeReport                          ;
 //using ApiTradeUnitConnStatusNotice   = com::tradex::api::TRXTradeUnitConnStatusNotice  ;
-using ApiText                        = XTPRI                        ;
+using ApiText                        = XTPRI                                   ;
 //using ApiQureryTradeReport           = XTPQueryTradeRsp;
 //using ApiQureryOrderReport           = XTPOrderInfoEx 
 // Export Api Types
 
 //using ApiTradeUnitID                 = com::tradex::api::trade_unit_t                  ;
-using ApiRequestID                   = int                 ;
-using ApiPriceType                   = XTP_PRICE_TYPE                  ;
-using ApiSide                        = XTP_SIDE_TYPE                       ;
-using ApiMarket                      = XTP_MARKET_TYPE                     ;
-using Apiexchange                    = XTP_EXCHANGE_TYPE                   ;
+using ApiRequestID                   = int                                     ;
+using ApiPriceType                   = XTP_PRICE_TYPE                          ;
+using ApiSide                        = XTP_SIDE_TYPE                           ;
+using ApiMarket                      = XTP_MARKET_TYPE                         ;
+using Apiexchange                    = XTP_EXCHANGE_TYPE                       ;
 //using ApiLoginRequest                = com::tradex::api::TRXLoginRequest               ;
 //using ApiAlgoParameters              = com::tradex::api::TRXAlgoParameters             ;
 
-using ApiSingleOrder                 = XTPOrderInsertInfo                ;
+using ApiSingleOrder                 = XTPOrderInsertInfo                      ;
 /*
 using ApiBasketOrder                 = com::tradex::api::TRXBasketOrder                ;
 using ApiBasketLeg                   = com::tradex::api::TRXBasketLeg                  ;
