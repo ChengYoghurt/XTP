@@ -11,6 +11,53 @@ namespace api     {
         p_spi_->on_disconnected(error_id_t::not_connected_to_server);
     }
 
+    void OnOrderEvent(ApiOrderReport *order_info, ApiText error_info, ApiTradeUnitID session_id) {
+       /* if(order_info->is_child_order) {
+            return; // skip all child order //?
+        }*/
+        if(!OrderID(order_info->order_client_id).is_from_trader(trade_id_)) {
+            return;
+        }
+        WCOrderResponse order_rsp;
+        std::memset(&order_rsp, 0, sizeof(order_rsp));
+        order_rsp.client_order_id  = order_info->order_xtp_id;
+        order_rsp.instrument       = std::atoi(order_info->ticker);
+        order_rsp.volume           = order_info->quantity;
+        order_rsp.price            = order_info->price;
+        order_rsp.traded           = order_info->qty_traded;
+        order_rsp.average_price    = order_info->trade_amount;//no average but has total
+        order_rsp.order_status     = simplify_status(order_info->order_status);
+        order_rsp.error_id         = error_id_t::unknown;
+        order_rsp.transaction_time = order_info->update_time % 1'000000'000;  // drop YYYYMMDD and only keep HHMMSSsss
+        order_rsp.host_time        = timestamp_t::now();
+        p_spi_->on_order_event(order_rsp);
+    }
+
+    void AdaptedSpi::OnTradeEvent(ApiTradeReport *trade_info, ApiTradeUnitID session_id) {
+        if(!OrderID(trade_info->order_client_id).is_from_trader(trade_id_)) {
+            return;
+        }
+        WCTradeResponse trade_rsp;
+        std::memset(&trade_rsp, 0, sizeof(trade_rsp));
+        trade_rsp.client_order_id  = trade_info->order_xtp_id;
+        trade_rsp.instrument       = std::atoi(trade_info->ticker);
+        trade_rsp.trade_volume     = trade_info->trade_quantity;
+        trade_rsp.trade_price      = trade_info->trade_price;
+        trade_rsp.transaction_time = trade_info->trade_time % 1'000000'000;
+        trade_rsp.host_time        = timestamp_t::now();
+        p_spi_->on_trade_event(trade_rsp);
+    }
+
+    void AdaptedSpi::OnCancelOrderError(ApiOrderCancelReject *cancel_info, ApiText *error_info, ApiTradeUnitID session_id) {
+      /*  if(!OrderID(cancel_info->client_order_id).is_from_trader(trade_id_)) {
+            return;
+        }*///no such
+        WCCancelRejectedResponse order_rsp;
+        order_rsp.client_order_id  = cancel_info->order_xtp_id;
+        order_rsp.error_id         = error_id_t::unknown;
+        p_spi_->on_cancel_rejected(std::move(order_rsp));
+    }
+
     void AdaptedSpi::OnQueryPosition(ApiPosition *position, ApiText *error_info, ApiRequestID request_id, bool is_last, uint64_t session_id) {
         WCPositionResponse pos_rsp;
         pos_rsp.instrument       = std::atoi(position->ticker)  ;
@@ -90,9 +137,46 @@ namespace api     {
     ApiRequestID AdaptedApi::get_request_id() {
         return ++request_id_;
     }
-    
-    error_id_t AdaptedApi::query_balance() {
 
+    int AdaptedApi::get_trading_day() {
+        std::string trading_day_str = p_broker_api_->GetTradingDay();
+        return std::stoi(trading_day_str);
+    }
+
+    error_id_t AdaptedApi::place_order(WCOrderRequest const& request) {
+        ApiSingleOrder single_order;
+        std::memset(&single_order, 0, sizeof(single_order));
+        //single_order.trade_unit = trade_unit_;
+        single_order.order_client_id = request.client_order_id;
+        std::snprintf(single_order.ticker, sizeof(single_order.ticker), "%06d", request.instrument);
+        switch (get_belonged_market(request.instrument)) {
+            case market_t::sh: 
+            case market_t::shsecond: 
+                single_order.market = ApiMarket::XTP_MKT_SH_A; 
+                break;
+            case market_t::sz: 
+            case market_t::szsecond: 
+                single_order.market = ApiMarket::XTP_MKT_SZ_A; 
+                break;
+            default: single_order.market = ApiMarket::XTP_MKT_UNKNOWN; break;
+        }
+        single_order.price = request.price;
+        single_order.quantity = request.volume;
+        single_order.side = (request.side == side_t::buy) ? ApiSide::XTP_SIDE_BUY : ApiSide::XTP_SIDE_SELL;
+        single_order.price_type = ApiPriceType::XTP_PRICE_LIMIT;
+        single_order.business_type = Apibusiness::XTP_BUSINESS_TYPE_CASH; 
+     // single_order.algo_parameters = nullptr; // not use algorithms trading
+
+        int ret = p_broker_api_->InsertOrder(&single_order,trade_unit_);
+        return error_id_t::success;
+    }
+
+    error_id_t AdaptedApi::cancel_order(WCOrderCancelRequest const& request) {
+        int ret = p_broker_api_->CancelOrder(request.client_order_id,trade_unit_);
+        return error_id_t::success;
+    }
+
+    error_id_t AdaptedApi::query_balance() {
         int ret = p_broker_api_->QueryAsset(session_id_, get_request_id());
         if (ret) {
             unique_ptr<ApiText> error_info(new ApiText(p_broker_api->GetApiLastError()));
