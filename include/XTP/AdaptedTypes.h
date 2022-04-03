@@ -9,7 +9,7 @@ using BrokerApi                      = XTP::API::TraderApi                     ;
 using BrokerSpi                      = XTP::API::TraderSpi                     ;
 
 // Export Spi Types
-using ApiBalance                     = XTPQueryAssetRsp                                  ;   //asset include balance   
+using ApiBalance                     = XTPQueryAssetRsp                        ; //asset include balance   
 //using ApiBorrowingSecurity           = com::tradex::api::TRXBorrowingSecurity          ;
 //using ApiCreditAsset                 = com::tradex::api::TRXCreditAsset                ;
 //using ApiFinancingLiability          = com::tradex::api::TRXFinancingLiability         ;
