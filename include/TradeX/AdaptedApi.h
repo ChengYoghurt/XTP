@@ -1,9 +1,6 @@
 #pragma once
 
-<<<<<<< HEAD
 #include "AdaptedTypes.h"
-=======
->>>>>>> 4246fa26952f07f45407b3a5fae20d51aada285f
 #include "TraderTypes.h"
 #include "WCApi.h"
 #include "spdlog/spdlog.h"
