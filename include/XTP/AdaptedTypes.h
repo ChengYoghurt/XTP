@@ -34,10 +34,12 @@ using ApiPriceType                   = XTP_PRICE_TYPE                          ;
 using ApiSide                        = XTP_SIDE_TYPE                           ;
 using ApiMarket                      = XTP_MARKET_TYPE                         ;
 using Apiexchange                    = XTP_EXCHANGE_TYPE                       ;
+using ApiBusiness                    = XTP_BUSINESS_TYPE                       ;
 //using ApiLoginRequest                = com::tradex::api::TRXLoginRequest               ;
 //using ApiAlgoParameters              = com::tradex::api::TRXAlgoParameters             ;
 
 using ApiSingleOrder                 = XTPOrderInsertInfo                      ;
+
 /*
 using ApiBasketOrder                 = com::tradex::api::TRXBasketOrder                ;
 using ApiBasketLeg                   = com::tradex::api::TRXBasketLeg                  ;
