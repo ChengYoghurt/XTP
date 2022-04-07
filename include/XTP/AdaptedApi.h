@@ -38,9 +38,17 @@ public:
     AdaptedApi() ;
     virtual ~AdaptedApi() ;
     virtual std::string version() const noexcept ;
-    
-    
-    virtual error_id_t  login(WCLoginRequest const& request) ;
+    virtual error_id_t login(WCLoginRequest const& request) ;
+    int get_trading_day() ;
+    ApiRequestID get_request_id() ;
+    error_id_t register_spi(std::unique_ptr<WCSpi> p_spi) ;
+    error_id_t place_order(WCOrderRequest const& request) ;
+    error_id_t cancel_order(WCOrderCancelRequest const& request) ;
+    error_id_t query_balance() ;
+    error_id_t query_position(WCPositionQueryRequest const& request) ;
+    error_id_t query_credit_balance() ;
+    error_id_t place_basket_order(WCBasketOrderRequest const& request) ;
+    error_id_t cancel_basket_order(WCBasketOrderCancelRequest const& request) ;
     
 protected:
     ApiRequestID get_request_id();
