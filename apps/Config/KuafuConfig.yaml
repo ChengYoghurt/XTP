@@ -5,6 +5,11 @@ TDFConfig: Config/TdfHc.yaml
 TDFAccount: Test
 TDFReplayFromStart: true
 
+# Trade Config
+TradeConfig: Config/XTPTradec.yaml
+TradeAccount: Test
+TradeReplayFromStart: true
+
 # LocalMarket Config
 ReplayLocalMarket: false
 LocalMarketLevelII: Data/LevelII

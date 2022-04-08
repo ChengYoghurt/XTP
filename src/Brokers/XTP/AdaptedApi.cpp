@@ -182,7 +182,7 @@ namespace api     {
         int ret = p_broker_api_->CancelOrder(request.client_order_id,session_id_);
         return error_id_t::success;
     }
-/*
+
     error_id_t AdaptedApi::query_balance() {
         int ret = p_broker_api_->QueryAsset(session_id_, get_request_id());
         if (ret) {
@@ -192,7 +192,7 @@ namespace api     {
         }
         else return error_id_t::success;
     }
-*/
+
     error_id_t AdaptedApi::query_position(WCPositionQueryRequest const& request) {
         if (request.query_all) {
             // Ticker being NULL means querying all
