@@ -247,8 +247,6 @@ namespace l2agg {
         constexpr static field_index_t HostTime            = 56;
     };
 
-    struct DepthMarketField dmfeild;
-
     struct StreamFlags {
         constexpr static char BuyTransFlag    = 'B';
         constexpr static char SellTransFlag   = 'S';

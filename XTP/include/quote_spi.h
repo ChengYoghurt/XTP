@@ -6,6 +6,9 @@
 #include <vector>
 #include <ctime>
 #include <map>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -36,6 +39,8 @@ typedef struct XTPDepthMarketEveryTicker{
 	std::vector<double>      vec_LowLimit;
 }XTPDMET;
 
+extern std::timed_mutex mutex_sh;
+extern std::timed_mutex mutex_sz;
 
 class MyQuoteSpi : public QuoteSpi
 {
@@ -80,10 +85,14 @@ public:
 	virtual void OnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	virtual void OnUnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	virtual void print_vec_xtpdmet(const std::map<std::string, XTPDMET> map_xtpdmet, const std::string file_path) const;
-	virtual void print_ticker_info(const int& print_type, const char* query_ticker_path) const;
+	virtual void print_ticker_info(XTP_EXCHANGE_TYPE exchange_id, const std::string query_ticker_path) const;
 	const std::map<std::string, XTPDMET>&get_xtpdmet(){
 		return map_xtpdmet;
 	}
+	std::condition_variable cv_last;
+	bool processed_sh;
+	bool processed_sz;
+
 private:
 	std::vector <XTPQSI> ticker_sh;
 	std::vector <XTPQSI> ticker_sz;
