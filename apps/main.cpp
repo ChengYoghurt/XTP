@@ -200,7 +200,7 @@ int main(int argc,char* argv[]) {
     }
 
     delete ptradeapi;
-    ptradeapi = NULL;
+    ptradeapi = nullptr;
 
 /*
     while(quit_flag == 0) {
