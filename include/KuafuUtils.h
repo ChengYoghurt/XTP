@@ -16,7 +16,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-
+#include "TraderTypeDefs.h"
 
 inline std::string get_today_str() {
     auto t = std::time(nullptr);
@@ -60,4 +60,33 @@ inline void check_file_exist(std::string const& name) {
     if(!is_exist) {
         throw std::invalid_argument("File " + name + " does not exist");
     }
+}
+
+using namespace kf;
+inline market_t get_belonged_market(instrument_id_t instrument) { 
+    int leading_two_digits = instrument / 10'000;
+    market_t market;
+    switch (leading_two_digits)
+    {
+    case 0:
+        market = market_t::sz; break;
+    case 30:
+        market = market_t::szsecond; break;
+    case 60:
+        market = market_t::sh; break;
+    case 68:
+        market = market_t::shsecond; break;
+    case 11:
+        market = market_t::sh; break;
+    case 12:
+        market = market_t::sz; break;
+    case 83:
+    case 87:
+    case 88:
+    case 43:
+        market = market_t::bj; break;
+    default:
+        throw std::runtime_error("No belonged market, maybe invalid instrument: " + std::to_string(instrument));
+    }
+    return market;
 }
