@@ -8,7 +8,7 @@
 #include "KuafuVersion.h"
 #include "KuafuUtils.h"
 #include "LogConfig.h"
-#include "TypeDefs.h"
+#include "TradeTypeDefs.h"
 #include "YAMLGetField.h"
 #include "xtp_quote_api.h"
 #include "quote_spi.h"
@@ -63,7 +63,7 @@ int main(int argc, char* argv[]){
 
     std::string levelII_folder;
     std::string config_file {"Config/KuafuConfig.yaml"};
-    std::string today_str{ get_today_str() };
+    std::string today_str{ kf::get_today_str() };
     int opt;
     while((opt = getopt(argc, argv, "f:d:h")) != -1) {
         switch(opt) {
@@ -134,7 +134,7 @@ int main(int argc, char* argv[]){
 
     bool use_yaml = true;
 
-    check_file_exist(config_file);
+    kf::check_file_exist(config_file);
     YAML::Node config = YAML::LoadFile(config_file);
 
     YAML_GET_FIELD(replay_local_market, config, ReplayLocalMarket);
@@ -145,7 +145,7 @@ int main(int argc, char* argv[]){
         YAML_GET_FIELD(replay_stock_list_file, config, ReplayStockList   );
 
         if(replay_stock_list_file != "all" && replay_stock_list_file != "All" && !replay_stock_list_file.empty()) {
-            check_file_exist(replay_stock_list_file);
+            kf::check_file_exist(replay_stock_list_file);
         }
     } else {
         // TDF Config
@@ -154,7 +154,7 @@ int main(int argc, char* argv[]){
         YAML_GET_FIELD(tdf_replay_from_start, config, TDFReplayFromStart);
 
         // config TDF account
-        check_file_exist(tdf_config_file);
+        kf::check_file_exist(tdf_config_file);
         YAML::Node tdf_config     = YAML::LoadFile(tdf_config_file);
         YAML::Node tdf_account    = tdf_config[tdf_account_name];
         if(!tdf_account) {
@@ -202,7 +202,7 @@ int main(int argc, char* argv[]){
     std::string calendar_file          ; YAML_GET_FIELD(calendar_file          , config, Calendar        );
     std::string all_stock_pool_file    ; YAML_GET_FIELD(all_stock_pool_file    , config, StockUniverse   );
 
-    check_file_exist(log_config_file);
+    kf::check_file_exist(log_config_file);
     config_log(log_config_file);
     auto p_logger = spdlog::get("main");
 
@@ -254,22 +254,20 @@ int main(int argc, char* argv[]){
     //                      +. Data Segment 
     //=============================================================//
 
-    //初始化行情api
+    // Initiate quote api
 	XTP::API::QuoteApi* pquoteapi = XTP::API::QuoteApi::CreateQuoteApi(client_id, filepath.c_str(), XTP_LOG_LEVEL_DEBUG);//log日志级别可以调整
     MyQuoteSpi* pquotespi = new MyQuoteSpi();
 	pquoteapi->RegisterSpi(pquotespi);
-	//设定行情服务器超时时间，单位为秒
-	pquoteapi->SetHeartBeatInterval(heat_beat_interval); //此为1.1.16新增接口
-	//设定行情本地缓存大小，单位为MB
-	pquoteapi->SetUDPBufferSize(quote_buffer_size);//此为1.1.16新增接口
+	// Set timeout (second)
+	pquoteapi->SetHeartBeatInterval(heat_beat_interval);
+	// Set local quote cache size (MB)
+	pquoteapi->SetUDPBufferSize(quote_buffer_size);
 
 	int login_result_quote = -1;
-	//登录行情服务器,自1.1.16开始，行情服务器支持UDP连接，推荐使用UDP
 	login_result_quote = pquoteapi->Login(tdf_server_ip.c_str(), tdf_server_port, tdf_username.c_str(), tdf_password.c_str(), (XTP_PROTOCOL_TYPE)quote_protocol); 
 	if (login_result_quote == 0)
 	{
         std::cout << "--------------Login successfully----------------" << std::endl;
-		//登录行情服务器成功后，订阅行情
         std::mutex mutex;
         pquotespi->processed_sh = false;
 	    pquotespi->processed_sz = false;
@@ -336,7 +334,7 @@ int main(int argc, char* argv[]){
 
 		int quote_exchange = tdf_exchange_sh;
 
-		//从配置文件中读取需要订阅的股票
+		// Read from yaml
 		char* *allInstruments = new char*[instrument_count_sh];
 		for (int i = 0; i < instrument_count_sh; i++) {
 			allInstruments[i] = new char[7];
@@ -344,7 +342,6 @@ int main(int argc, char* argv[]){
 			strcpy(allInstruments[i], instrument.c_str());
 		}
 
-        //开始订阅,注意公网测试环境仅支持TCP方式，如果使用UDP方式会没有行情数据，实盘大多数使用UDP连接
 		pquoteapi->SubscribeMarketData(allInstruments, instrument_count_sh, (XTP_EXCHANGE_TYPE)quote_exchange);
 		pquoteapi->SubscribeTickByTick(allInstruments, instrument_count_sh, (XTP_EXCHANGE_TYPE)quote_exchange);
 
@@ -400,11 +397,7 @@ int main(int argc, char* argv[]){
     //=============================================================//
 
     p_logger->info("dumping data to disk...");
-
-    std::vector<XTPMD> vec_xtpmd;
-    //vec_xtpmd = pquotespi->get_XTPMD();
-    //pquotespi->print_vec_xtpmd(vec_xtpmd, all_stock_pool_file.c_str());
-
+    pquotespi->print_vec_xtpdmet(all_stock_pool_file.c_str());
     p_logger->info("Stop Market spi");
     p_logger->info("All Done!");
 

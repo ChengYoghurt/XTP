@@ -53,7 +53,7 @@ void config_log(const std::string& config_file) {
         log_file += ".log";
 
         // create log_dir if not exist
-        mkdir_if_not_exist(default_log_dir);
+        kf::mkdir_if_not_exist(default_log_dir);
 
         std::vector<spdlog::sink_ptr> sinks;
         auto sink_table = config["sinks"].as< std::vector<std::string> >();

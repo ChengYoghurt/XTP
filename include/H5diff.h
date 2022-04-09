@@ -10,8 +10,7 @@
 
 #include "hdf5.h"
 #include "quote_spi.h"
-#include "Typedefs.h"
-//FIX: have defined a struct in .h, may cause multipul defination
+#include "QuoteTypeDefs.h"
 
 using std::cout;
 using std::endl;
