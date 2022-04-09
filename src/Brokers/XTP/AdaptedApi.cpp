@@ -74,22 +74,7 @@ namespace api     {
         }
         p_spi_->on_query_position(pos_rsp);
     }
-/*
-    void AdaptedSpi::OnQueryBalance(const ApiBalance *balance, const ApiText error_message, const ApiRequestID request_id, const bool is_last, const bool is_success) {
-        WCBalanceResponse balance_rsp;
-        balance_rsp.initial_balance   = balance->initial_balance   ;
-        balance_rsp.initial_balance   = balance->initial_balance   ;
-        balance_rsp.available_balance = balance->available_balance ;
-        balance_rsp.market_value      = balance->market_value      ;
-        balance_rsp.total_asset       = balance->total_asset       ;
-        if((balance == nullptr) || (is_success == false)) {
-            balance_rsp.error_id = error_id_t::unknown;
-        } else {
-            balance_rsp.error_id = error_id_t::success;
-        }
-        p_spi_->on_query_balance(balance_rsp);
-    }
-*/
+
     void AdaptedSpi::OnQueryAsset(ApiBalance *asset, ApiText *error_info, ApiRequestID request_id, bool is_last, uint64_t session_id) {
         WCBalanceResponse balance_rsp;
         balance_rsp.initial_balance   = 0                       ;
@@ -104,6 +89,17 @@ namespace api     {
             pos_rsp.error_id = error_id_t::unknown;
         }
         p_spi_->on_query_balance(balance_rsp);
+    }
+
+    AdaptedApi::AdaptedApi() 
+        :p_logger_(spdlog::get("AdaptedApi"))
+    {
+        p_broker_api_ = BrokerApi::CreateTraderApi(".")//////////////////////
+        
+    }
+
+    AdaptedApi::~AdaptedApi() {
+        p_broker_api_->Release();
     }
 
     error_id_t AdaptedApi::register_spi(std::unique_ptr<WCSpi> p_spi) {
