@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "TypeDefs.h"
+#include "QuoteTypeDefs.h"
 
 #include <cstdlib>
 #include <ctime>
