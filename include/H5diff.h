@@ -10,7 +10,7 @@
 
 #include "hdf5.h"
 #include "quote_spi.h"
-#include "Typedefs.h"
+#include "TraderTypeDefs.h"
 //FIX: have defined a struct in .h, may cause multipul defination
 
 using std::cout;

@@ -98,23 +98,27 @@ void MyQuoteSpi::OnQueryAllTickers(XTPQSI *ticker_info, XTPRI *error_info, bool 
 	// cout << "OnQueryAllTickers -----------" << endl;
 
 	if (ticker_info) {
-		if (ticker_info->exchange_id == XTP_EXCHANGE_SH) {
-			// If starts with ‘6’, sh
-			if (ticker_info->ticker[0] == '6')
-				ticker_sh.push_back(*ticker_info);
+		kf::market_t query_market = kf::get_belonged_market(atoi(ticker_info->ticker));
+		
+		// If market type sh | shsecond
+		if (query_market == kf::market_t::sh || query_market == kf::market_t::shsecond) 
+			ticker_sh.push_back(ticker_info->ticker);
 
-			// After receiving last, print to ticker ids to .txt
-			if (is_last) {
+		// If market type sz | szsecond
+		if (query_market == kf::market_t::sz || query_market == kf::market_t::szsecond)
+			ticker_sz.push_back(ticker_info->ticker);
+		
+		// After receiving last, print ticker ids to .txt
+		if (is_last) {
+			if (ticker_info->exchange_id == XTP_EXCHANGE_SH) {
+				processed_sh = true;
 				std::cout << "I'M LAST_SH_TICKER" << std::endl;
+				cv_last.notify_one();
 			}
-		} 
-		else if (ticker_info->exchange_id == XTP_EXCHANGE_SZ) {
-			// If starts with ‘0|3’, sz
-			if (ticker_info->ticker[0] == '0' || ticker_info->ticker[0] == '3') 
-				ticker_sz.push_back(*ticker_info);
-			
-			if (is_last) {
+			else if (ticker_info->exchange_id == XTP_EXCHANGE_SZ) {
+				processed_sz = true;
 				std::cout << "I'M LAST_SZ_TICKER" << std::endl;
+				cv_last.notify_one();
 			}
 		}
 	}
@@ -183,12 +187,13 @@ bool MyQuoteSpi::IsErrorRspInfo(XTPRI *pRspInfo)
 		cout << "--->>> ErrorID=" << pRspInfo->error_id << ", ErrorMsg=" << pRspInfo->error_msg << endl;
 	return bResult;
 }
+
 void MyQuoteSpi::print_vec_xtpdmet(const std::string &file_path) const
 {
 	//print function, tickers split with #  
 	char market_data_path[100] = {'\0'};
 	sprintf(market_data_path, "%s/_market_data.csv", file_path.c_str());
-	mkdir_if_not_exist(file_path);
+	kf::mkdir_if_not_exist(file_path);
 	std::ofstream market_data_outfile;
 	std::cout << market_data_path << std::endl;
 	market_data_outfile.open(market_data_path, std::ios::out);
@@ -281,19 +286,19 @@ void MyQuoteSpi::print_vec_xtpdmet(const std::string &file_path) const
 	market_data_outfile.close();
 }
 
-void MyQuoteSpi::print_ticker_info(XTP_EXCHANGE_TYPE exchange_id, string& query_ticker_path) const {
+void MyQuoteSpi::print_ticker_info(XTP_EXCHANGE_TYPE exchange_id, const std::string query_ticker_path) const {
 	std::ofstream query_ticker_outfile;
 	// Old ticker file has been deleted
 	// So we can use 'app' to append new query results
 	query_ticker_outfile.open(query_ticker_path, std::ios::app);
 	
-	if(exchange_id == XTP_EXCHANGE_SZ)
-		for (auto ticker_info : ticker_sh) {
-			query_ticker_outfile << ticker_info.ticker << std::endl;
+	if(exchange_id == XTP_EXCHANGE_SH)
+		for (auto ticker : ticker_sh) {
+			query_ticker_outfile << ticker << std::endl;
 		}
 	else if(exchange_id == XTP_EXCHANGE_SZ)
-		for (auto ticker_info : ticker_sz) {
-			query_ticker_outfile << ticker_info.ticker << std::endl;
+		for (auto ticker : ticker_sz) {
+			query_ticker_outfile << ticker << std::endl;
 		}
 	query_ticker_outfile.close();
 }

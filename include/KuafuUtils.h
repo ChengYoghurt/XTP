@@ -65,7 +65,7 @@ inline void check_file_exist(std::string const& name) {
     }
 }
 
-market_t get_belonged_market(instrument_id_t instrument) { 
+inline market_t get_belonged_market(instrument_id_t instrument) { 
     int leading_two_digits = instrument / 10'000;
     market_t market;
     switch (leading_two_digits)
@@ -88,7 +88,13 @@ market_t get_belonged_market(instrument_id_t instrument) {
     case 43:
         market = market_t::bj; break;
     default:
-        throw std::runtime_error("No belonged market, maybe invalid instrument: " + std::to_string(instrument));
+        try {
+            //std::cout << "Arrive at throw in getBelonged" << std::endl;
+            throw std::runtime_error("No belonged market, maybe invalid instrument: " + std::to_string(instrument));
+        } catch(std::runtime_error &e) {
+            return market_t::unknown;
+        }
+        
     }
     return market;
 }
