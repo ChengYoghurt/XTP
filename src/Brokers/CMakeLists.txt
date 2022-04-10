@@ -30,7 +30,7 @@ if ("XTP" IN_LIST broker_apis)
         ${AdaptedApi}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/Brokers>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/Brokers/${BrokerApi}>
     )
     target_sources(
         ${AdaptedApi}
