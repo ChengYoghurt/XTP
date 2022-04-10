@@ -208,31 +208,31 @@ int main(int argc,char* argv[]) {
     wcloginrequest.server_ip            = trade_server_ip     ;
     wcloginrequest.server_port          = trade_server_port   ;
     wcloginrequest.agent_fingerprint.local_ip    =trade_server_ip; //? not certain
-    login_result_trade = ptradeapi->login(wcloginrequest);
+    login_result_trade = wc_trader.login(wcloginrequest);
     if (login_result_trade == wct::error_id_t::success) {
         std::cout << "--------------Login successfully----------------" << std::endl;
         wct::WCLoginResponse response; 
-        response.session_id = ptradeapi->get_session_id();
+        response.session_id = wc_trader.get_session_id();
         response.error_id = wct::error_id_t::success;
-        ptradespi->on_login(response);
+        wc_trader.on_login(response);
 
         for (uint32_t i = 0 ; i < order_count ; i++) {
-            ptradeapi->place_order(vec_wcorderrequest[i]);
+            wc_trader.place_order(vec_wcorderrequest[i]);
         }
 
         for (uint32_t i = 0 ; i < cancel_order_count ; i++) {
-            ptradeapi->cancel_order(vec_wccancelreq[i]);
+            wc_trader.cancel_order(vec_wccancelreq[i]);
         }
 
         if (query_balance_is_true) {
-            ptradeapi->query_balance();
+            wc_trader.query_balance();
         }
 
         if (query_position_is_true) {
             wct::WCPositionQueryRequest wcposition_queryreq;
             wcposition_queryreq.instrument = query_position_instrument;
             wcposition_queryreq.query_all = query_position_is_all;
-            ptradeapi->query_position(wcposition_queryreq);
+            wc_trader.query_position(wcposition_queryreq);
         }
 
     }
