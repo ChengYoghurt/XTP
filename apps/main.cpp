@@ -191,13 +191,17 @@ int main(int argc,char* argv[]) {
     p_logger->info("LogConfig              = {}", log_config_file             );
 
 
-    wct::api::AdaptedApi* ptradeapi = new wct::api::AdaptedApi();
-    //std::unique_ptr<wct::api::AdaptedApi> ptradeapi = std::make_unique<wct::api::AdaptedApi>();
-    std::unique_ptr<wct::api::WCSpi> ptradespi = std::make_unique<wct::api::WCSpi>();
+    // TODO: complete construction
+    auto p_adapted_spi = std::make_unique<wct::api::AdaptedSpi>();
+    auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>();
+    p_adapted_api->register_spi(std::move(p_adapted_spi));
+    WCTrader wc_trader(
+        std::move(p_wc_trader_config), 
+        std::move(p_adapted_api),
+    ); 
+    std::thread wc_trader_th = std::thread(&WCTrader::run, &wc_trader);
 
-    ptradeapi->register_spi(std::move(ptradespi));
-    
-    wct::error_id_t login_result_trade          ;
+    wct::error_id_t login_result_trade     ;
     wct::WCLoginRequest wcloginrequest     ;
     wcloginrequest.username             = trade_username      ;
     wcloginrequest.password             = trade_password      ;
