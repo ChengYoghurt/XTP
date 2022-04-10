@@ -119,12 +119,12 @@ namespace wct {
     };
 
     struct WCOrderRequest {
-        order_id_t      client_order_id ;//自己生成的，要自己记下来，需要与回报的时候匹配（才能证明是我报的）
+        order_id_t      client_order_id ;
         instrument_id_t instrument      ;
-        market_t        market          ;//sh or sz
+        market_t        market          ;
         price_t         price           ;
         volume_t        volume          ;
-        side_t          side            ;//委托方向
+        side_t          side            ;
         price_type_t    price_type      ;
     };
 
@@ -200,7 +200,7 @@ namespace wct {
     };
 
     struct WCCreditBalanceResponse {
-        ratio_t     maintainance_ratio;  // ratio of colateral for maintanace
+        ratio_t     maintainance_ratio;  // ratio of collateral for maintanace
         price_t     total_asset       ;
         price_t     total_debt        ;
         price_t     line_of_credit    ;

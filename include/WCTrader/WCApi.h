@@ -15,9 +15,9 @@ public:
     virtual void on_order_event(WCOrderResponse const& response) = 0;
     virtual void on_trade_event(WCTradeResponse const& response) = 0;
     virtual void on_cancel_rejected(WCCancelRejectedResponse const& response) = 0;
-    virtual void on_query_position(WCPositionResponse const& response) = 0; //查询当前持仓
-    virtual void on_query_balance(WCBalanceResponse const& response) = 0; //查询当前余额
-    virtual void on_query_credit_balance(WCCreditBalanceResponse const& response) = 0; //查询可融资融券的余额
+    virtual void on_query_position(WCPositionResponse const& response) = 0;
+    virtual void on_query_balance(WCBalanceResponse const& response) = 0;
+    virtual void on_query_credit_balance(WCCreditBalanceResponse const& response) = 0;
 };  /* class WCSpi */
 
 class WCApi {
@@ -33,7 +33,7 @@ public:
     virtual error_id_t  query_position(WCPositionQueryRequest const& request) = 0;
     virtual error_id_t  query_credit_balance() = 0;
 
-    virtual error_id_t place_basket_order(WCBasketOrderRequest const& request) = 0; //下一篮子单
+    virtual error_id_t place_basket_order(WCBasketOrderRequest const& request) = 0;
     virtual error_id_t cancel_basket_order(WCBasketOrderCancelRequest const& request) = 0;
 };  /* class WCApi */
 
