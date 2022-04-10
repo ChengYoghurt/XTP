@@ -47,3 +47,37 @@ if ("main" IN_LIST target_apps)
     )
     install(TARGETS ${target_name} DESTINATION bin)
 endif()
+
+if ("ManualWCTrader" IN_LIST target_apps)
+    foreach(api ${broker_apis})
+        message(STATUS "Compile with AdaptedAPI::${api}")
+        set(AdaptedWCTrader ManualWCTrader.${api})
+        add_executable(${AdaptedWCTrader})
+        target_sources(
+            ${AdaptedWCTrader}
+        PRIVATE
+            ManualWCTrader/ManualWCTrader.cpp
+            ManualWCTrader/CommandProcessor.cpp
+            ManualWCTrader/CommandExecutor.cpp
+        )
+        target_include_directories(
+            ${AdaptedWCTrader}
+        PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/Brokers/${api}>
+            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/app/ManualWCTrader>
+        )
+        target_link_libraries(
+            ${AdaptedWCTrader}
+        PUBLIC
+            Threads::Threads
+            LogConfig::LogConfig
+            WCTrader::WCTrader
+            AdaptedApi::${api}
+        )
+    endforeach()
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ManualWCTrader/Config/ManualWCTraderLogConfig.yaml DESTINATION ${CMAKE_BINARY_DIR}/Config)
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ManualWCTrader/Config/ManualWCTraderConfig.yaml DESTINATION ${CMAKE_BINARY_DIR}/Config)
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ManualWCTrader/Config/TradeXAlgoParams.yaml DESTINATION ${CMAKE_BINARY_DIR}/Config)
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ManualWCTrader/Config/RiskManagement.yaml DESTINATION ${CMAKE_BINARY_DIR}/Config)
+endif()
