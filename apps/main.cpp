@@ -3,13 +3,13 @@
 #include "KuafuVersion.h"
 #include "KuafuUtils.h"
 #include "LogConfig.h"
-#include "TypeDefs.h"
+#include "TraderTypeDefs.h"
 #include "YAMLGetField.h"
-#include "WCApi.h"
+#include "WCTrader/WCApi.h"
 #include "xtp_trader_api.h"
 #include "XTP/AdaptedApi.h"
 #include "XTP/AdaptedTypes.h"
-#include "TraderTypes.h"
+#include "WCTrader/TraderTypes.h"
 
 #include <vector>
 #include <cstdio>
@@ -109,7 +109,7 @@ int main(int argc,char* argv[]) {
         wct::WCOrderRequest wcorderrequest;
         wcorderrequest.instrument       = node_orders[i]["instrument_id"].as<wct::instrument_id_t>();
         wcorderrequest.client_order_id  = wct::order_id_t(node_orders[i]["client_order_id"].as<uint32_t>());
-        wcorderrequest.market           = get_belonged_market(wcorderrequest.instrument);
+        wcorderrequest.market           = (wct::market_t)get_belonged_market(wcorderrequest.instrument);
         wcorderrequest.price            = node_orders[i]["price"].as<wct::price_t>();
         wcorderrequest.volume           = node_orders[i]["volume"].as<wct::volume_t>();
         wcorderrequest.side             = (wct::side_t)node_orders[i]["side"].as<uint32_t>();
@@ -123,7 +123,7 @@ int main(int argc,char* argv[]) {
 
     for (uint32_t i = 0 ; i < cancel_order_count ; i++) {
         wct::WCOrderCancelRequest wccancelreq;
-        wccancelreq.client_order_id = wct::order_id_t(node_cancel_orders[i].as<uint32_t>());////////////not certain
+        wccancelreq.client_order_id = wct::order_id_t(node_cancel_orders[i].as<uint32_t>());//? not certain
         vec_wccancelreq.emplace_back(wccancelreq);
     }
     //qurry config
@@ -149,7 +149,7 @@ int main(int argc,char* argv[]) {
     // show all parameters
     p_logger->info("Parameters Summary:");
     p_logger->info("TradingDay           = {}", today_str                 );
-    p_logger->info("KuafuVersion         = {}", KUAFU_VERSION             );/////////////////TODOO
+    p_logger->info("KuafuVersion         = {}", KUAFU_VERSION             );
     p_logger->info("KuafuUpdate          = {}", KUAFU_VERSION_MESSAGE     );
 
     p_logger->info("[[ tradeConfig ]]");
@@ -160,6 +160,7 @@ int main(int argc,char* argv[]) {
 
 
     wct::api::AdaptedApi* ptradeapi = new wct::api::AdaptedApi();
+    //std::unique_ptr<wct::api::AdaptedApi> ptradeapi = std::make_unique<wct::api::AdaptedApi>();
     std::unique_ptr<wct::api::WCSpi> ptradespi = std::make_unique<wct::api::WCSpi>();
 
     ptradeapi->register_spi(std::move(ptradespi));
@@ -170,10 +171,14 @@ int main(int argc,char* argv[]) {
     wcloginrequest.password             = trade_password      ;
     wcloginrequest.server_ip            = trade_server_ip     ;
     wcloginrequest.server_port          = trade_server_port   ;
-    wcloginrequest.agent_fingerprint.local_ip    =trade_server_ip; ///////////////not certain
+    wcloginrequest.agent_fingerprint.local_ip    =trade_server_ip; //? not certain
     login_result_trade = ptradeapi->login(wcloginrequest);
     if (login_result_trade == wct::error_id_t::success) {
         std::cout << "--------------Login successfully----------------" << std::endl;
+        wct::WCLoginResponse response; 
+        response.session_id = ptradeapi->get_session_id();
+        response.error_id = wct::error_id_t::success;
+        ptradespi->on_login(response);
 
         for (uint32_t i = 0 ; i < order_count ; i++) {
             ptradeapi->place_order(vec_wcorderrequest[i]);
@@ -198,10 +203,6 @@ int main(int argc,char* argv[]) {
     else {
 
     }
-
-    delete ptradeapi;
-    ptradeapi = NULL;
-
 /*
     while(quit_flag == 0) {
         sigsuspend(&zeromask);

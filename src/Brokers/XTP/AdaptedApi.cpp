@@ -129,16 +129,16 @@ namespace api     {
             return error_id_t::not_login;
         }
         else {
-            WCLoginResponse response; 
-            response.session_id = session_id_;
-            response.error_id   = 0          ;
-            p_spi_->p_spi_->on_login(response);
             return error_id_t::success;
         }
     }
 
     ApiRequestID AdaptedApi::get_request_id() {
         return ++request_id_;
+    }
+
+    uint64_t AdaptedApi::get_session_id() {
+        return session_id_;
     }
 
     int AdaptedApi::get_trading_day() {
@@ -171,18 +171,28 @@ namespace api     {
      // single_order.algo_parameters = nullptr; // not use algorithms trading
 
         int ret = p_broker_api_->InsertOrder(&single_order,session_id_);
-        return error_id_t::success;
+        if (ret) {
+                const  ApiText* error_info = p_broker_api_->GetApiLastError();
+                p_logger_->error("placeorder failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+                return error_id_t::unknown;
+            }
+        else return error_id_t::success;
     }
 
     error_id_t AdaptedApi::cancel_order(WCOrderCancelRequest const& request) {
         int ret = p_broker_api_->CancelOrder(request.client_order_id,session_id_);
-        return error_id_t::success;
+        if (ret) {
+                const  ApiText* error_info = p_broker_api_->GetApiLastError();
+                p_logger_->error("cancelorder failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+                return error_id_t::unknown;
+            }
+        else return error_id_t::success;
     }
 
     error_id_t AdaptedApi::query_balance() {
         int ret = p_broker_api_->QueryAsset(session_id_, get_request_id());
         if (ret) {
-            unique_ptr<ApiText> error_info(new ApiText(p_broker_api->GetApiLastError()));
+            const  ApiText* error_info = p_broker_api->GetApiLastError();
             p_logger_->error("QueryAsset failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
             return error_id_t::unknown;
         }
@@ -195,25 +205,26 @@ namespace api     {
             // QueryPos only use MARKET_TYPE when ticker isn't NULL
             int ret = p_broker_api_->QueryPosition(NULL, session_id_, get_request_id());
             if (ret) {
-                std::unique_ptr<ApiText> error_info(p_broker_api_->GetApiLastError());
+                const  ApiText* error_info = p_broker_api_->GetApiLastError();
                 p_logger_->error("QueryPosition of all tickers failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
                 return error_id_t::unknown;
             }
         }
         else {
-            std::string ticker = std::to_string(request.instrument);
-            if (ticker[0] == '6') {
-                int ret = p_broker_api_->QueryPosition(ticker.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SH_A);
+            market_t instrument_market = get_belonged_market(request.instrument);
+            std::string instrument_str = instrument_to_str(request.instrument);
+            if (instrument_market == market_t::sh || market_t::shsecond) {
+                int ret = p_broker_api_->QueryPosition(instrument_str.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SH_A);
                 if (ret) {
-                std::unique_ptr<ApiText> error_info(p_broker_api_->GetApiLastError());
+                const  ApiText* error_info = p_broker_api_->GetApiLastError();
                 p_logger_->error("QueryPosition of sh market failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
                 return error_id_t::unknown;
                 }
             }
-            else if (ticker[0] == '0' || ticker[0] == '3') {
-                int ret = p_broker_api_->QueryPosition(ticker.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SZ_A);
+            else if (instrument_market == market_t::sz || market_t::scsecond) {
+                int ret = p_broker_api_->QueryPosition(instrument_str.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SZ_A);
                 if (ret) {
-                std::unique_ptr<ApiText> error_info(p_broker_api_->GetApiLastError());
+                const  ApiText* error_info = error_info(p_broker_api_->GetApiLastError();
                 p_logger_->error("QueryPosition of sz market failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
                 return error_id_t::unknown;
                 }
@@ -228,7 +239,7 @@ namespace api     {
 
     error_id_t AdaptedApi::place_basket_order(WCBasketOrderRequest const& request){
 
-    } //下一篮子单
+    }
     error_id_t AdaptedApi::cancel_basket_order(WCBasketOrderCancelRequest const& request){
         
     }
