@@ -11,8 +11,8 @@ namespace api     {
         p_spi_->on_disconnected(error_id_t::not_connected_to_server);
     }
 
-    void  AdaptedSpi::OnOrderEvent(ApiOrderReport *order_info, ApiText error_info, uint64_t session_id) {
-       /* if(order_info->is_child_order) {
+    void AdaptedSpi::OnOrderEvent(ApiOrderReport *order_info, ApiText error_info, uint64_t session_id) {
+        /* if(order_info->is_child_order) {
             return; // skip all child order //?
         }*////no such
         if(!OrderID(order_info->order_client_id).is_from_trader(trade_id_)) {
