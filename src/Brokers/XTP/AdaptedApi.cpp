@@ -160,12 +160,22 @@ namespace api     {
      // single_order.algo_parameters = nullptr; // not use algorithms trading
 
         int ret = p_broker_api_->InsertOrder(&single_order,session_id_);
-        return error_id_t::success;
+        if (ret) {
+                const  ApiText* error_info = p_broker_api_->GetApiLastError();
+                p_logger_->error("placeorder failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+                return error_id_t::unknown;
+            }
+        else return error_id_t::success;
     }
 
     error_id_t AdaptedApi::cancel_order(WCOrderCancelRequest const& request) {
         int ret = p_broker_api_->CancelOrder(request.client_order_id,session_id_);
-        return error_id_t::success;
+        if (ret) {
+                const  ApiText* error_info = p_broker_api_->GetApiLastError();
+                p_logger_->error("cancelorder failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+                return error_id_t::unknown;
+            }
+        else return error_id_t::success;
     }
 
     error_id_t AdaptedApi::query_balance() {
