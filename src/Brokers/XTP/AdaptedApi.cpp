@@ -130,6 +130,10 @@ namespace api     {
         return ++request_id_;
     }
 
+    uint64_t AdaptedApi::get_session_id() {
+        return session_id_;
+    }
+
     int AdaptedApi::get_trading_day() {
         std::string trading_day_str = p_broker_api_->GetTradingDay();
         return std::stoi(trading_day_str);
@@ -190,17 +194,18 @@ namespace api     {
             }
         }
         else {
-            std::string ticker = std::to_string(request.instrument);
-            if (ticker[0] == '6') {
-                int ret = p_broker_api_->QueryPosition(ticker.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SH_A);
+            market_t instrument_market = get_belonged_market(request.instrument);
+            std::string instrument_str = instrument_to_str(request.instrument);
+            if (instrument_market == market_t::sh || market_t::shsecond) {
+                int ret = p_broker_api_->QueryPosition(instrument_str.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SH_A);
                 if (ret) {
                 const  ApiText* error_info = p_broker_api_->GetApiLastError();
                 p_logger_->error("QueryPosition of sh market failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
                 return error_id_t::unknown;
                 }
             }
-            else if (ticker[0] == '0' || ticker[0] == '3') {
-                int ret = p_broker_api_->QueryPosition(ticker.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SZ_A);
+            else if (instrument_market == market_t::sz || market_t::scsecond) {
+                int ret = p_broker_api_->QueryPosition(instrument_str.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SZ_A);
                 if (ret) {
                 const  ApiText* error_info = error_info(p_broker_api_->GetApiLastError();
                 p_logger_->error("QueryPosition of sz market failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);

@@ -19,6 +19,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#define instrument_len 6
+
 namespace kf {
 
 inline std::string get_today_str() {
@@ -65,7 +67,7 @@ inline void check_file_exist(std::string const& name) {
     }
 }
 
-market_t get_belonged_market(instrument_id_t instrument) { 
+inline market_t get_belonged_market(instrument_id_t instrument) { 
     int leading_two_digits = instrument / 10'000;
     market_t market;
     switch (leading_two_digits)
@@ -91,6 +93,15 @@ market_t get_belonged_market(instrument_id_t instrument) {
         throw std::runtime_error("No belonged market, maybe invalid instrument: " + std::to_string(instrument));
     }
     return market;
+}
+
+inline std::string instrument_to_str(instrument_id_t instrument) {
+
+    std::string instrument_str(instrument_len, '0');
+    for(int instrument_index = instrument_len - 1; instrument ; --instrument_index) {
+        instrument_str[instrument_index] = instrument%10;
+        instrument /= 10;
+    }
 }
 
 } /* namespace kf */
