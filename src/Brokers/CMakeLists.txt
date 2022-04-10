@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 project(TradeXLib
         VERSION 0.1
-        DESCRIPTION "TensorTraderX"
+        DESCRIPTION "TraderXTP"
         LANGUAGES C CXX
 )
 
@@ -18,11 +18,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(TradeX REQUIRED)
 find_package(spdlog REQUIRED)
 
-list(APPEND broker_apis "Fake")
+#list(APPEND broker_apis "Fake")
+list(APPEND broker_apis "XTP")
 set(broker_apis ${broker_apis} PARENT_SCOPE)
 
-if ("TradeX" IN_LIST broker_apis)
-    set(BrokerApi "TradeX")
+if ("XTP" IN_LIST broker_apis)
+    set(BrokerApi "XTP")
     set(AdaptedApi Adapted${BrokerApi})
     add_library(${AdaptedApi})
     target_include_directories(
@@ -39,7 +40,7 @@ if ("TradeX" IN_LIST broker_apis)
     target_link_libraries(
         ${AdaptedApi}
     PUBLIC
-        TradeX::TradeX
+        XTP::XTP
         spdlog::spdlog
     )
     add_library(AdaptedApi::${BrokerApi} ALIAS ${AdaptedApi})

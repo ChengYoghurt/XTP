@@ -118,10 +118,6 @@ namespace api     {
             return error_id_t::not_login;
         }
         else {
-            WCLoginResponse response; 
-            response.session_id = session_id_;
-            response.error_id   = 0          ;
-            p_spi_->p_spi_->on_login(response);
             return error_id_t::success;
         }
     }
