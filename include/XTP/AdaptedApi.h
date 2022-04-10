@@ -1,8 +1,8 @@
 #pragma once
 
 #include "XTP/AdaptedTypes.h"
-#include "TraderTypes.h"
-#include "WCApi.h"
+#include "WCTrader/TraderTypes.h"
+#include "WCTrader/WCApi.h"
 #include "spdlog/spdlog.h"
 
 #include <cstdint>
@@ -21,8 +21,7 @@ public:
     {}
     virtual ~AdaptedSpi() = default;
 protected:
-    
-    virtual void OnDisconnected(uint64_t session_id, int reason) ; 
+    virtual void OnDisconnected(uint64_t session_id, int reason); 
     virtual void OnQueryPosition(ApiPosition *position, ApiText *error_info, ApiRequestID request_id, bool is_last, uint64_t session_id) ;
     virtual void OnQueryAsset(ApiBalance *asset, ApiText *error_info, ApiRequestID request_id, bool is_last, uint64_t session_id) ;
     virtual void OnOrderEvent(ApiOrderReport *order_info, ApiText error_info, uint64_t session_id);
@@ -41,9 +40,10 @@ public:
     AdaptedApi() ;
     virtual ~AdaptedApi() ;
     virtual std::string version() const noexcept ;
-    virtual error_id_t login(WCLoginRequest const& request) ;
+    virtual error_id_t login(WCLoginRequest const& request);
     int get_trading_day() ;
     ApiRequestID get_request_id() ;
+    uint64_t get_session_id();
     error_id_t register_spi(std::unique_ptr<WCSpi> p_spi) ;
     error_id_t place_order(WCOrderRequest const& request) ;
     error_id_t cancel_order(WCOrderCancelRequest const& request) ;
@@ -54,7 +54,7 @@ public:
     error_id_t cancel_basket_order(WCBasketOrderCancelRequest const& request) ;
     
 protected:
-    ApiRequestID get_request_id();
+    //ApiRequestID get_request_id();
     static order_status_t simplify_status(ApiOrderStatus) ;
 protected:
     BrokerApi * p_broker_api_;
