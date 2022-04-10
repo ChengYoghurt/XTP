@@ -27,10 +27,42 @@ static void sig_int(int signo) {
     }
 }
 */
+
+void usage(const char* call_name) {
+    std::cerr << "KUAFU Version: " << KUAFU_VERSION << std::endl;
+    std::cerr << "Usage: " << call_name << " \\ \n"
+              << "       [-f configure_file] \\ \n";
+}
+
 int main(int argc,char* argv[]) {
 
-    std::string config_file {"Config/KuafuConfig.yaml"};
-    std::string today_str{ get_today_str() };
+    std::string config_file = "Config/KuafuConfig.yaml";
+    std::string today_str { get_today_str() };
+    int opt;
+    while((opt = getopt(argc, argv, "f:h")) != -1) {
+        switch(opt) {
+        case 'f':
+            config_file = optarg;
+            break;
+        case 'h':
+            usage(argv[0]);
+            return 0;
+        case ':':
+            std::cerr << "Error: option -" << static_cast<char>(optopt) << " needs a value, use default value." << std::endl;
+            break;
+        case '?':
+            std::cerr << "Error: unknown option -" << static_cast<char>(optopt) << ", ignore option." << std::endl;
+            break;
+        default:
+            // do nothing
+            return -1;
+        }
+    }
+    if (optind < argc) {
+        // direct pass file name without -f
+        config_file = argv[optind];
+    }
+
 
     //=============================================================//
     //                     +. Load YAML configure                  //
