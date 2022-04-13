@@ -5,11 +5,10 @@
 #include "LogConfig.h"
 #include "TraderTypeDefs.h"
 #include "YAMLGetField.h"
-#include "WCTrader/WCApi.h"
-#include "xtp_trader_api.h"
-#include "XTP/AdaptedApi.h"
-#include "XTP/AdaptedTypes.h"
 #include "WCTrader/TraderTypes.h"
+#include "WCTrader/WCTrader.h"
+#include "AdaptedApi.h"
+#include "AdaptedTypes.h"
 
 #include <vector>
 #include <cstdio>
@@ -18,6 +17,7 @@
 #include <iterator>
 #include <fstream>
 #include <signal.h>
+#include <thread>
 /*
 std::atomic<bool> quit_flag = false;
 
@@ -190,12 +190,10 @@ int main(int argc,char* argv[]) {
     p_logger->info("tradePort              = {}", trade_server_port           );
     p_logger->info("LogConfig              = {}", log_config_file             );
 
-
-    // TODO: complete construction
-    auto p_adapted_spi = std::make_unique<wct::api::AdaptedSpi>();
+    auto p_wc_trader_config = std::make_unique<wct::WCTraderConfig>();
+    p_wc_trader_config->trade_id = 42;  // fill values from config 
     auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>();
-    p_adapted_api->register_spi(std::move(p_adapted_spi));
-    WCTrader wc_trader(
+    wct::WCTrader wc_trader(
         std::move(p_wc_trader_config), 
         std::move(p_adapted_api),
     ); 
@@ -244,5 +242,8 @@ int main(int argc,char* argv[]) {
         sigsuspend(&zeromask);
     }
 */
+    wc_trader.stop();
+    wc_trader_th.join();
+
     return 0;
 }
