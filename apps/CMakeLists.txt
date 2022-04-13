@@ -15,69 +15,52 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# list and compile executable
-list(APPEND target_apps "main")
+# add directory of FindHdf5.cmake
+include(${CMAKE_SOURCE_DIR}/cmake/FindHdf5.cmake)
 
 set(XTP_DIR "${CMAKE_SOURCE_DIR}/XTP/")
 find_package(XTP REQUIRED)
 
+# list and compile executable
+list(APPEND target_apps "main")
 
 if ("main" IN_LIST target_apps)
-    set(target_name "main")
-    add_executable(${target_name})
-    target_sources(
-        ${target_name}
-    PUBLIC
-        ${target_name}.cpp
-        ${CMAKE_SOURCE_DIR}/src/quote_spi.cpp
-    )
+    foreach(api ${broker_apis})
+    message(STATUS "Compile with AdaptedAPI::${api}")
+    set(AdaptedTrader Adapted.${api})
+    add_executable(${AdaptedTrader})
+        target_sources(
+            ${AdaptedTrader}
+        PRIVATE
+            # TODO 
+            main.cpp
+            ${CMAKE_SOURCE_DIR}/src/quote_spi.cpp
+        )
+
     target_include_directories(
-        ${target_name}
+        ${AdaptedTrader}
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/${api}>
+        $<INSTALL_INTERFACE:include/${api}>
     )
+
+    target_link_directories(
+        ${AdaptedTrader}
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/WCTrader>
+        $<INSTALL_INTERFACE:lib/WCTrader>
+    )
+
     target_link_libraries(
-        ${target_name}
+        ${AdaptedTrader}
     PUBLIC
         LogConfig::LogConfig
         Threads::Threads
         Kuafu::Kuafu
         XTP::XTP
+        WCTrader
+        AdaptedApi::${api}
     )
-    install(TARGETS ${target_name} DESTINATION bin)
+    install(TARGETS ${AdaptedTrader} DESTINATION bin)
 endif()
 
-if ("ManualWCTrader" IN_LIST target_apps)
-    foreach(api ${broker_apis})
-        message(STATUS "Compile with AdaptedAPI::${api}")
-        set(AdaptedWCTrader ManualWCTrader.${api})
-        add_executable(${AdaptedWCTrader})
-        target_sources(
-            ${AdaptedWCTrader}
-        PRIVATE
-            ManualWCTrader/ManualWCTrader.cpp
-            ManualWCTrader/CommandProcessor.cpp
-            ManualWCTrader/CommandExecutor.cpp
-        )
-        target_include_directories(
-            ${AdaptedWCTrader}
-        PUBLIC
-            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/Brokers/${api}>
-            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/app/ManualWCTrader>
-        )
-        target_link_libraries(
-            ${AdaptedWCTrader}
-        PUBLIC
-            Threads::Threads
-            LogConfig::LogConfig
-            WCTrader::WCTrader
-            AdaptedApi::${api}
-        )
-    endforeach()
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ManualWCTrader/Config/ManualWCTraderLogConfig.yaml DESTINATION ${CMAKE_BINARY_DIR}/Config)
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ManualWCTrader/Config/ManualWCTraderConfig.yaml DESTINATION ${CMAKE_BINARY_DIR}/Config)
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ManualWCTrader/Config/TradeXAlgoParams.yaml DESTINATION ${CMAKE_BINARY_DIR}/Config)
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ManualWCTrader/Config/RiskManagement.yaml DESTINATION ${CMAKE_BINARY_DIR}/Config)
-endif()
