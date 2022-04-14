@@ -18,9 +18,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # add directory of FindHdf5.cmake
 include(${CMAKE_SOURCE_DIR}/cmake/FindHdf5.cmake)
 
-set(XTP_DIR "${CMAKE_SOURCE_DIR}/XTP/")
-find_package(XTP REQUIRED)
-
 # list and compile executable
 list(APPEND target_apps "main")
 
@@ -32,7 +29,6 @@ if ("main" IN_LIST target_apps)
         target_sources(
             ${AdaptedTrader}
         PRIVATE
-            # TODO 
             main.cpp
             ${CMAKE_SOURCE_DIR}/src/quote_spi.cpp
         )
@@ -62,5 +58,6 @@ if ("main" IN_LIST target_apps)
         AdaptedApi::${api}
     )
     install(TARGETS ${AdaptedTrader} DESTINATION bin)
+    endforeach()
 endif()
 
