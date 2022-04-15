@@ -47,7 +47,7 @@ namespace l2agg {
 
     using request_id_t               = int                  ;
     using front_id_t                 = int                  ;
-    using session_id_t               = int                  ;
+    using session_id_t               = uint64_t             ;
 
     using seq_id_t                   = int                  ;
     using channel_id_t               = int                  ;

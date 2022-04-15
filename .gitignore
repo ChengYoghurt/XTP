@@ -61,3 +61,6 @@ bld/
 # python
 __pycache__/
 *.pyc
+
+# exception
+!lib/WCTrader/libWCTrader.a

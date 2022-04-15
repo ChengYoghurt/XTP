@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "QuoteTypeDefs.h"
+
 #include <cstdlib>
 #include <ctime>
 #include <cstring>
@@ -19,6 +21,8 @@
 #include "TraderTypeDefs.h"
 
 #define instrument_len 6
+
+namespace kf {
 
 inline std::string get_today_str() {
     auto t = std::time(nullptr);
@@ -64,7 +68,6 @@ inline void check_file_exist(std::string const& name) {
     }
 }
 
-using namespace kf;
 inline market_t get_belonged_market(instrument_id_t instrument) { 
     int leading_two_digits = instrument / 10'000;
     market_t market;
@@ -102,4 +105,6 @@ inline std::string instrument_to_str(instrument_id_t instrument) {
         instrument /= 10;
     }
     return instrument_str;
+}
+
 }
