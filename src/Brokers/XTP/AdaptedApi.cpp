@@ -1,4 +1,4 @@
-#include "XTP/AdaptedApi.h"
+#include "AdaptedApi.h"
 #include "KuafuUtils.h"
 #include <cstring>
 

@@ -18,6 +18,8 @@
 #include <unistd.h>
 #include "TraderTypeDefs.h"
 
+#define instrument_len 6
+
 inline std::string get_today_str() {
     auto t = std::time(nullptr);
     auto tm = *std::localtime(&t);
@@ -89,4 +91,15 @@ inline market_t get_belonged_market(instrument_id_t instrument) {
         throw std::runtime_error("No belonged market, maybe invalid instrument: " + std::to_string(instrument));
     }
     return market;
+}
+
+inline std::string instrument_to_str(instrument_id_t instrument) {
+
+    std::string instrument_str(instrument_len, '0');
+    for(int instrument_index = instrument_len - 1; instrument ; --instrument_index)
+    {
+        instrument_str[instrument_index] = instrument%10;
+        instrument /= 10;
+    }
+    return instrument_str;
 }

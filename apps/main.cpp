@@ -5,11 +5,10 @@
 #include "LogConfig.h"
 #include "TraderTypeDefs.h"
 #include "YAMLGetField.h"
-#include "WCTrader/WCApi.h"
-#include "xtp_trader_api.h"
-#include "XTP/AdaptedApi.h"
-#include "XTP/AdaptedTypes.h"
 #include "WCTrader/TraderTypes.h"
+#include "WCTrader/WCTrader.h"
+#include "AdaptedApi.h"
+#include "AdaptedTypes.h"
 
 #include <vector>
 #include <cstdio>
@@ -18,6 +17,7 @@
 #include <iterator>
 #include <fstream>
 #include <signal.h>
+#include <thread>
 /*
 std::atomic<bool> quit_flag = false;
 
@@ -27,10 +27,42 @@ static void sig_int(int signo) {
     }
 }
 */
+
+void usage(const char* call_name) {
+    std::cerr << "KUAFU Version: " << KUAFU_VERSION << std::endl;
+    std::cerr << "Usage: " << call_name << " \\ \n"
+              << "       [-f configure_file] \\ \n";
+}
+
 int main(int argc,char* argv[]) {
 
-    std::string config_file {"Config/KuafuConfig.yaml"};
-    std::string today_str{ get_today_str() };
+    std::string config_file = "Config/KuafuConfig.yaml";
+    std::string today_str { get_today_str() };
+    int opt;
+    while((opt = getopt(argc, argv, "f:h")) != -1) {
+        switch(opt) {
+        case 'f':
+            config_file = optarg;
+            break;
+        case 'h':
+            usage(argv[0]);
+            return 0;
+        case ':':
+            std::cerr << "Error: option -" << static_cast<char>(optopt) << " needs a value, use default value." << std::endl;
+            break;
+        case '?':
+            std::cerr << "Error: unknown option -" << static_cast<char>(optopt) << ", ignore option." << std::endl;
+            break;
+        default:
+            // do nothing
+            return -1;
+        }
+    }
+    if (optind < argc) {
+        // direct pass file name without -f
+        config_file = argv[optind];
+    }
+
 
     //=============================================================//
     //                     +. Load YAML configure                  //
@@ -158,45 +190,47 @@ int main(int argc,char* argv[]) {
     p_logger->info("tradePort              = {}", trade_server_port           );
     p_logger->info("LogConfig              = {}", log_config_file             );
 
+    auto p_wc_trader_config = std::make_unique<wct::WCTraderConfig>();
+    p_wc_trader_config->trade_id = 42;  // fill values from config 
+    auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>();
+    wct::WCTrader wc_trader(
+        std::move(p_wc_trader_config), 
+        std::move(p_adapted_api),
+    ); 
+    std::thread wc_trader_th = std::thread(&WCTrader::run, &wc_trader);
 
-    wct::api::AdaptedApi* ptradeapi = new wct::api::AdaptedApi();
-    //std::unique_ptr<wct::api::AdaptedApi> ptradeapi = std::make_unique<wct::api::AdaptedApi>();
-    std::unique_ptr<wct::api::WCSpi> ptradespi = std::make_unique<wct::api::WCSpi>();
-
-    ptradeapi->register_spi(std::move(ptradespi));
-    
-    wct::error_id_t login_result_trade          ;
+    wct::error_id_t login_result_trade     ;
     wct::WCLoginRequest wcloginrequest     ;
     wcloginrequest.username             = trade_username      ;
     wcloginrequest.password             = trade_password      ;
     wcloginrequest.server_ip            = trade_server_ip     ;
     wcloginrequest.server_port          = trade_server_port   ;
     wcloginrequest.agent_fingerprint.local_ip    =trade_server_ip; //? not certain
-    login_result_trade = ptradeapi->login(wcloginrequest);
+    login_result_trade = wc_trader.login(wcloginrequest);
     if (login_result_trade == wct::error_id_t::success) {
         std::cout << "--------------Login successfully----------------" << std::endl;
         wct::WCLoginResponse response; 
-        response.session_id = ptradeapi->get_session_id();
+        response.session_id = wc_trader.get_session_id();
         response.error_id = wct::error_id_t::success;
-        ptradespi->on_login(response);
+        wc_trader.on_login(response);
 
         for (uint32_t i = 0 ; i < order_count ; i++) {
-            ptradeapi->place_order(vec_wcorderrequest[i]);
+            wc_trader.place_order(vec_wcorderrequest[i]);
         }
 
         for (uint32_t i = 0 ; i < cancel_order_count ; i++) {
-            ptradeapi->cancel_order(vec_wccancelreq[i]);
+            wc_trader.cancel_order(vec_wccancelreq[i]);
         }
 
         if (query_balance_is_true) {
-            ptradeapi->query_balance();
+            wc_trader.query_balance();
         }
 
         if (query_position_is_true) {
             wct::WCPositionQueryRequest wcposition_queryreq;
             wcposition_queryreq.instrument = query_position_instrument;
             wcposition_queryreq.query_all = query_position_is_all;
-            ptradeapi->query_position(wcposition_queryreq);
+            wc_trader.query_position(wcposition_queryreq);
         }
 
     }
@@ -208,5 +242,8 @@ int main(int argc,char* argv[]) {
         sigsuspend(&zeromask);
     }
 */
+    wc_trader.stop();
+    wc_trader_th.join();
+
     return 0;
 }
