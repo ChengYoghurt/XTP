@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -35,3 +35,4 @@ void record_absent (string ticker_id, l2agg::timestamp_t std_time, const char* a
 void create_index (vector <l2agg::timestamp_t>& data_vec, std::map <l2agg::timestamp_t, size_t>& time_index_m, vector <size_t> &repeatime_index_vec);
 
 void prepare_diff (const char* market_data_path, const char* hdf5_file_path);
+*/

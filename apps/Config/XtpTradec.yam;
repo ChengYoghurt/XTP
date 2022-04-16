@@ -1,0 +1,30 @@
+%YAML 1.2
+---
+#XTPTrade information
+# side,price_type use ASCII
+Test: 
+ server_ip: "119.3.103.38"
+ server_port: 6002
+ username: "253191000198"
+ password: "RnancU1F"
+ client_id: 3
+ path_linux: "/root/log/"
+ path: "D:\\test\\"
+ exchange_id_sh: 1
+ exchange_id_sz: 2
+ order:
+  -
+    client_order_id: 1
+    instrument_id: 600090
+    price: 7.0
+    quantity: 200
+    side: 66
+    price_type: 76
+ cancel_order_id: 
+ query_position_is_true: true
+ query_position_is_all: true
+ query_position_instrument: 600001
+ query_balance_is_true: true
+ hb_interval: 15
+ quote_buffer_size: 128
+ quote_protocol: 1

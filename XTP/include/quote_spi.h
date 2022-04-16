@@ -1,13 +1,15 @@
 #pragma once
 #include "xtp_quote_api.h"
+#include "QuoteTypeDefs.h"
 #include <fstream>
 #include <NumericTime.h>
 #include <sys/timeb.h>
 #include <vector>
 #include <ctime>
 #include <map>
-#include <Typedefs.h>
+#include <thread>
 #include <mutex>
+#include <condition_variable>
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -80,6 +82,12 @@ public:
 	virtual void OnUnSubscribeAllOptionOrderBook(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	virtual void OnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	virtual void OnUnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
+	const std::map<std::string, XTPDMET>&get_xtpdmet(){
+		return map_xtpdmet;
+	}
+	std::condition_variable cv_last;
+	bool processed_sh;
+	bool processed_sz;
 	virtual void print_vec_xtpdmet(const std::string &file_path) const;
 	virtual void print_ticker_info(XTP_EXCHANGE_TYPE exchange_id, string &query_ticker_path) const;
 

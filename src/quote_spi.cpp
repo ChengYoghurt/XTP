@@ -105,6 +105,8 @@ void MyQuoteSpi::OnQueryAllTickers(XTPQSI *ticker_info, XTPRI *error_info, bool 
 
 			// After receiving last, print to ticker ids to .txt
 			if (is_last) {
+				processed_sh = true;
+				cv_last.notify_one();
 				std::cout << "I'M LAST_SH_TICKER" << std::endl;
 			}
 		} 
@@ -114,6 +116,8 @@ void MyQuoteSpi::OnQueryAllTickers(XTPQSI *ticker_info, XTPRI *error_info, bool 
 				ticker_sz.push_back(*ticker_info);
 			
 			if (is_last) {
+				processed_sz = true;
+				cv_last.notify_one();
 				std::cout << "I'M LAST_SZ_TICKER" << std::endl;
 			}
 		}
@@ -287,7 +291,7 @@ void MyQuoteSpi::print_ticker_info(XTP_EXCHANGE_TYPE exchange_id, string& query_
 	// So we can use 'app' to append new query results
 	query_ticker_outfile.open(query_ticker_path, std::ios::app);
 	
-	if(exchange_id == XTP_EXCHANGE_SZ)
+	if(exchange_id == XTP_EXCHANGE_SH)
 		for (auto ticker_info : ticker_sh) {
 			query_ticker_outfile << ticker_info.ticker << std::endl;
 		}
