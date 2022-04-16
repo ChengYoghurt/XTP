@@ -15,13 +15,14 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(TradeX REQUIRED)
+set(XTP_DIR "${CMAKE_SOURCE_DIR}/XTP/")
+find_package(XTP REQUIRED)
 find_package(spdlog REQUIRED)
 
 #list(APPEND broker_apis "Fake")
 list(APPEND broker_apis "XTP")
 set(broker_apis ${broker_apis} PARENT_SCOPE)
-
+message("Hi I'm AdaptedAPI::")
 if ("XTP" IN_LIST broker_apis)
     set(BrokerApi "XTP")
     set(AdaptedApi Adapted${BrokerApi})

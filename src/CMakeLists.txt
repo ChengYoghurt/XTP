@@ -59,3 +59,5 @@ add_library(Kuafu::Kuafu ALIAS Kuafu)
 
 install(TARGETS Kuafu DESTINATION lib)
 install(FILES ${CMAKE_SOURCE_DIR}/include/Kuafu.h DESTINATION include)
+
+add_subdirectory(Brokers)

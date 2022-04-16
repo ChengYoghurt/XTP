@@ -1,5 +1,6 @@
 #pragma once
 #include "xtp_quote_api.h"
+#include "QuoteTypeDefs.h"
 #include <fstream>
 #include <NumericTime.h>
 #include <sys/timeb.h>

@@ -8,9 +8,9 @@
 #include "QuoteTypeDefs.h"
 
 #include <cstdlib>
+#include <iomanip>
 #include <ctime>
 #include <cstring>
-#include <iomanip>
 #include <sstream>
 #include <string>
 
@@ -18,11 +18,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "TraderTypeDefs.h"
 
 #define instrument_len 6
 
-namespace kf {
+//namespace kf {
 
 inline std::string get_today_str() {
     auto t = std::time(nullptr);
@@ -107,4 +106,4 @@ inline std::string instrument_to_str(instrument_id_t instrument) {
     return instrument_str;
 }
 
-}
+//}

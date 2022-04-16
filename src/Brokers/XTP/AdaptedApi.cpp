@@ -187,7 +187,7 @@ namespace api     {
         else {
             market_t instrument_market = get_belonged_market(request.instrument);
             std::string instrument_str = instrument_to_str(request.instrument);
-            if (instrument_market == market_t::sh || market_t::shsecond) {
+            if (instrument_market == market_t::sh || instrument_market == market_t::shsecond) {
                 int ret = p_broker_api_->QueryPosition(instrument_str.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SH_A);
                 if (ret) {
                 const  ApiText* error_info = p_broker_api_->GetApiLastError();
@@ -195,10 +195,10 @@ namespace api     {
                 return error_id_t::unknown;
                 }
             }
-            else if (instrument_market == market_t::sz || market_t::scsecond) {
+            else if (instrument_market == market_t::sz || instrument_market == market_t::szsecond) {
                 int ret = p_broker_api_->QueryPosition(instrument_str.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SZ_A);
                 if (ret) {
-                const  ApiText* error_info = error_info(p_broker_api_->GetApiLastError();
+                const  ApiText* error_info = p_broker_api_->GetApiLastError();
                 p_logger_->error("QueryPosition of sz market failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
                 return error_id_t::unknown;
                 }

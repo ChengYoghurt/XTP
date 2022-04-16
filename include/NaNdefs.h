@@ -88,12 +88,7 @@ namespace strmagg {
         static const kf::NumericTime value;
     };
     template<>
-<<<<<<< HEAD
     inline bool isnan<kf::NumericTime>(const kf::NumericTime& v) {
         return v == GetNaN<kf::NumericTime>::value;
-=======
-    inline bool isnan<NumericTime>(const kf::NumericTime& v) {
-        return v == GetNaN<NumericTime>::value;
->>>>>>> 8f6e9e8c5afc702d7ea3e5fbb31a2a450222ea5a
     }
 } // namespace strmagg

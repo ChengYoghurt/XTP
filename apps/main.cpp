@@ -27,6 +27,7 @@ static void sig_int(int signo) {
     }
 }
 */
+using namespace kf;
 
 void usage(const char* call_name) {
     std::cerr << "KUAFU Version: " << KUAFU_VERSION << std::endl;

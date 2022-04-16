@@ -17,7 +17,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # add directory of FindHdf5.cmake
 include(${CMAKE_SOURCE_DIR}/cmake/FindHdf5.cmake)
-
+#set(AdaptedApi::XTP_DIR "${CMAKE_SOURCE_DIR}/src/Brokers")
+#find_package(AdaptedApi::XTP REQUIRED)
 # list and compile executable
 list(APPEND target_apps "main")
 
@@ -26,37 +27,40 @@ if ("main" IN_LIST target_apps)
     add_executable(${target_name})
     target_sources(
         ${target_name}
-    PUBLIC
+    PRIVATE
         ${target_name}.cpp
         ${CMAKE_SOURCE_DIR}/src/quote_spi.cpp
+    )
 
     target_include_directories(
-        ${AdaptedTrader}
+        ${target_name}
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include
-        $<INSTALL_INTERFACE:include
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/${api}>
         $<INSTALL_INTERFACE:include/${api}>
     )
 
     target_link_directories(
-        ${AdaptedTrader}
+        ${target_name}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/WCTrader>
         $<INSTALL_INTERFACE:lib/WCTrader>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/Brokers>
+        $<INSTALL_INTERFACE:src/Brokers>
     )
 
     target_link_libraries(
-        ${AdaptedTrader}
+        ${target_name}
     PUBLIC
         LogConfig::LogConfig
         Threads::Threads
         Kuafu::Kuafu
-        XTP::XTP
+        #XTP::XTP
         WCTrader
-        AdaptedApi::${api}
+        AdaptedApi::XTP
+        #AdaptedApi::${api}
     )
-    install(TARGETS ${AdaptedTrader} DESTINATION bin)
-    endforeach()
+    install(TARGETS ${target_name} DESTINATION bin)
 endif()
 
