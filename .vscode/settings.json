@@ -71,5 +71,6 @@
         "queue": "cpp",
         "stack": "cpp",
         "cstdbool": "cpp"
-    }
+    },
+    "C_Cpp.errorSquiggles": "Enabled"
 }

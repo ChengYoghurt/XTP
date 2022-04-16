@@ -1,5 +1,6 @@
 #pragma once
 #include "xtp_quote_api.h"
+#include "QuoteTypeDefs.h"
 #include <fstream>
 #include <time.h>
 #include <sys/timeb.h>
@@ -9,7 +10,6 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
-#include "QuoteTypeDefs.h"
 
 #ifdef _WIN32
 #include <windows.h>
