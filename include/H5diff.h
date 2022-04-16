@@ -8,9 +8,9 @@
 #include <set>
 #include <algorithm>
 
-#include "hdf5.h"
-#include "quote_spi.h"
+#include "H5diff.h"
 #include "QuoteTypeDefs.h"
+//FIX: have defined a struct in .h, may cause multipul defination
 
 using std::cout;
 using std::endl;

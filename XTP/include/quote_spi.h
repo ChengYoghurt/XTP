@@ -10,7 +10,7 @@
 #include <mutex>
 #include <condition_variable>
 #include "QuoteTypeDefs.h"
-#include "TradeTypeDefs.h"
+
 #ifdef _WIN32
 #include <windows.h>
 #else

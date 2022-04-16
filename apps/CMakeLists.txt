@@ -24,6 +24,10 @@ find_package(XTP REQUIRED)
 # list and compile executable
 list(APPEND target_apps "main")
 
+set(XTP_DIR "${CMAKE_SOURCE_DIR}/XTP/")
+find_package(XTP REQUIRED)
+
+
 if ("main" IN_LIST target_apps)
     set(target_name "main")
     add_executable(${target_name})

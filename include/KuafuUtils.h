@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "QuoteTypeDefs.h"
+
 #include <cstdlib>
 #include <ctime>
 #include <cstring>
@@ -17,9 +19,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "TradeTypeDefs.h"
+#include "TraderTypeDefs.h"
 
-namespace kf{
+namespace kf {
+
 inline std::string get_today_str() {
     auto t = std::time(nullptr);
     auto tm = *std::localtime(&t);

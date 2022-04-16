@@ -8,7 +8,7 @@
 #include "KuafuVersion.h"
 #include "KuafuUtils.h"
 #include "LogConfig.h"
-#include "TradeTypeDefs.h"
+#include "TraderTypeDefs.h"
 #include "YAMLGetField.h"
 #include "xtp_quote_api.h"
 #include "quote_spi.h"
