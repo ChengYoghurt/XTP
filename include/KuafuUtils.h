@@ -6,7 +6,7 @@
 #pragma once
 
 #include "QuoteTypeDefs.h"
-
+#include "TraderTypeDefs.h"
 #include <cstdlib>
 #include <iomanip>
 #include <ctime>
@@ -20,8 +20,6 @@
 #include <unistd.h>
 
 #define instrument_len 6
-
-//namespace kf {
 
 inline std::string get_today_str() {
     auto t = std::time(nullptr);
@@ -66,7 +64,7 @@ inline void check_file_exist(std::string const& name) {
         throw std::invalid_argument("File " + name + " does not exist");
     }
 }
-
+using namespace kf;
 inline market_t get_belonged_market(instrument_id_t instrument) { 
     int leading_two_digits = instrument / 10'000;
     market_t market;
@@ -95,7 +93,7 @@ inline market_t get_belonged_market(instrument_id_t instrument) {
     return market;
 }
 
-inline std::string instrument_to_str(instrument_id_t instrument) {
+inline std::string instrument_to_str(l2agg::instrument_id_t instrument) {
 
     std::string instrument_str(instrument_len, '0');
     for(int instrument_index = instrument_len - 1; instrument ; --instrument_index)
@@ -106,4 +104,4 @@ inline std::string instrument_to_str(instrument_id_t instrument) {
     return instrument_str;
 }
 
-//}
+

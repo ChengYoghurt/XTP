@@ -136,7 +136,7 @@ namespace api     {
         //single_order.trade_unit = trade_unit_;
         single_order.order_client_id = request.client_order_id;
         std::snprintf(single_order.ticker, sizeof(single_order.ticker), "%06d", request.instrument);
-        switch (get_belonged_market(request.instrument)) {
+        switch ((wct::market_t)get_belonged_market(request.instrument)) {
             case market_t::sh: 
             case market_t::shsecond: 
                 single_order.market = ApiMarket::XTP_MKT_SH_A; 
@@ -185,7 +185,7 @@ namespace api     {
             }
         }
         else {
-            market_t instrument_market = get_belonged_market(request.instrument);
+            market_t instrument_market = (wct::market_t)get_belonged_market(request.instrument);
             std::string instrument_str = instrument_to_str(request.instrument);
             if (instrument_market == market_t::sh || instrument_market == market_t::shsecond) {
                 int ret = p_broker_api_->QueryPosition(instrument_str.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SH_A);
