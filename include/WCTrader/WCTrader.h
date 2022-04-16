@@ -63,7 +63,7 @@ struct WCTraderConfig {
     int32_t     trade_unit         ;
     std::string server_socket      ;
     std::string tradex_logger_name ;
-    std::string tradex_algo_params ;
+    std::string tradex_algo_params ;////////////////tradex
 };
 
 class WCTrader {
@@ -131,7 +131,7 @@ public:
     const BalanceInfo& query_balance_from_account();
     const BalanceInfo& query_balance_from_broker();
 
-    std::ostream& dump_log(std::ostream& os) ;
+    std::ostream& dump_log(std::ostream& os) ;/////////////////////////////////////////////////
 
 private:
 
