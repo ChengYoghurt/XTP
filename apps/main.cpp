@@ -5,10 +5,11 @@
 #include "LogConfig.h"
 #include "TraderTypeDefs.h"
 #include "YAMLGetField.h"
+#include "WCTrader/WCApi.h"
+#include "XTP/AdaptedApi.h"
+#include "XTP/AdaptedTypes.h"
 #include "WCTrader/TraderTypes.h"
-#include "WCTrader/WCTrader.h"
-#include "AdaptedApi.h"
-#include "AdaptedTypes.h"
+#include "WCTrader.h"
 
 #include <vector>
 #include <cstdio>
@@ -18,6 +19,8 @@
 #include <fstream>
 #include <signal.h>
 #include <thread>
+
+
 /*
 std::atomic<bool> quit_flag = false;
 
@@ -27,7 +30,6 @@ static void sig_int(int signo) {
     }
 }
 */
-using namespace kf;
 
 void usage(const char* call_name) {
     std::cerr << "KUAFU Version: " << KUAFU_VERSION << std::endl;
@@ -160,20 +162,23 @@ int main(int argc,char* argv[]) {
         vec_wccancelreq.emplace_back(wccancelreq);
     }
     //qurry config
-    bool query_balance_is_true;
+    bool query_balance_is_true_account;
+    bool query_balance_is_true_broker;
     bool query_position_is_true;
     bool query_position_is_all;
     wct::instrument_id_t query_position_instrument; 
 
-    YAML_GET_FIELD(query_balance_is_true,     trade_account, query_balance_is_true    );
-    YAML_GET_FIELD(query_position_is_true,    trade_account, query_position_is_true   );
-    YAML_GET_FIELD(query_position_is_all,     trade_account, query_position_is_all    );
-    YAML_GET_FIELD(query_position_instrument, trade_account, query_position_instrument);
+    YAML_GET_FIELD(query_balance_is_true_account,     trade_account, query_balance_is_true_account    );
+    YAML_GET_FIELD(query_balance_is_true_broker,      trade_account, query_balance_is_true_broker     );
+    YAML_GET_FIELD(query_position_is_true,            trade_account, query_position_is_true           );
+    YAML_GET_FIELD(query_position_is_all,             trade_account, query_position_is_all            );
+    YAML_GET_FIELD(query_position_instrument,         trade_account, query_position_instrument        );
     
     // Read Config
     std::string log_config_file        ; YAML_GET_FIELD(log_config_file        , config, LogConfig       );
     std::string calendar_file          ; YAML_GET_FIELD(calendar_file          , config, Calendar        );
     std::string all_stock_pool_file    ; YAML_GET_FIELD(all_stock_pool_file    , config, StockUniverse   );
+    std::string query_data             ; YAML_GET_FIELD(query_data             , config, Query_data      );
 
     check_file_exist(log_config_file);
     config_log(log_config_file);
@@ -191,60 +196,123 @@ int main(int argc,char* argv[]) {
     p_logger->info("tradePort              = {}", trade_server_port           );
     p_logger->info("LogConfig              = {}", log_config_file             );
 
-    auto p_wc_trader_config = std::make_unique<wct::WCTraderConfig>();
-    p_wc_trader_config->trade_id = 42;  // fill values from config 
+
+    // TODO: complete construction
+    auto p_adapted_spi = std::make_unique<wct::api::AdaptedSpi>();
     auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>();
+    auto p_wc_trader_config = std::make_unique<wct::WCTraderConfig>();
+    p_adapted_api->register_spi(std::move(p_adapted_spi));
     wct::WCTrader wc_trader(
         std::move(p_wc_trader_config), 
         std::move(p_adapted_api),
     ); 
-    std::thread wc_trader_th = std::thread(&WCTrader::run, &wc_trader);
+    std::thread wc_trader_th = std::thread(&wct::WCTrader::run, &wc_trader);
 
     wct::error_id_t login_result_trade     ;
     wct::WCLoginRequest wcloginrequest     ;
+    wct::HoldingInfo holdingofgiveninstr   ;
+    wct::BalanceInfo balanceinfo           ;
+    wct::PositionInfo positioninfo         ;
+
     wcloginrequest.username             = trade_username      ;
     wcloginrequest.password             = trade_password      ;
     wcloginrequest.server_ip            = trade_server_ip     ;
     wcloginrequest.server_port          = trade_server_port   ;
     wcloginrequest.agent_fingerprint.local_ip    =trade_server_ip; //? not certain
-    login_result_trade = wc_trader.login(wcloginrequest);
+    wc_trader.login(wcloginrequest);////////////////////////////////
     if (login_result_trade == wct::error_id_t::success) {
         std::cout << "--------------Login successfully----------------" << std::endl;
         wct::WCLoginResponse response; 
         response.session_id = wc_trader.get_session_id();
         response.error_id = wct::error_id_t::success;
-        wc_trader.on_login(response);
+        //wc_trader.on_login(response);////////////////////////////////
+        wct::price_t account_avail = 5.0; 
+        init_account_avail(account_avail); 
+
+        std::ofstream querylog;
+        querylog.open(query_data, std::ios::app);
+
+        /////////////////////////lack choose methods and save order_id///////////////////////////
 
         for (uint32_t i = 0 ; i < order_count ; i++) {
-            wc_trader.place_order(vec_wcorderrequest[i]);
+            wct::instrument_t stock     = vec_wcorderrequest[i].instrument  ;
+            wct::side_t side            = vec_wcorderrequest[i].side        ;
+            wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
+            wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
+            wct::millisec_t empire_ms   = 100                               ;
+            wc_trader.place_order(stock, side, vol, limit_price, empire_ms);
+        }
+
+        for (uint32_t i = 0 ; i < order_count ; i++) {
+            order_id_t local_order_id = 
+            wct::instrument_t stock     = vec_wcorderrequest[i].instrument  ;
+            wct::side_t side            = vec_wcorderrequest[i].side        ;
+            wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
+            wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
+            wc_trader.execute_place_order(local_order_id, stock, side, vol, limit_price);
         }
 
         for (uint32_t i = 0 ; i < cancel_order_count ; i++) {
-            wc_trader.cancel_order(vec_wccancelreq[i]);
+            wct::order_id_t last_order_id = vec_wccancelreq[i].client_order_id;
+            wc_trader.cancel_order(last_order_id);
         }
 
-        if (query_balance_is_true) {
-            wc_trader.query_balance();
+        for (uint32_t i = 0 ; i < cancel_order_count ; i++) {
+            wct::order_id_t last_order_id = vec_wccancelreq[i].client_order_id;
+            wc_trader.execute_cancel_order(last_order_id);
         }
 
         if (query_position_is_true) {
-            wct::WCPositionQueryRequest wcposition_queryreq;
-            wcposition_queryreq.instrument = query_position_instrument;
-            wcposition_queryreq.query_all = query_position_is_all;
-            wc_trader.query_position(wcposition_queryreq);
+            holdingofgiveninstr = wc_trader.query_holdings(query_position_instrument);
+            querylog << "query_position" << std::endl;
+            querylog << "holding: "      << holdingofgiveninstr.holding
+                     << "available: "    << holdingofgiveninstr.available
+                     << std::endl;
+        } 
+
+        if (query_position_is_all) {
+            positioninfo = wc_trader.query_holdings();
         }
+
+        if (query_balance_is_true_account) {
+            balanceinfo = wc_trader.query_balance_from_account();
+            querylog << "query_balance_account" <<std::endl; 
+            querylog << "initial_balance: "     << balanceinfo.initial_balance
+                     << "available_balance: "   << balanceinfo.available_balance
+                     << "market_value: "        << balanceinfo.market_value
+                     << "total_asset: "         << balanceinfo.total_asset
+                     << std::endl;
+        }
+
+        if (query_balance_is_true_broker) {
+            balanceinfo = wc_trader.query_balance_from_broker();
+            querylog << "query_balance_account" <<std::endl; 
+            querylog << "initial_balance: "     << balanceinfo.initial_balance
+                     << "available_balance: "   << balanceinfo.available_balance
+                     << "market_value: "        << balanceinfo.market_value
+                     << "total_asset: "         << balanceinfo.total_asset
+                     << std::endl;
+        }
+        
+        querylog.close();
 
     }
     else {
 
     }
+
+    std::string dumplogpath;
+    YAML_GET_FIELD(dumplogpath, config, Dump_log_output);
+    dumplogpath = dumplogpath + kf::get_time_str() + ".log";
+    std::ofstream dumplogfile;
+    dumplogfile.open(dumplogpath, std::ios::app);
+    wc_trader.dump_log(dumplogfile);
+    dumplogfile.close();
+
 /*
     while(quit_flag == 0) {
         sigsuspend(&zeromask);
     }
 */
-    wc_trader.stop();
-    wc_trader_th.join();
-
     return 0;
 }

@@ -24,7 +24,8 @@ Test:
  query_position_is_true: true
  query_position_is_all: true
  query_position_instrument: 600001
- query_balance_is_true: true
+ query_balance_is_true_account: true
+ query_balance_is_true_broker: true
  hb_interval: 15
  quote_buffer_size: 128
  quote_protocol: 1
