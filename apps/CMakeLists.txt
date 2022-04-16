@@ -22,21 +22,19 @@ include(${CMAKE_SOURCE_DIR}/cmake/FindHdf5.cmake)
 list(APPEND target_apps "main")
 
 if ("main" IN_LIST target_apps)
-    message(STATUS "broker_apis = ${broker_apis}.")
-    foreach(api ${broker_apis})
-    message(STATUS "Compile with AdaptedAPI::${api}")
-    set(AdaptedTrader Adapted.${api})
-    add_executable(${AdaptedTrader})
-        target_sources(
-            ${AdaptedTrader}
-        PRIVATE
-            main.cpp
-            ${CMAKE_SOURCE_DIR}/src/quote_spi.cpp
-        )
+    set(target_name "main")
+    add_executable(${target_name})
+    target_sources(
+        ${target_name}
+    PUBLIC
+        ${target_name}.cpp
+        ${CMAKE_SOURCE_DIR}/src/quote_spi.cpp
 
     target_include_directories(
         ${AdaptedTrader}
     PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include
+        $<INSTALL_INTERFACE:include
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/${api}>
         $<INSTALL_INTERFACE:include/${api}>
     )

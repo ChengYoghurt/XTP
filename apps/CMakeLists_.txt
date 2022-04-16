@@ -33,6 +33,18 @@ if ("main" IN_LIST target_apps)
         ${target_name}.cpp
         ${CMAKE_SOURCE_DIR}/src/quote_spi.cpp
 
+    #or
+    message(STATUS "broker_apis = ${broker_apis}.")
+    foreach(api ${broker_apis})
+    message(STATUS "Compile with AdaptedAPI::${api}")
+    set(AdaptedTrader Adapted.${api})
+    add_executable(${AdaptedTrader})
+        target_sources(
+            ${AdaptedTrader}
+        PRIVATE
+            main.cpp
+            ${CMAKE_SOURCE_DIR}/src/quote_spi.cpp
+        )
 
     )
     target_include_directories(
