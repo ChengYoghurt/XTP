@@ -16,13 +16,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(XTP_DIR "${CMAKE_SOURCE_DIR}/XTP/")
+set(XTP_Algo_DIR "${CMAKE_SOURCE_DIR}/XTP_Algo/")
 find_package(XTP REQUIRED)
+find_package(XTP_Algo REQUIRED)
 find_package(spdlog REQUIRED)
 
 #list(APPEND broker_apis "Fake")
 list(APPEND broker_apis "XTP")
 set(broker_apis ${broker_apis} PARENT_SCOPE)
-message("Hi I'm AdaptedAPI::")
+message("Hi I'm AdaptedAPI::${broker_apis}")
 if ("XTP" IN_LIST broker_apis)
     set(BrokerApi "XTP")
     set(AdaptedApi Adapted${BrokerApi})
@@ -42,6 +44,33 @@ if ("XTP" IN_LIST broker_apis)
         ${AdaptedApi}
     PUBLIC
         XTP::XTP
+        spdlog::spdlog
+    )
+    add_library(AdaptedApi::${BrokerApi} ALIAS ${AdaptedApi})
+endif()
+
+list(APPEND broker_apis "XTP_Algo")
+set(broker_apis ${broker_apis} PARENT_SCOPE)
+if ("XTP_Algo" IN_LIST broker_apis)
+    set(BrokerApi "XTP_Algo")
+    message("Hi I'm AdaptedAPI::${BrokerApi}")
+    set(AdaptedApi Adapted${BrokerApi})
+    add_library(${AdaptedApi})
+    target_include_directories(
+        ${AdaptedApi}
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/${BrokerApi}>
+    )
+    target_sources(
+        ${AdaptedApi}
+    PRIVATE
+        ${BrokerApi}/AdaptedApi.cpp
+    )
+    target_link_libraries(
+        ${AdaptedApi}
+    PUBLIC
+        XTP_Algo::XTP_Algo
         spdlog::spdlog
     )
     add_library(AdaptedApi::${BrokerApi} ALIAS ${AdaptedApi})

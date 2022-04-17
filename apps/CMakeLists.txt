@@ -23,6 +23,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/FindHdf5.cmake)
 list(APPEND target_apps "main")
 
 if ("main" IN_LIST target_apps)
+message("Hi in main broker_apis are:${broker_apis}")
     set(target_name "main")
     add_executable(${target_name})
     target_sources(
@@ -37,8 +38,8 @@ if ("main" IN_LIST target_apps)
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/${api}>
-        $<INSTALL_INTERFACE:include/${api}>
+        #$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/${api}>
+        #$<INSTALL_INTERFACE:include/${api}>
     )
 
     target_link_directories(
@@ -59,6 +60,7 @@ if ("main" IN_LIST target_apps)
         #XTP::XTP
         WCTrader
         AdaptedApi::XTP
+        AdaptedApi::XTP_Algo
         #AdaptedApi::${api}
     )
     install(TARGETS ${target_name} DESTINATION bin)
