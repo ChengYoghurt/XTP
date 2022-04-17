@@ -136,7 +136,7 @@ int main(int argc,char* argv[]) {
 */
     //not clear if yamlgetfield can convert node to other types like side_t
     //order config
-    YAML::Node node_orders   = trade_account["order"];        ;
+    YAML::Node node_orders   = trade_account["order"];        
     uint32_t order_count     = node_orders.size();
     std::vector<wct::WCOrderRequest> vec_wcorderrequest;
 
