@@ -9,7 +9,7 @@
 #include "XTP/AdaptedApi.h"
 #include "XTP/AdaptedTypes.h"
 #include "WCTrader/TraderTypes.h"
-#include "WCTrader.h"
+#include "WCTrader/WCTrader.h"
 
 #include <vector>
 #include <cstdio>
@@ -198,13 +198,15 @@ int main(int argc,char* argv[]) {
 
 
     // TODO: complete construction
+    auto p_wcspi       = std::make_unique<wct::api::WCSpi>();
     auto p_adapted_spi = std::make_unique<wct::api::AdaptedSpi>();
     auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>();
     auto p_wc_trader_config = std::make_unique<wct::WCTraderConfig>();
-    p_adapted_api->register_spi(std::move(p_adapted_spi));
+    p_adapted_api->register_spi(std::move(p_wcspi));
     wct::WCTrader wc_trader(
         std::move(p_wc_trader_config), 
         std::move(p_adapted_api),
+        nullptr
     ); 
     std::thread wc_trader_th = std::thread(&wct::WCTrader::run, &wc_trader);
 
@@ -223,43 +225,47 @@ int main(int argc,char* argv[]) {
     if (login_result_trade == wct::error_id_t::success) {
         std::cout << "--------------Login successfully----------------" << std::endl;
         wct::WCLoginResponse response; 
-        response.session_id = wc_trader.get_session_id();
+        response.session_id = p_adapted_api->get_session_id();
         response.error_id = wct::error_id_t::success;
         //wc_trader.on_login(response);////////////////////////////////
         wct::price_t account_avail = 5.0; 
-        init_account_avail(account_avail); 
+        wc_trader.init_account_avail(account_avail); 
 
         std::ofstream querylog;
         querylog.open(query_data, std::ios::app);
 
         /////////////////////////lack choose methods and save order_id///////////////////////////
+        std::vector<wct::order_id_t> vec_orderid;
 
         for (uint32_t i = 0 ; i < order_count ; i++) {
-            wct::instrument_t stock     = vec_wcorderrequest[i].instrument  ;
+            wct::order_id_t local_order_id;
+            wct::instrument_id_t stock  = vec_wcorderrequest[i].instrument  ;
             wct::side_t side            = vec_wcorderrequest[i].side        ;
             wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
             wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
             wct::millisec_t empire_ms   = 100                               ;
-            wc_trader.place_order(stock, side, vol, limit_price, empire_ms);
+            local_order_id = wc_trader.place_order(stock, side, vol, limit_price, empire_ms);
+            vec_orderid.push_back(local_order_id);
         }
 
-        for (uint32_t i = 0 ; i < order_count ; i++) {
-            order_id_t local_order_id = 
-            wct::instrument_t stock     = vec_wcorderrequest[i].instrument  ;
+        /*for (uint32_t i = 0 ; i < order_count ; i++) {
+            wct::instrument_id_t stock     = vec_wcorderrequest[i].instrument  ;
             wct::side_t side            = vec_wcorderrequest[i].side        ;
             wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
             wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
             wc_trader.execute_place_order(local_order_id, stock, side, vol, limit_price);
-        }
+        }*/
 
-        for (uint32_t i = 0 ; i < cancel_order_count ; i++) {
-            wct::order_id_t last_order_id = vec_wccancelreq[i].client_order_id;
+        for (size_t i = vec_orderid.size() - 1 ; i >= 0 ; i++) {
+            wct::order_id_t last_order_id = vec_orderid[i];
             wc_trader.cancel_order(last_order_id);
+            vec_orderid.pop_back();
         }
 
-        for (uint32_t i = 0 ; i < cancel_order_count ; i++) {
-            wct::order_id_t last_order_id = vec_wccancelreq[i].client_order_id;
+        for (size_t i = vec_orderid.size() -1 ; i >= 0 ; i++) {
+            wct::order_id_t last_order_id = vec_orderid[i];
             wc_trader.execute_cancel_order(last_order_id);
+            vec_orderid.pop_back();
         }
 
         if (query_position_is_true) {
@@ -303,7 +309,7 @@ int main(int argc,char* argv[]) {
 
     std::string dumplogpath;
     YAML_GET_FIELD(dumplogpath, config, Dump_log_output);
-    dumplogpath = dumplogpath + kf::get_time_str() + ".log";
+    dumplogpath = dumplogpath + get_time_str() + ".log";
     std::ofstream dumplogfile;
     dumplogfile.open(dumplogpath, std::ios::app);
     wc_trader.dump_log(dumplogfile);

@@ -62,7 +62,7 @@ protected:
     size_t request_id_ = 0;
     uint64_t session_id_;
     std::unique_ptr<AdaptedSpi> p_spi_;
-    std::shared_ptr<spdlog::logger> p_logger_;
+    std::shared_ptr<spdlog::logger> p_logger_; 
 
 };  /* class AdaptedApi */
 

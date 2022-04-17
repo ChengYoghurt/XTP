@@ -10,8 +10,8 @@ namespace api     {
         p_spi_->on_disconnected(error_id_t::not_connected_to_server);
     }
 
-    void AdaptedSpi::OnOrderEvent(ApiOrderReport *order_info, ApiText error_info, uint64_t session_id) {
-        /* if(order_info->is_child_order) {
+    void  AdaptedSpi::OnOrderEvent(ApiOrderReport *order_info, ApiText error_info, uint64_t session_id) {
+       /* if(order_info->is_child_order) {
             return; // skip all child order //?
         }*////no such
         if(!OrderID(order_info->order_client_id).is_from_trader(trade_id_)) {
@@ -84,17 +84,6 @@ namespace api     {
             asset_rsp.error_id = error_id_t::unknown;
         }
         p_spi_->on_query_balance(asset_rsp);
-    }
-
-    AdaptedApi::AdaptedApi() 
-        :p_logger_(spdlog::get("AdaptedApi"))
-    {
-        p_broker_api_ = BrokerApi::CreateTraderApi(".")//////////////////////
-        
-    }
-
-    AdaptedApi::~AdaptedApi() {
-        p_broker_api_->Release();
     }
 
     error_id_t AdaptedApi::register_spi(std::unique_ptr<WCSpi> p_spi) {
@@ -218,7 +207,7 @@ namespace api     {
         return error_id_t::success;
     }
 
-    error_id_t AdaptedApi::query_credit_balance(){
+    /*error_id_t AdaptedApi::query_credit_balance(){
 
     }
 
@@ -227,7 +216,7 @@ namespace api     {
     }
     error_id_t AdaptedApi::cancel_basket_order(WCBasketOrderCancelRequest const& request){
         
-    }
+    }*/
 
 } /* namespace api     */
 } /* namespace wct     */
