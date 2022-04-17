@@ -16,9 +16,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(XTP_DIR "${CMAKE_SOURCE_DIR}/XTP/")
-set(XTP_Algo_DIR "${CMAKE_SOURCE_DIR}/XTP_Algo/")
+#set(XTP_Algo_DIR "${CMAKE_SOURCE_DIR}/XTP_Algo/")
 find_package(XTP REQUIRED)
-find_package(XTP_Algo REQUIRED)
+#find_package(XTP_Algo REQUIRED)
 find_package(spdlog REQUIRED)
 
 #list(APPEND broker_apis "Fake")
@@ -49,7 +49,7 @@ if ("XTP" IN_LIST broker_apis)
     add_library(AdaptedApi::${BrokerApi} ALIAS ${AdaptedApi})
 endif()
 
-list(APPEND broker_apis "XTP_Algo")
+#list(APPEND broker_apis "XTP_Algo")
 set(broker_apis ${broker_apis} PARENT_SCOPE)
 if ("XTP_Algo" IN_LIST broker_apis)
     set(BrokerApi "XTP_Algo")
@@ -70,7 +70,7 @@ if ("XTP_Algo" IN_LIST broker_apis)
     target_link_libraries(
         ${AdaptedApi}
     PUBLIC
-        XTP_Algo::XTP_Algo
+        #XTP_Algo::XTP_Algo
         spdlog::spdlog
     )
     add_library(AdaptedApi::${BrokerApi} ALIAS ${AdaptedApi})

@@ -60,7 +60,6 @@ message("Hi in main broker_apis are:${broker_apis}")
         #XTP::XTP
         WCTrader
         AdaptedApi::XTP
-        AdaptedApi::XTP_Algo
         #AdaptedApi::${api}
     )
     install(TARGETS ${target_name} DESTINATION bin)

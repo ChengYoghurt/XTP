@@ -201,8 +201,7 @@ int main(int argc,char* argv[]) {
     auto p_wc_trader_config = std::make_unique<wct::WCTraderConfig>();
     wct::WCTrader wc_trader(
         std::move(p_wc_trader_config), 
-        std::move(p_adapted_api),
-        nullptr
+        std::move(p_adapted_api)
     ); 
     std::thread wc_trader_th = std::thread(&wct::WCTrader::run, &wc_trader);
 
@@ -237,8 +236,8 @@ int main(int argc,char* argv[]) {
         wct::side_t side            = vec_wcorderrequest[i].side        ;
         wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
         wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
-        wct::millisec_t empire_ms   = 100                               ;
-        local_order_id = wc_trader.place_order(stock, side, vol, limit_price, empire_ms);
+        wct::millisec_t expire_ms   = 100                               ;
+        local_order_id = wc_trader.place_order(stock, side, vol, limit_price, expire_ms);
         vec_orderid.push_back(local_order_id);
     }
 
@@ -253,13 +252,11 @@ int main(int argc,char* argv[]) {
     for (size_t i = 0 ; i <= vec_orderid.size() ; i++) {
         wct::order_id_t last_order_id = vec_orderid[i];
         wc_trader.cancel_order(last_order_id);
-        vec_orderid.pop_back();
     }
 
     for (size_t i = 0 ; i <= vec_orderid.size() ; i++) {
         wct::order_id_t last_order_id = vec_orderid[i];
         wc_trader.execute_cancel_order(last_order_id);
-        vec_orderid.pop_back();
     }
 
     if (query_position_is_true) {
