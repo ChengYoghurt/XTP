@@ -113,6 +113,9 @@ namespace api     {
         std::string local_ip        = request.agent_fingerprint.local_ip;
 
         session_id_                 = p_broker_api_->Login(ip.c_str(), port, user.c_str(), password.c_str(), sock_type, local_ip.c_str());
+        
+        int ret                     = p_broker_api_->LoginALGO(ip.c_str(), port, user.c_str(), password.c_str(), sock_type, local_ip.c_str());//algo服务器
+        int ret                     = p_broker_api_->ALGOUserEstablishChannel(ip.c_str(), port, user.c_str(), password.c_str(),session_id_) ; //oms服务器                     
         if(session_id_ == 0) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
             p_logger_->error("Login failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
@@ -224,16 +227,30 @@ namespace api     {
         return error_id_t::success;
     }
 
-    /*error_id_t AdaptedApi::query_credit_balance(){
+    error_id_t AdaptedApi::query_credit_balance(){
 
     }
 
     error_id_t AdaptedApi::place_basket_order(WCBasketOrderRequest const& request){
-
+        std::string strategyparam;
+        
+        int ret = p_broker_api_->InsertAlgoOrder(std::stoi(request.algo_name),request.client_basket_id,"1",session_id_);
+        if (ret) {
+            const  ApiText* error_info = p_broker_api_->GetApiLastError();
+            p_logger_->error("InsertAlgoOrder of all tickers failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+            return error_id_t::unknown;
+        }
     }
     error_id_t AdaptedApi::cancel_basket_order(WCBasketOrderCancelRequest const& request){
         
-    }*/
+        int ret = p_broker_api_->CancelAlgoOrder(true, request.client_order_id, session_id_);
+
+        if (ret) {
+            const  ApiText* error_info = p_broker_api_->GetApiLastError();
+            p_logger_->error("CancelAlgoOrder of all tickers failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+            return error_id_t::unknown;
+        }
+}
 
 } /* namespace api     */
 } /* namespace wct     */

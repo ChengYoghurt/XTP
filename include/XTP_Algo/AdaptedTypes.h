@@ -1,6 +1,6 @@
 #pragma once
 
-#include "xtp_trader_api.h"
+#include "xtp_algo_trader_api.h"
 
 namespace wct     {
 namespace api     {

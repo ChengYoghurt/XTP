@@ -1,6 +1,6 @@
 #pragma once
 
-#include "XTP/AdaptedTypes.h"
+#include "XTP_Algo/AdaptedTypes.h"
 #include "WCTrader/TraderTypes.h"
 #include "WCTrader/WCApi.h"
 #include "spdlog/spdlog.h"
@@ -33,6 +33,7 @@ protected:
     std::unique_ptr<WCSpi> p_spi_;
     std::shared_ptr<spdlog::logger> p_logger_;
     std::unordered_map<uint64_t,order_id_t> order_id_xtptowc;
+
 };
 
 class AdaptedApi : public wct::api::WCApi
@@ -63,9 +64,9 @@ protected:
     size_t request_id_ = 0;
     uint64_t session_id_;
     std::unique_ptr<AdaptedSpi> p_spi_;
-    std::shared_ptr<spdlog::logger> p_logger_; 
-
+    std::shared_ptr<spdlog::logger> p_logger_;
     std::unordered_map<order_id_t,uint64_t> order_id_wctoxtp;
+
 };  /* class AdaptedApi */
 
 } /* namespace wrapper */

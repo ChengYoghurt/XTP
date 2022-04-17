@@ -6,8 +6,8 @@
 #include "TraderTypeDefs.h"
 #include "YAMLGetField.h"
 #include "WCTrader/WCApi.h"
-#include "XTP/AdaptedApi.h"
-#include "XTP/AdaptedTypes.h"
+#include "AdaptedApi.h"
+#include "AdaptedTypes.h"
 #include "WCTrader/TraderTypes.h"
 #include "WCTrader/WCTrader.h"
 
@@ -21,7 +21,7 @@
 #include <thread>
 
 
-/*
+
 std::atomic<bool> quit_flag = false;
 
 static void sig_int(int signo) {
@@ -29,7 +29,7 @@ static void sig_int(int signo) {
         quit_flag = true;
     }
 }
-*/
+
 
 void usage(const char* call_name) {
     std::cerr << "KUAFU Version: " << KUAFU_VERSION << std::endl;
@@ -307,6 +307,12 @@ int main(int argc,char* argv[]) {
 
     }
 
+    sigset_t zeromask;
+    while(quit_flag == 0) {
+        sigsuspend(&zeromask);
+    }
+    wc_trader.stop();
+
     std::string dumplogpath;
     YAML_GET_FIELD(dumplogpath, config, Dump_log_output);
     dumplogpath = dumplogpath + get_time_str() + ".log";
@@ -315,10 +321,8 @@ int main(int argc,char* argv[]) {
     wc_trader.dump_log(dumplogfile);
     dumplogfile.close();
 
-/*
-    while(quit_flag == 0) {
-        sigsuspend(&zeromask);
-    }
-*/
+
+    
+
     return 0;
 }
