@@ -22,8 +22,10 @@ find_package(XTP_Algo REQUIRED)
 find_package(spdlog REQUIRED)
 
 #list(APPEND broker_apis "Fake")
+
 list(APPEND broker_apis "XTP")
 set(broker_apis ${broker_apis} PARENT_SCOPE)
+#set(broker_apis ${broker_apis} PARENT_SCOPE)
 message("Hi I'm AdaptedAPI::${broker_apis}")
 if ("XTP" IN_LIST broker_apis)
     set(BrokerApi "XTP")

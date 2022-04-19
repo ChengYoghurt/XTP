@@ -20,16 +20,20 @@ include(${CMAKE_SOURCE_DIR}/cmake/FindHdf5.cmake)
 #set(AdaptedApi::XTP_DIR "${CMAKE_SOURCE_DIR}/src/Brokers")
 #find_package(AdaptedApi::XTP REQUIRED)
 # list and compile executable
+set(broker_apis PARENT_SCOPE)
 list(APPEND target_apps "main")
 
 if ("main" IN_LIST target_apps)
 message("Hi in main broker_apis are:${broker_apis}")
-    set(target_name "main")
+    set(target_main "main")
+    foreach(broker_api ${broker_apis})
+    set(target_name ${broker_api}_${target_main})
+    message("Building target broker_api:${target_name}")
     add_executable(${target_name})
     target_sources(
         ${target_name}
-    PRIVATE
-        ${target_name}.cpp
+    PUBLIC
+        ${target_main}.cpp
         ${CMAKE_SOURCE_DIR}/src/quote_spi.cpp
     )
 
@@ -38,8 +42,8 @@ message("Hi in main broker_apis are:${broker_apis}")
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
-        #$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/${api}>
-        #$<INSTALL_INTERFACE:include/${api}>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/${broker_api}>
+        $<INSTALL_INTERFACE:include/${broker_api}>
     )
 
     target_link_directories(
@@ -57,12 +61,11 @@ message("Hi in main broker_apis are:${broker_apis}")
         LogConfig::LogConfig
         Threads::Threads
         Kuafu::Kuafu
-        #XTP::XTP
         WCTrader
-        AdaptedApi::XTP
-        AdaptedApi::XTP_Algo
-        #AdaptedApi::${api}
+        AdaptedApi::${broker_api}
     )
+    
     install(TARGETS ${target_name} DESTINATION bin)
+    endforeach()
 endif()
 

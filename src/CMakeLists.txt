@@ -61,3 +61,5 @@ install(TARGETS Kuafu DESTINATION lib)
 install(FILES ${CMAKE_SOURCE_DIR}/include/Kuafu.h DESTINATION include)
 
 add_subdirectory(Brokers)
+message("Hi in src broker_apis list is:${broker_apis}")
+set(broker_apis ${broker_apis} PARENT_SCOPE)
