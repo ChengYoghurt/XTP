@@ -1,8 +1,7 @@
 #pragma once
 #include "xtp_quote_api.h"
-#include "QuoteTypeDefs.h"
 #include <fstream>
-#include <NumericTime.h>
+#include <time.h>
 #include <sys/timeb.h>
 #include <vector>
 #include <ctime>
@@ -10,6 +9,8 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include "QuoteTypeDefs.h"
+#include "TraderTypeDefs.h"
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -19,10 +20,7 @@
 #define NUM_OF_ROUND 1
 
 using namespace XTP::API;
-using instrument_id_t = std::string;
-
-extern std::timed_mutex mutex_sh;
-extern std::timed_mutex mutex_sz;
+using instrument_t = std::string;
 
 struct XTPDepthMarketEveryTicker{
 	std::vector<uint32_t>	         vec_depthtime;
@@ -44,18 +42,22 @@ struct XTPDepthMarketEveryTicker{
 	std::vector<l2agg::price_t>      vec_LowLimit;
 };
 
-
 class MyQuoteSpi : public QuoteSpi
 {
 public:
 	MyQuoteSpi();
 	~MyQuoteSpi();
 
-	
-	///@param reason 
+	///���ͻ����뽻�׺�̨ͨ�����ӶϿ�ʱ���÷��������á���������������API���Զ��������ӣ��ͻ��˿ɲ���������
+	///@param reason ����ԭ��
+	///        0x1001 �����ʧ��
+	///        0x1002 ����дʧ��
+	///        0x2001 ����������ʱ
+	///        0x2002 ��������ʧ��
+	///        0x2003 �յ�������
 	virtual void OnDisconnected(int reason);
 
-
+///����Ӧ��
 	virtual void OnError(XTPRI *error_info,bool is_last);
 
 
@@ -82,19 +84,19 @@ public:
 	virtual void OnUnSubscribeAllOptionOrderBook(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	virtual void OnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
 	virtual void OnUnSubscribeAllOptionTickByTick(XTP_EXCHANGE_TYPE exchange_id, XTPRI *error_info);
-	const std::map<std::string, XTPDMET>&get_xtpdmet(){
-		return map_xtpdmet;
+	virtual void print_vec_xtpdmet(const std::string &file_path) const;
+	virtual void print_ticker_info(XTP_EXCHANGE_TYPE exchange_id, const std::string query_ticker_path) const;
+	const std::map<std::string, XTPDepthMarketEveryTicker>&get_xtpdmet(){
+		return map_xtpdmet_;
 	}
 	std::condition_variable cv_last;
 	bool processed_sh;
 	bool processed_sz;
-	virtual void print_vec_xtpdmet(const std::string &file_path) const;
-	virtual void print_ticker_info(XTP_EXCHANGE_TYPE exchange_id, string &query_ticker_path) const;
 
 private:
-	std::vector <XTPQSI> ticker_sh;
-	std::vector <XTPQSI> ticker_sz;
-	std::map<instrument_id_t, XTPDepthMarketEveryTicker> map_xtpdmet_;
+	std::vector <std::string> ticker_sh;
+	std::vector <std::string> ticker_sz;
+	std::map<instrument_t, XTPDepthMarketEveryTicker> map_xtpdmet_;
 
 	bool IsErrorRspInfo(XTPRI *pRspInfo);	
 };

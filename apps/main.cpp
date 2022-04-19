@@ -197,20 +197,14 @@ int main(int argc,char* argv[]) {
     p_logger->info("LogConfig              = {}", log_config_file             );
 
 
-    // TODO: complete construction
-    auto p_wcspi       = std::make_unique<wct::api::WCSpi>();
-    auto p_adapted_spi = std::make_unique<wct::api::AdaptedSpi>();
     auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>();
     auto p_wc_trader_config = std::make_unique<wct::WCTraderConfig>();
-    p_adapted_api->register_spi(std::move(p_wcspi));
     wct::WCTrader wc_trader(
         std::move(p_wc_trader_config), 
-        std::move(p_adapted_api),
-        nullptr
+        std::move(p_adapted_api)
     ); 
     std::thread wc_trader_th = std::thread(&wct::WCTrader::run, &wc_trader);
 
-    wct::error_id_t login_result_trade     ;
     wct::WCLoginRequest wcloginrequest     ;
     wct::HoldingInfo holdingofgiveninstr   ;
     wct::BalanceInfo balanceinfo           ;
@@ -221,32 +215,31 @@ int main(int argc,char* argv[]) {
     wcloginrequest.server_ip            = trade_server_ip     ;
     wcloginrequest.server_port          = trade_server_port   ;
     wcloginrequest.agent_fingerprint.local_ip    =trade_server_ip; //? not certain
-    wc_trader.login(wcloginrequest);////////////////////////////////
-    if (login_result_trade == wct::error_id_t::success) {
-        std::cout << "--------------Login successfully----------------" << std::endl;
-        wct::WCLoginResponse response; 
-        response.session_id = p_adapted_api->get_session_id();
-        response.error_id = wct::error_id_t::success;
-        //wc_trader.on_login(response);////////////////////////////////
-        wct::price_t account_avail = 5.0; 
-        wc_trader.init_account_avail(account_avail); 
+    wc_trader.login(wcloginrequest);
 
-        std::ofstream querylog;
-        querylog.open(query_data, std::ios::app);
+    std::cout << "--------------Login successfully----------------" << std::endl;
+    wct::WCLoginResponse response; 
+    response.session_id = p_adapted_api->get_session_id();
+    response.error_id = wct::error_id_t::success;
+    //wc_trader.on_login(response);////////////////////////////////
+    wct::price_t account_avail = 50000000; 
+    wc_trader.init_account_avail(account_avail); 
 
-        /////////////////////////lack choose methods and save order_id///////////////////////////
-        std::vector<wct::order_id_t> vec_orderid;
+    std::ofstream querylog;
+    querylog.open(query_data, std::ios::app);
 
-        for (uint32_t i = 0 ; i < order_count ; i++) {
-            wct::order_id_t local_order_id;
-            wct::instrument_id_t stock  = vec_wcorderrequest[i].instrument  ;
-            wct::side_t side            = vec_wcorderrequest[i].side        ;
-            wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
-            wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
-            wct::millisec_t empire_ms   = 100                               ;
-            local_order_id = wc_trader.place_order(stock, side, vol, limit_price, empire_ms);
-            vec_orderid.push_back(local_order_id);
-        }
+    std::vector<wct::order_id_t> vec_orderid;
+
+    for (uint32_t i = 0 ; i < order_count ; i++) {
+        wct::order_id_t local_order_id;
+        wct::instrument_id_t stock  = vec_wcorderrequest[i].instrument  ;
+        wct::side_t side            = vec_wcorderrequest[i].side        ;
+        wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
+        wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
+        wct::millisec_t expire_ms   = 100                               ;
+        local_order_id = wc_trader.place_order(stock, side, vol, limit_price, expire_ms);
+        vec_orderid.push_back(local_order_id);
+    }
 
         /*for (uint32_t i = 0 ; i < order_count ; i++) {
             wct::instrument_id_t stock     = vec_wcorderrequest[i].instrument  ;
@@ -256,56 +249,50 @@ int main(int argc,char* argv[]) {
             wc_trader.execute_place_order(local_order_id, stock, side, vol, limit_price);
         }*/
 
-        for (size_t i = vec_orderid.size() - 1 ; i >= 0 ; i++) {
-            wct::order_id_t last_order_id = vec_orderid[i];
-            wc_trader.cancel_order(last_order_id);
-            vec_orderid.pop_back();
-        }
+    for (size_t i = 0 ; i <= vec_orderid.size() ; i++) {
+        wct::order_id_t last_order_id = vec_orderid[i];
+        wc_trader.cancel_order(last_order_id);
+    }
 
-        for (size_t i = vec_orderid.size() -1 ; i >= 0 ; i++) {
-            wct::order_id_t last_order_id = vec_orderid[i];
-            wc_trader.execute_cancel_order(last_order_id);
-            vec_orderid.pop_back();
-        }
+    for (size_t i = 0 ; i <= vec_orderid.size() ; i++) {
+        wct::order_id_t last_order_id = vec_orderid[i];
+        wc_trader.execute_cancel_order(last_order_id);
+    }
 
-        if (query_position_is_true) {
-            holdingofgiveninstr = wc_trader.query_holdings(query_position_instrument);
-            querylog << "query_position" << std::endl;
-            querylog << "holding: "      << holdingofgiveninstr.holding
-                     << "available: "    << holdingofgiveninstr.available
-                     << std::endl;
-        } 
+    if (query_position_is_true) {
+        holdingofgiveninstr = wc_trader.query_holdings(query_position_instrument);
+        querylog << "query_position" << std::endl;
+        querylog << "holding: "      << holdingofgiveninstr.holding
+                 << "available: "    << holdingofgiveninstr.available
+                 << std::endl;
+    } 
 
-        if (query_position_is_all) {
-            positioninfo = wc_trader.query_holdings();
-        }
+    if (query_position_is_all) {
+        positioninfo = wc_trader.query_holdings();
+    }
 
-        if (query_balance_is_true_account) {
-            balanceinfo = wc_trader.query_balance_from_account();
-            querylog << "query_balance_account" <<std::endl; 
-            querylog << "initial_balance: "     << balanceinfo.initial_balance
-                     << "available_balance: "   << balanceinfo.available_balance
-                     << "market_value: "        << balanceinfo.market_value
-                     << "total_asset: "         << balanceinfo.total_asset
-                     << std::endl;
-        }
+    if (query_balance_is_true_account) {
+        balanceinfo = wc_trader.query_balance_from_account();
+        querylog << "query_balance_account" <<std::endl; 
+        querylog << "initial_balance: "     << balanceinfo.initial_balance
+                 << "available_balance: "   << balanceinfo.available_balance
+                 << "market_value: "        << balanceinfo.market_value
+                 << "total_asset: "         << balanceinfo.total_asset
+                 << std::endl;
+    }
 
-        if (query_balance_is_true_broker) {
-            balanceinfo = wc_trader.query_balance_from_broker();
-            querylog << "query_balance_account" <<std::endl; 
-            querylog << "initial_balance: "     << balanceinfo.initial_balance
-                     << "available_balance: "   << balanceinfo.available_balance
-                     << "market_value: "        << balanceinfo.market_value
-                     << "total_asset: "         << balanceinfo.total_asset
-                     << std::endl;
-        }
+    if (query_balance_is_true_broker) {
+        balanceinfo = wc_trader.query_balance_from_broker();
+        querylog << "query_balance_account" <<std::endl; 
+        querylog << "initial_balance: "     << balanceinfo.initial_balance
+                 << "available_balance: "   << balanceinfo.available_balance
+                 << "market_value: "        << balanceinfo.market_value
+                 << "total_asset: "         << balanceinfo.total_asset
+                 << std::endl;
+    }
         
-        querylog.close();
+    querylog.close();
 
-    }
-    else {
-
-    }
 
     sigset_t zeromask;
     while(quit_flag == 0) {
@@ -320,9 +307,6 @@ int main(int argc,char* argv[]) {
     dumplogfile.open(dumplogpath, std::ios::app);
     wc_trader.dump_log(dumplogfile);
     dumplogfile.close();
-
-
-    
 
     return 0;
 }

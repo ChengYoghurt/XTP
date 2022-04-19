@@ -70,8 +70,7 @@ class WCTrader {
 public:
     WCTrader(
         std::unique_ptr<WCTraderConfig> p_config, 
-        std::unique_ptr<api::WCApi> p_trader_api,
-        std::unique_ptr<RiskControllerCreator> p_risk_controller_creator = nullptr
+        std::unique_ptr<api::WCApi> p_trader_api///////////////////////temporarily delete risk for there is not file
     );
     ~WCTrader() ;
 
