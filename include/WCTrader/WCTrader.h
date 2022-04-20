@@ -15,7 +15,6 @@
 #include <atomic>
 #include <string>
 #include <memory>
-#include <variant>
 #include "concurrentqueue/concurrentqueue.h"
 #include "spdlog/spdlog.h"
 
@@ -24,7 +23,6 @@ namespace wct {
 class ControlSignals        ;
 class OrderKeeper           ;
 class RiskController        ;
-class RiskControllerCreator ;
 class WCCallback            ;
 class WCTrader              ;
 class WCTraderConfig        ;
@@ -63,17 +61,19 @@ struct WCTraderConfig {
     int32_t     trade_unit         ;
     std::string server_socket      ;
     std::string tradex_logger_name ;
-    std::string tradex_algo_params ;////////////////tradex
+    std::string tradex_algo_params ;
 };
 
 class WCTrader {
 public:
     WCTrader(
         std::unique_ptr<WCTraderConfig> p_config, 
-        std::unique_ptr<api::WCApi> p_trader_api,
-        std::unique_ptr<RiskController> p_risk_controller
+        std::unique_ptr<api::WCApi> p_trader_api
     );
     ~WCTrader() ;
+
+    // add risk control 
+    void load_risk_config(std::string const& risk_config_file);
 
     // account init
     void init_account_avail(price_t account_avail) ;
@@ -87,7 +87,7 @@ public:
     void login(WCLoginRequest const& request) ;
 
     // API: place orders:
-    // 1. place order with risk control and delay service, only last order id is returned if splitted
+    // 1. place order with risk control and delay service, only last order id is returned if splited
     order_id_t place_order(
         instrument_id_t stock, 
         side_t side, 
@@ -131,7 +131,7 @@ public:
     const BalanceInfo& query_balance_from_account();
     const BalanceInfo& query_balance_from_broker();
 
-    std::ostream& dump_log(std::ostream& os) ;/////////////////////////////////////////////////
+    std::ostream& dump_log(std::ostream& os) ;
 
 private:
 
