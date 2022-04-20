@@ -64,5 +64,5 @@ __pycache__/
 
 # exception
 !lib/WCTrader/libWCTrader.a
-!XTP/bin/*
+!XTP/lib/*
 !XTP_Algo/lib/*
