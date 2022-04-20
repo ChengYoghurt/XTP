@@ -36,6 +36,9 @@ namespace api     {
     }
 
     AdaptedApi::AdaptedApi(){}
+    AdaptedApi::~AdaptedApi(){}
+
+
 
     void AdaptedSpi::OnTradeEvent(ApiTradeReport *trade_info, uint64_t session_id) {
         if(!OrderID(trade_info->order_client_id).is_from_trader(trade_id_)) {
@@ -223,6 +226,18 @@ namespace api     {
                 }
             }
         }
+        return error_id_t::success;
+    }
+
+    error_id_t AdaptedApi::query_credit_balance(){
+        return error_id_t::success;
+    }
+
+    error_id_t AdaptedApi::place_basket_order(WCBasketOrderRequest const& request){
+        return error_id_t::success;
+    }
+
+    error_id_t AdaptedApi::cancel_basket_order(WCBasketOrderCancelRequest const& request){
         return error_id_t::success;
     }
 
