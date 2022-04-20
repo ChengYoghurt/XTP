@@ -35,6 +35,8 @@ namespace api     {
         p_spi_->on_order_event(order_rsp);
     }
 
+    AdaptedApi::AdaptedApi(){}
+
     void AdaptedSpi::OnTradeEvent(ApiTradeReport *trade_info, uint64_t session_id) {
         if(!OrderID(trade_info->order_client_id).is_from_trader(trade_id_)) {
             return;
