@@ -8,7 +8,6 @@ INTERFACE
 target_link_directories(
     XTP
 INTERFACE
-    ${CMAKE_CURRENT_LIST_DIR}/bin
     ${CMAKE_CURRENT_LIST_DIR}/lib
 )
 
