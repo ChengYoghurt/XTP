@@ -11,6 +11,12 @@ sinks:
 
 loggers:
   - main 
+  - AdaptedApi
+  - AdaptedSpi
+  - WCTrader
+  - WCCallback
+  - WCRspHandler
+  - OrderLog
   - default
 
 set_error_loggers:
