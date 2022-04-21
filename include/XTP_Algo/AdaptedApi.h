@@ -1,6 +1,6 @@
 #pragma once
 
-#include "XTP_Algo/AdaptedTypes.h"
+#include "AdaptedTypes.h"
 #include "WCTrader/TraderTypes.h"
 #include "WCTrader/WCApi.h"
 #include "spdlog/spdlog.h"
@@ -55,6 +55,7 @@ public:
     error_id_t place_basket_order(WCBasketOrderRequest const& request) ;
     error_id_t cancel_basket_order(WCBasketOrderCancelRequest const& request) ;
     
+    uint64_t set_session_id(uint64_t const &session_id);
 protected:
     //ApiRequestID get_request_id();
     static order_status_t simplify_status(ApiOrderStatus) ;
