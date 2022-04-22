@@ -9,88 +9,47 @@ namespace api     {
         p_logger_->error("Disconnected, session_id = {}, reason = {}", session_id, reason);
         p_spi_->on_disconnected(error_id_t::not_connected_to_server);
     }
+    void AdaptedSpi::OnAlgoDisconnected(int reason) {
+        p_logger_->error("AlgoDisconnected, reason = {}",reason);
+    //    p_spi_->on_disconnected(error_id_t::not_connected_to_server);
+    }
+    void AdaptedSpi::OnALGOUserEstablishChannel(char* user, XTPRI* error_info, uint64_t session_id) {
 
-    void  AdaptedSpi::OnOrderEvent(ApiOrderReport *order_info, ApiText error_info, uint64_t session_id) {
-       /* if(order_info->is_child_order) {
-            return; // skip all child order //?
-        }*////no such
-        if(!OrderID(order_info->order_client_id).is_from_trader(trade_id_)) {
-            return;
-        }
-        if(order_id_xtptowc[order_info->order_xtp_id] = 0){
-            order_id_xtptowc[order_info->order_xtp_id] = order_info->order_client_id;
-        }
+    }
+    void AdaptedSpi::OnInsertAlgoOrder(XTPStrategyInfoStruct* strategy_info, XTPRI *error_info, uint64_t session_id) {
+
+    }
+    void AdaptedSpi::OnStrategyStateReport(ApiOrderReport* strategy_state, uint64_t session_id) {
         WCOrderResponse order_rsp;
         std::memset(&order_rsp, 0, sizeof(order_rsp));
-        order_rsp.client_order_id  = order_info->order_client_id;
-        order_rsp.instrument       = std::atoi(order_info->ticker);
-        order_rsp.volume           = order_info->quantity;
-        order_rsp.price            = order_info->price;
-        order_rsp.traded           = order_info->qty_traded;
-        order_rsp.average_price    = order_info->trade_amount;//no average but has total
-        //order_rsp.order_status     = simplify_status(order_info->order_status);
+        order_rsp.client_order_id  = strategy_state->m_strategy_info.m_client_strategy_id;
+        order_rsp.instrument       =strategy_to_instrument_id[order_rsp.client_order_id];
+        order_rsp.volume           = strategy_state->m_strategy_qty;
+        order_rsp.price            = strategy_state->m_strategy_execution_price;
+        order_rsp.traded           = strategy_state->m_strategy_execution_qty;
+        order_rsp.average_price    = strategy_state->m_strategy_market_price;//no average but has market
+        //order_rsp.order_status     = simplify_status(strategy_state->order_status);
         order_rsp.error_id         = error_id_t::unknown;
-        order_rsp.transaction_time = order_info->update_time % 1'000000'000;  // drop YYYYMMDD and only keep HHMMSSsss
+        //order_rsp.transaction_time = strategy_state->update_time % 1'000000'000;  // no transaction time
         order_rsp.host_time        = timestamp_t::now();
         p_spi_->on_order_event(order_rsp);
-    }
-
-    void AdaptedSpi::OnTradeEvent(ApiTradeReport *trade_info, uint64_t session_id) {
-        if(!OrderID(trade_info->order_client_id).is_from_trader(trade_id_)) {
-            return;
-        }
-        if(order_id_xtptowc[trade_info->order_xtp_id] = 0){
-            order_id_xtptowc[trade_info->order_xtp_id] = trade_info->order_client_id;
-        }
-        WCTradeResponse trade_rsp;
-        std::memset(&trade_rsp, 0, sizeof(trade_rsp));
-        trade_rsp.client_order_id  = trade_info->order_client_id;
-        trade_rsp.instrument       = std::atoi(trade_info->ticker);
-        trade_rsp.trade_volume     = trade_info->quantity;
-        trade_rsp.trade_price      = trade_info->price;
-        trade_rsp.transaction_time = trade_info->trade_time % 1'000000'000;
-        trade_rsp.host_time        = timestamp_t::now();
-        p_spi_->on_trade_event(trade_rsp);
-    }
-
-    void AdaptedSpi::OnCancelOrderError(ApiOrderCancelReject *cancel_info, ApiText *error_info, uint64_t session_id) {
+    };
+    void AdaptedSpi::OnCancelAlgoOrder(ApiOrderCancelReport *cancel_info, ApiText *error_info, uint64_t session_id) {
       /*  if(!OrderID(cancel_info->client_order_id).is_from_trader(trade_id_)) {
             return;
         }*///no such
-        WCCancelRejectedResponse order_rsp;
-        order_rsp.client_order_id  =order_id_xtptowc[cancel_info->order_xtp_id];
-        order_rsp.error_id         = error_id_t::unknown;
-        p_spi_->on_cancel_rejected(order_rsp);
+        if(error_info->error_id != 0){
+            WCCancelRejectedResponse order_rsp;
+            order_rsp.client_order_id  =cancel_info->m_client_strategy_id;
+            order_rsp.error_id         = error_id_t::unknown;
+            p_spi_->on_cancel_rejected(order_rsp);
+        }
+    }
+    bool AdaptedSpi::setinstrument(order_id_t const&strategy_id,instrument_id_t const&instrument_id){
+        strategy_to_instrument_id[strategy_id] = instrument_id;
+        return true;
     }
 
-    void AdaptedSpi::OnQueryPosition(ApiPosition *position, ApiText *error_info, ApiRequestID request_id, bool is_last, uint64_t session_id) {
-        WCPositionResponse pos_rsp;
-        pos_rsp.instrument       = std::atoi(position->ticker)  ;
-        pos_rsp.yesterday_volume = position->yesterday_position ;
-        pos_rsp.latest_volume    = position->total_qty          ;
-        pos_rsp.available_volume = position->sellable_qty       ;
-        pos_rsp.is_last          = is_last                      ; 
-        if(error_info == nullptr || error_info->error_id == 0) {
-            pos_rsp.error_id = error_id_t::success;
-        } else {
-            pos_rsp.error_id = error_id_t::unknown;
-        }
-        p_spi_->on_query_position(pos_rsp);
-    }
-
-    void AdaptedSpi::OnQueryAsset(ApiBalance *asset, ApiText *error_info, ApiRequestID request_id, bool is_last, uint64_t session_id) {
-        WCBalanceResponse asset_rsp;
-        asset_rsp.initial_balance   = 0                       ;
-        asset_rsp.available_balance = asset->buying_power     ;
-        asset_rsp.market_value      = asset->security_asset   ;
-        asset_rsp.total_asset       = asset->total_asset      ;
-        if(error_info == nullptr || error_info->error_id == 0) {
-            asset_rsp.error_id = error_id_t::success;
-        } else {
-            asset_rsp.error_id = error_id_t::unknown;
-        }
-        p_spi_->on_query_balance(asset_rsp);
-    }
 
     error_id_t AdaptedApi::register_spi(std::unique_ptr<WCSpi> p_spi) {
         p_spi_ = std::make_unique<AdaptedSpi>(std::move(p_spi));
@@ -111,16 +70,16 @@ namespace api     {
         std::string password        = request.password                  ;
         XTP_PROTOCOL_TYPE sock_type = XTP_PROTOCOL_TCP                  ;
         std::string local_ip        = request.agent_fingerprint.local_ip;
-        int ret                     = p_broker_api_->LoginALGO(ip.c_str(), port, user.c_str(), password.c_str(), sock_type, local_ip.c_str());//algo server
-  //    int ret                     = p_broker_api_->ALGOUserEstablishChannel(ip.c_str(), port, user.c_str(), password.c_str(),session_id_) ; //考虑上层封装实现 //oms server                   
+        int ret                     = p_broker_api_->Login(ip.c_str(), port, user.c_str(), password.c_str(), sock_type, local_ip.c_str());//oms server
+  //    int ret                     = p_broker_api_->ALGOUserEstablishChannel(ip.c_str(), port, user.c_str(), password.c_str(),session_id_) ; //oms server                   
         if(ret == 0) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            p_logger_->error("LoginAlgo failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
+            p_logger_->error("Login failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
             return error_id_t::not_login;
         }
-        else {
-            return error_id_t::success;
-        }
+        ret                         = p_broker_api_->Login(ip.c_str(), port, user.c_str(), password.c_str(), sock_type, local_ip.c_str());//algo server
+        return error_id_t::success;
+        
     }
 
     ApiRequestID AdaptedApi::get_request_id() {
@@ -137,7 +96,7 @@ namespace api     {
     }
 
     error_id_t AdaptedApi::place_order(WCOrderRequest const& request) {
-        ApiSingleOrder single_order;
+/*        ApiSingleOrder single_order;
         std::memset(&single_order, 0, sizeof(single_order));
         //single_order.trade_unit = trade_unit_;
         single_order.order_client_id = request.client_order_id;
@@ -161,67 +120,21 @@ namespace api     {
      // single_order.algo_parameters = nullptr; // not use algorithms trading
 
         int xtp_order_id = p_broker_api_->InsertOrder(&single_order,session_id_);
-        order_id_wctoxtp[request.client_order_id] = xtp_order_id;
+        strategy_id_wctoxtp[request.client_order_id] = xtp_order_id;
         if (xtp_order_id) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
             p_logger_->error("InsertOrder failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
             return error_id_t::unknown;
         }
-        else return error_id_t::success;
+        else */return error_id_t::success;
     }
 
     error_id_t AdaptedApi::cancel_order(WCOrderCancelRequest const& request) {
-        int ret = p_broker_api_->CancelOrder(order_id_wctoxtp[request.client_order_id],session_id_);
-        if (ret) {
-            const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            p_logger_->error("CancelOrder failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
-            return error_id_t::unknown;
-        }
-        else return error_id_t::success;
+
     }
 
     error_id_t AdaptedApi::query_balance() {
-        int ret = p_broker_api_->QueryAsset(session_id_, get_request_id());
-        if (ret) {
-            const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            p_logger_->error("QueryAsset failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
-            return error_id_t::unknown;
-        }
-        else return error_id_t::success;
-    }
 
-    error_id_t AdaptedApi::query_position(WCPositionQueryRequest const& request) {
-        if (request.query_all) {
-            // Ticker being NULL means querying all
-            // QueryPos only use MARKET_TYPE when ticker isn't NULL
-            int ret = p_broker_api_->QueryPosition(NULL, session_id_, get_request_id());
-            if (ret) {
-                const  ApiText* error_info = p_broker_api_->GetApiLastError();
-                p_logger_->error("QueryPosition of all tickers failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
-                return error_id_t::unknown;
-            }
-        }
-        else {
-            market_t instrument_market = (wct::market_t)get_belonged_market(request.instrument);
-            std::string instrument_str = instrument_to_str(request.instrument);
-            if (instrument_market == market_t::sh || instrument_market == market_t::shsecond) {
-                int ret = p_broker_api_->QueryPosition(instrument_str.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SH_A);
-                if (ret) {
-                const  ApiText* error_info = p_broker_api_->GetApiLastError();
-                p_logger_->error("QueryPosition of sh market failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
-                return error_id_t::unknown;
-                }
-            }
-            else if (instrument_market == market_t::sz || instrument_market == market_t::szsecond) {
-                int ret = p_broker_api_->QueryPosition(instrument_str.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SZ_A);
-                if (ret) {
-                const  ApiText* error_info = p_broker_api_->GetApiLastError();
-                p_logger_->error("QueryPosition of sz market failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
-                return error_id_t::unknown;
-                }
-            }
-        }
-        return error_id_t::success;
     }
 
     error_id_t AdaptedApi::query_credit_balance(){
@@ -252,10 +165,6 @@ namespace api     {
             return error_id_t::unknown;
         }
         return error_id_t::success;
-    }
-
-    uint64_t AdaptedApi::set_session_id(uint64_t const &session_id){
-        session_id_ = session_id;
     }
 
 } /* namespace api     */

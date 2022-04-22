@@ -12,6 +12,11 @@
 namespace wct     {
 namespace api     {
 
+struct AlgoConfig{
+    
+
+
+};
 class AdaptedSpi: public BrokerSpi
 {
 public:
@@ -22,17 +27,28 @@ public:
     virtual ~AdaptedSpi() = default;
 protected:
     virtual void OnDisconnected(uint64_t session_id, int reason); 
-    virtual void OnQueryPosition(ApiPosition *position, ApiText *error_info, ApiRequestID request_id, bool is_last, uint64_t session_id) ;
-    virtual void OnQueryAsset(ApiBalance *asset, ApiText *error_info, ApiRequestID request_id, bool is_last, uint64_t session_id) ;
-    virtual void OnOrderEvent(ApiOrderReport *order_info, ApiText error_info, uint64_t session_id);
-    virtual void OnTradeEvent(ApiTradeReport *trade_info, uint64_t session_id);
-    virtual void OnCancelOrderError(ApiOrderCancelReject *cancel_info, ApiText *error_info, uint64_t session_id);
+    virtual void OnAlgoDisconnected(int reason); 
+//    virtual void OnAlgoConnected(){};
+//    virtual void OnQueryPosition(ApiPosition *position, ApiText *error_info, ApiRequestID request_id, bool is_last, uint64_t session_id) ;
+//    virtual void OnQueryAsset(ApiBalance *asset, ApiText *error_info, ApiRequestID request_id, bool is_last, uint64_t session_id) ;
+    
+    virtual void OnALGOUserEstablishChannel(char* user, XTPRI* error_info, uint64_t session_id);
+    virtual void OnInsertAlgoOrder(XTPStrategyInfoStruct* strategy_info, XTPRI *error_info, uint64_t session_id);
+    virtual void OnStrategyStateReport(ApiOrderReport* strategy_state, uint64_t session_id);
+	virtual void OnCancelAlgoOrder(ApiOrderCancelReport* strategy_info, XTPRI *error_info, uint64_t session_id);
+//    virtual void OnOrderEvent(ApiOrderReport *order_info, ApiText error_info, uint64_t session_id);
+//    virtual void OnTradeEvent(ApiTradeReport *trade_info, uint64_t session_id);
+//    virtual void OnCancelOrderError(ApiOrderCancelReject *cancel_info, ApiText *error_info, uint64_t session_id);
+    bool setinstrument(order_id_t const&strategy_id,instrument_id_t const&instrument_id);
+
+protected:
+    static order_status_t simplify_status(ApiOrderStatus) ;
 
 protected:
     uint32_t trade_id_;
     std::unique_ptr<WCSpi> p_spi_;
     std::shared_ptr<spdlog::logger> p_logger_;
-    std::unordered_map<uint64_t,order_id_t> order_id_xtptowc;
+    std::unordered_map<order_id_t,instrument_id_t> strategy_to_instrument_id;
 
 };
 
@@ -47,18 +63,18 @@ public:
     ApiRequestID get_request_id() ;
     uint64_t get_session_id();
     error_id_t register_spi(std::unique_ptr<WCSpi> p_spi) ;
-    error_id_t place_order(WCOrderRequest const& request) ;
+    error_id_t place_order(WCOrderRequest const& request){} ;
     error_id_t cancel_order(WCOrderCancelRequest const& request) ;
     error_id_t query_balance() ;
-    error_id_t query_position(WCPositionQueryRequest const& request) ;
+    error_id_t query_position(WCPositionQueryRequest const& request);
     error_id_t query_credit_balance() ;
     error_id_t place_basket_order(WCBasketOrderRequest const& request) ;
     error_id_t cancel_basket_order(WCBasketOrderCancelRequest const& request) ;
-    
-    uint64_t set_session_id(uint64_t const &session_id);
+
 protected:
     //ApiRequestID get_request_id();
-    static order_status_t simplify_status(ApiOrderStatus) ;
+    //static order_status_t simplify_status(ApiOrderStatus) ;
+
 protected:
     BrokerApi * p_broker_api_;
     uint32_t trade_id_;
@@ -66,7 +82,7 @@ protected:
     uint64_t session_id_;
     std::unique_ptr<AdaptedSpi> p_spi_;
     std::shared_ptr<spdlog::logger> p_logger_;
-    std::unordered_map<order_id_t,uint64_t> order_id_wctoxtp;
+    std::unordered_map<order_id_t,uint64_t> strategy_id_wctoxtp;
 
 };  /* class AdaptedApi */
 
