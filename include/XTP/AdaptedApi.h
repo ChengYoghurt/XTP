@@ -39,6 +39,7 @@ class AdaptedApi : public wct::api::WCApi
 {
 public:
     AdaptedApi() ;
+    AdaptedApi(uint32_t client_id, std::string filepath);
     virtual ~AdaptedApi() ;
     virtual std::string version() const noexcept ;
     virtual error_id_t login(WCLoginRequest const& request);

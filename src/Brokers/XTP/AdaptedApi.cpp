@@ -35,10 +35,23 @@ namespace api     {
         p_spi_->on_order_event(order_rsp);
     }
 
-    AdaptedApi::AdaptedApi(){}
-    AdaptedApi::~AdaptedApi(){}
+    AdaptedApi::AdaptedApi()
+        : p_logger_(spdlog::get("AdaptedApi"))
+        {
+            p_broker_api_ = BrokerApi::CreateTraderApi(1, "default.txt");
+            p_spi_ = nullptr;
+        }
 
+    AdaptedApi::AdaptedApi(uint32_t client_id, std::string filepath)
+        : p_logger_(spdlog::get("AdaptedApi"))    
+        {
+            p_broker_api_ = BrokerApi::CreateTraderApi(client_id, filepath.c_str());
+            p_spi_ = nullptr;
+        }
 
+    AdaptedApi::~AdaptedApi(){
+        p_broker_api_->Release();
+    }
 
     void AdaptedSpi::OnTradeEvent(ApiTradeReport *trade_info, uint64_t session_id) {
         if(!OrderID(trade_info->order_client_id).is_from_trader(trade_id_)) {

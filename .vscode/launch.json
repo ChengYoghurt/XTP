@@ -11,7 +11,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/tests/KuafuTest",
             "args": [],
-            "stopAtEntry": false,
+            "stopAtEntry": true,
             "cwd": "${workspaceFolder}/build",
             "environment": [
                 {
