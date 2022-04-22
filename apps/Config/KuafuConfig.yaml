@@ -6,7 +6,7 @@ TDFAccount: Test
 TDFReplayFromStart: true
 
 # Trade Config
-TradeConfig: Config/XTPTradec.yaml
+TradeConfig: apps/Config/XTPTradec.yaml
 TradeAccount: Test
 TradeReplayFromStart: true
 

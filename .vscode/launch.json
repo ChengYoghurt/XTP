@@ -11,7 +11,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/tests/KuafuTest",
             "args": [],
-            "stopAtEntry": false,
+            "stopAtEntry": true,
             "cwd": "${workspaceFolder}/build",
             "environment": [
                 {
@@ -35,10 +35,10 @@
             "name": "Main",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/apps/main",
+            "program": "${workspaceFolder}/build/apps/XTP_main",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/build",
+            "cwd": "${workspaceFolder}/build/apps",
             "environment": [
                 {
                     "name": "LD_LIBRARY_PATH",
