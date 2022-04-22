@@ -32,10 +32,10 @@
         },
         // apps
         {
-            "name": "Main",
+            "name": "XTP_main",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/apps/main",
+            "program": "${workspaceFolder}/build/apps/XTP_main",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build",

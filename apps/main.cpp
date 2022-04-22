@@ -198,12 +198,12 @@ int main(int argc,char* argv[]) {
 
     auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>();
     auto p_wc_trader_config = std::make_unique<wct::WCTraderConfig>();
-    //p_wc_trader_config->trade_id=1;
     
     wct::WCTrader wc_trader(
         std::move(p_wc_trader_config), 
         std::move(p_adapted_api)
     ); 
+
     std::thread wc_trader_th = std::thread(&wct::WCTrader::run, &wc_trader);
 
     wct::WCLoginRequest wcloginrequest     ;
