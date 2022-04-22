@@ -6,26 +6,19 @@ Test:
  server_port: 6002
  username: "253191000198"
  password: "RnancU1F"
-<<<<<<< HEAD
  client_id: 1
-=======
- client_id: 3
->>>>>>> 8f6e9e8c5afc702d7ea3e5fbb31a2a450222ea5a
  path_linux: "/root/log/"
  path: "D:\\test\\"
  exchange_id_sh: 1
  exchange_id_sz: 2
  query_tickers_path_sh: "tickers_sh.txt"
  query_tickers_path_sz: "tickers_sz.txt"
-<<<<<<< HEAD
-=======
  instrument_sh:
   - "688281"
   - "603070"
  instrument_sz:
   - "000004"
   - "301222"
->>>>>>> 8f6e9e8c5afc702d7ea3e5fbb31a2a450222ea5a
  hb_interval: 15
  quote_buffer_size: 128
  quote_protocol: 1

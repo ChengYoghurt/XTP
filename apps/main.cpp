@@ -39,7 +39,7 @@ void usage(const char* call_name) {
 
 int main(int argc,char* argv[]) {
 
-    std::string config_file = "Config/KuafuConfig.yaml";
+    std::string config_file { "Config/KuafuConfig.yaml"};
     std::string today_str { get_today_str() };
     int opt;
     while((opt = getopt(argc, argv, "f:h")) != -1) {
@@ -136,11 +136,11 @@ int main(int argc,char* argv[]) {
 */
     //not clear if yamlgetfield can convert node to other types like side_t
     //order config
-    YAML::Node node_orders   = trade_account["order"];        
+    YAML::Node node_orders  ;// = trade_account["order"];        
     uint32_t order_count     = node_orders.size();
     std::vector<wct::WCOrderRequest> vec_wcorderrequest;
 
-    for (uint32_t i = 0 ; i < order_count ; i++) {
+    /*for (uint32_t i = 0 ; i < order_count ; i++) {
         wct::WCOrderRequest wcorderrequest;
         wcorderrequest.instrument       = node_orders[i]["instrument_id"].as<wct::instrument_id_t>();
         wcorderrequest.client_order_id  = wct::order_id_t(node_orders[i]["client_order_id"].as<uint32_t>());
@@ -150,9 +150,9 @@ int main(int argc,char* argv[]) {
         wcorderrequest.side             = (wct::side_t)node_orders[i]["side"].as<uint32_t>();
         wcorderrequest.price_type       = (wct::price_type_t)node_orders[i]["price_type"].as<uint32_t>();
         vec_wcorderrequest.emplace_back(wcorderrequest);
-    }
+    }*/
     //concel order config
-    YAML::Node node_cancel_orders   = trade_account["cancel_order_id"];        ;
+    YAML::Node node_cancel_orders  ;// = trade_account["cancel_order_id"];        ;
     uint32_t cancel_order_count     = node_cancel_orders.size();;
     std::vector<wct::WCOrderCancelRequest> vec_wccancelreq;
 
@@ -196,9 +196,9 @@ int main(int argc,char* argv[]) {
     p_logger->info("tradePort              = {}", trade_server_port           );
     p_logger->info("LogConfig              = {}", log_config_file             );
 
-
     auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>();
     auto p_wc_trader_config = std::make_unique<wct::WCTraderConfig>();
+    
     wct::WCTrader wc_trader(
         std::move(p_wc_trader_config), 
         std::move(p_adapted_api)

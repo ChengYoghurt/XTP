@@ -11,7 +11,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/tests/KuafuTest",
             "args": [],
-            "stopAtEntry": false,
+            "stopAtEntry": true,
             "cwd": "${workspaceFolder}/build",
             "environment": [
                 {
@@ -32,7 +32,7 @@
         },
         // apps
         {
-            "name": "Main",
+            "name": "XTP_main",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/apps/XTP_main",
