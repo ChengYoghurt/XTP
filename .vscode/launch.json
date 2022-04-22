@@ -38,7 +38,7 @@
             "program": "${workspaceFolder}/build/apps/XTP_main",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/build/apps",
+            "cwd": "${workspaceFolder}/build",
             "environment": [
                 {
                     "name": "LD_LIBRARY_PATH",
