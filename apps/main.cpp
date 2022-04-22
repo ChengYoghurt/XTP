@@ -84,8 +84,7 @@ int main(int argc,char* argv[]) {
     std::string filepath; 
     int log_level;
     // trade account config addtional 
-    //uint32_t client_id;
-    int client_id;
+    uint32_t client_id;
     uint32_t heat_beat_interval;
     uint32_t trade_protocol;
 

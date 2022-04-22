@@ -39,12 +39,14 @@ namespace api     {
         : p_logger_(spdlog::get("AdptedApi"))
         {
             p_broker_api_ = BrokerApi::CreateTraderApi(1, "default.txt");
+            p_spi_ = nullptr;
         }
 
-    AdaptedApi::AdaptedApi(int client_id, std::string filepath)
+    AdaptedApi::AdaptedApi(uint32_t client_id, std::string filepath)
         : p_logger_(spdlog::get("AdptedApi"))    
         {
             p_broker_api_ = BrokerApi::CreateTraderApi(client_id, filepath.c_str());
+            p_spi_ = nullptr;
         }
 
     AdaptedApi::~AdaptedApi(){
