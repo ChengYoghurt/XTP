@@ -1,5 +1,6 @@
 #include "AdaptedApi.h"
 #include "KuafuUtils.h"
+#include "YAMLGetField.h"
 #include <cstring>
 
 namespace wct     {
@@ -16,13 +17,14 @@ namespace api     {
     void AdaptedSpi::OnALGOUserEstablishChannel(char* user, XTPRI* error_info, uint64_t session_id) {
 
     }
-    void AdaptedSpi::OnInsertAlgoOrder(XTPStrategyInfoStruct* strategy_info, XTPRI *error_info, uint64_t session_id) {
+    void AdaptedSpi::OnInsertAlgoOrder(ApiInsertReport* strategy_info, XTPRI *error_info, uint64_t session_id) {
 
     }
     void AdaptedSpi::OnStrategyStateReport(ApiOrderReport* strategy_state, uint64_t session_id) {
         WCOrderResponse order_rsp;
         std::memset(&order_rsp, 0, sizeof(order_rsp));
         order_rsp.client_order_id  = strategy_state->m_strategy_info.m_client_strategy_id;
+        strategy_to_xtp_id[order_rsp.client_order_id] = strategy_state->m_strategy_info.m_xtp_strategy_id;
         order_rsp.instrument       =strategy_to_instrument_id[order_rsp.client_order_id];
         order_rsp.volume           = strategy_state->m_strategy_qty;
         order_rsp.price            = strategy_state->m_strategy_execution_price;
@@ -49,8 +51,32 @@ namespace api     {
         strategy_to_instrument_id[strategy_id] = instrument_id;
         return true;
     }
+    u_int64_t AdaptedSpi::qurry_xtp_id(order_id_t client_order_id){
+        return strategy_to_xtp_id[client_order_id];
+    }
+/*
+    AdaptedApi::AdaptedApi(std::string const&algo_login_config_file ="Config/AlgoLoginConfig.yaml"){
+        std::string today_str { get_today_str() };
+        check_file_exist(algo_login_config_file);
+        YAML::Node login_config = YAML::LoadFile(algo_login_config_file);
+        
+        YAML_GET_FIELD(algo_login_config_.algo_server_ip  , login_config, server_ip  );
+        YAML_GET_FIELD(algo_login_config_.algo_server_port, login_config, server_port);
+        YAML_GET_FIELD(algo_login_config_.algo_username   , login_config, username   );
+        YAML_GET_FIELD(algo_login_config_.algo_password   , login_config, password   );
+      
+        std::string algo_config_file;
+        YAML_GET_FIELD(algo_config_file                   , login_config, AlgoConfigfile );
+        check_file_exist(algo_config_file);
+        YAML::Node config = YAML::LoadFile(algo_config_file);
 
-
+        YAML_GET_FIELD(algo_config_.algo_name        , config, algo_name        );
+        YAML_GET_FIELD(algo_config_.expire_action    , config, expire_action    );
+        YAML_GET_FIELD(algo_config_.limit_action     , config, limit_action     );
+        YAML_GET_FIELD(algo_config_.paticipation_rate, config, paticipation_rate);
+        YAML_GET_FIELD(algo_config_.style            , config, style            );
+    }
+*/
     error_id_t AdaptedApi::register_spi(std::unique_ptr<WCSpi> p_spi) {
         p_spi_ = std::make_unique<AdaptedSpi>(std::move(p_spi));
         // RegisterSpi return value is void
@@ -71,13 +97,33 @@ namespace api     {
         XTP_PROTOCOL_TYPE sock_type = XTP_PROTOCOL_TCP                  ;
         std::string local_ip        = request.agent_fingerprint.local_ip;
         int ret                     = p_broker_api_->Login(ip.c_str(), port, user.c_str(), password.c_str(), sock_type, local_ip.c_str());//oms server
-  //    int ret                     = p_broker_api_->ALGOUserEstablishChannel(ip.c_str(), port, user.c_str(), password.c_str(),session_id_) ; //oms server                   
         if(ret == 0) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
             p_logger_->error("Login failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
             return error_id_t::not_login;
         }
-        ret                         = p_broker_api_->Login(ip.c_str(), port, user.c_str(), password.c_str(), sock_type, local_ip.c_str());//algo server
+        session_id_ = ret;
+
+        XTP_PROTOCOL_TYPE algo_sock_type = XTP_PROTOCOL_TCP                  ;
+        ret = p_broker_api_->LoginALGO(
+              algo_login_config_.algo_server_ip.c_str(), 
+              algo_login_config_.algo_server_port,
+              algo_login_config_.algo_username.c_str(), 
+              algo_login_config_.algo_password.c_str(), 
+              algo_sock_type, 
+              algo_login_config_.local_ip.c_str());//algo server
+        if(ret != 0) {
+            const  ApiText* error_info = p_broker_api_->GetApiLastError();
+            p_logger_->error("LoginAlgo failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
+            return error_id_t::not_login;
+        }
+
+        ret = p_broker_api_->ALGOUserEstablishChannel(ip.c_str(), port, user.c_str(), password.c_str(),session_id_) ; //oms server                   
+        if(ret != 0) {
+            const  ApiText* error_info = p_broker_api_->GetApiLastError();
+            p_logger_->error("EstablishChannel failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
+            return error_id_t::not_login;
+        }
         return error_id_t::success;
         
     }
@@ -142,22 +188,86 @@ namespace api     {
     }
 
     error_id_t AdaptedApi::place_basket_order(WCBasketOrderRequest const& request){
-        std::string strategy_param;
-    
-        uint32_t strategy_type;
-        
+        uint32_t strategy_type = static_cast<uint32_t>(algo_config_.algo_type);
+        std::string start_time = std::string(request.start_time.str(),0,8);
+        std::string end_time   = std::string(request.start_time.str(),0,8);
+        std::string limit_action;
+        std::string expire_action;  
 
-        int ret = p_broker_api_->InsertAlgoOrder(strategy_type,request.client_basket_id,"1",session_id_);
-        if (ret) {
-            const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            p_logger_->error("InsertAlgoOrder of all tickers failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
-            return error_id_t::unknown;
+        if(algo_config_.limit_action) limit_action = "true";   
+        else limit_action = "false";
+        if(algo_config_.expire_action) expire_action = "true";   
+        else expire_action = "false";
+
+        for(auto& basket_leg: request.basket_legs){
+            std::string strategy_param;
+            std::string market;
+            std::string side;
+            switch ((wct::market_t)get_belonged_market(basket_leg.instrument)) {
+                case market_t::sh: 
+                case market_t::shsecond: 
+                    market = "SH"; 
+                    break;
+                case market_t::sz: 
+                case market_t::szsecond: 
+                    market = "SZ"; 
+                    break;
+                default: break;
+            }
+            switch (basket_leg.side)
+            {
+            case side_t::buy: side = "BUY";
+                break;
+            case side_t::sell: side = "SELL";
+            default:
+                break;
+            }
+            switch(algo_config_.algo_type){
+                case algo_type_t::unknown: return error_id_t::unknown;
+                break;
+                case algo_type_t::TWAP_PLUS:
+                case algo_type_t::VWAP_PLUS:
+                strategy_param = "{\"start_time\": \"" +
+                start_time + "\", \"end_time\": \"" +
+                end_time   + "\", \"ticker\": \"" +
+                std::to_string(basket_leg.instrument) + "\", \"market\": \"" +
+                market     + "\", \"side\": \"" +
+                side       + "\", \"quantity\": " +
+                std::to_string(basket_leg.volume) + "\", \"limit_action\": " +
+                limit_action + ", \"expire_action\": " +
+                expire_action + ", \"price\": " + 
+                std::to_string(basket_leg.price) +" }";
+                break;
+                case algo_type_t::TWAP:
+                case algo_type_t::VWAP:
+                strategy_param = "{\"start_time\": \"" +
+                start_time + "\", \"end_time\": \"" +
+                end_time   + "\", \"market\": \"" +
+                market     + "\", \"ticker\": \"" +
+                std::to_string(basket_leg.instrument) + "\", \"side\": \"" +
+                side       + "\", \"quantity\": " +
+                std::to_string(basket_leg.volume) + ", \"price\": " + 
+                std::to_string(basket_leg.price)  + ", \"business_type\": \"" +
+                "CASH" + "\", \"participation_rate\": " +
+                std::to_string(algo_config_.paticipation_rate)  +", \"style\"" +
+                std::to_string(algo_config_.style) + " }";
+                break;
+                default:break;
+            }
+            //another solution:malloc 
+            char strategy_param_c[1024];
+            sprintf(strategy_param_c,strategy_param.c_str());
+            int ret = p_broker_api_->InsertAlgoOrder(strategy_type,basket_leg.client_order_id,strategy_param_c,session_id_);        
+            if (ret) {
+                const  ApiText* error_info = p_broker_api_->GetApiLastError();
+                p_logger_->error("InsertAlgoOrder failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+            }
         }
-         return error_id_t::success;
+        return error_id_t::success;
     }
     error_id_t AdaptedApi::cancel_basket_order(WCBasketOrderCancelRequest const& request){
-        
-        int ret = p_broker_api_->CancelAlgoOrder(true, request.client_order_id, session_id_);
+        uint32_t strategy_xtp_id = p_spi_->qurry_xtp_id(request.client_order_id);
+        int ret = p_broker_api_->CancelAlgoOrder(true, strategy_xtp_id, session_id_);
 
         if (ret) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
