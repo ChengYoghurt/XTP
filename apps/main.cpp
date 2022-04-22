@@ -82,8 +82,9 @@ int main(int argc,char* argv[]) {
     std::string trade_username ;
     std::string trade_password ;
     std::string filepath; 
+    XTP_LOG_LEVEL log_level;
     // trade account config addtional 
-    uint32_t client_id;
+    uint8_t client_id;
     uint32_t heat_beat_interval;
     uint32_t trade_protocol;
 
@@ -111,6 +112,7 @@ int main(int argc,char* argv[]) {
     // yaml 初始化 additional
     YAML_GET_FIELD(client_id         , trade_account, client_id        );    
     YAML_GET_FIELD(heat_beat_interval, trade_account, hb_interval      );
+    YAML_GET_FIELD(log_level         , trade_account, log_l     );
  //   YAML_GET_FIELD(trade_exchange_sh      , trade_account, exchange_id_sh       );
  //   YAML_GET_FIELD(trade_exchange_sz      , trade_account, exchange_id_sz       );
 
@@ -196,7 +198,7 @@ int main(int argc,char* argv[]) {
     p_logger->info("tradePort              = {}", trade_server_port           );
     p_logger->info("LogConfig              = {}", log_config_file             );
 
-    auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>();
+    auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>(client_id, filepath, log_level);
     auto p_wc_trader_config = std::make_unique<wct::WCTraderConfig>();
     
     wct::WCTrader wc_trader(
