@@ -38,13 +38,13 @@ namespace api     {
     AdaptedApi::AdaptedApi()
         : p_logger_(spdlog::get("AdptedApi"))
         {
-            p_broker_api_ = BrokerApi::CreateTraderApi(1, "default.txt", XTP_LOG_LEVEL_INFO);
+            p_broker_api_ = BrokerApi::CreateTraderApi(1, "default.txt");
         }
 
-    AdaptedApi::AdaptedApi(uint8_t client_id, std::string filepath, XTP_LOG_LEVEL log_level)
+    AdaptedApi::AdaptedApi(int client_id, std::string filepath)
         : p_logger_(spdlog::get("AdptedApi"))    
         {
-            p_broker_api_ = BrokerApi::CreateTraderApi(client_id, filepath.c_str(), log_level);
+            p_broker_api_ = BrokerApi::CreateTraderApi(client_id, filepath.c_str());
         }
 
     AdaptedApi::~AdaptedApi(){

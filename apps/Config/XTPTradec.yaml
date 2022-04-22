@@ -8,7 +8,6 @@ Test:
  username: "253191000198"
  password: "RnancU1F"
  client_id: 3
- log_l: 4
  path_linux: "/root/log/"
  path: "D:\\test\\"
  exchange_id_sh: 1

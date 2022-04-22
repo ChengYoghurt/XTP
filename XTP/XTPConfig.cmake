@@ -15,5 +15,6 @@ target_link_libraries(
     XTP
 INTERFACE
     xtpquoteapi
+    xtptraderapi
 )
 add_library(XTP::XTP ALIAS XTP)
