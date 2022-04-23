@@ -213,11 +213,11 @@ int main(int argc,char* argv[]) {
     wct::BalanceInfo balanceinfo           ;
     wct::PositionInfo positioninfo         ;
 
-    wcloginrequest.username             = trade_username      ;
-    wcloginrequest.password             = trade_password      ;
-    wcloginrequest.server_ip            = trade_server_ip     ;
-    wcloginrequest.server_port          = trade_server_port   ;
-    wcloginrequest.agent_fingerprint.local_ip    =trade_server_ip; //? not certain
+    wcloginrequest.username                     = trade_username      ;
+    wcloginrequest.password                     = trade_password      ;
+    wcloginrequest.server_ip                    = trade_server_ip     ;
+    wcloginrequest.server_port                  = trade_server_port   ;
+    wcloginrequest.agent_fingerprint.local_ip   = trade_server_ip     ; //? not certain
     wc_trader.login(wcloginrequest);
 
     std::cout << "--------------Login successfully----------------" << std::endl;
