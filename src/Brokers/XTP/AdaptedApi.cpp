@@ -131,6 +131,7 @@ namespace api     {
         std::string local_ip        = request.agent_fingerprint.local_ip;
 
         session_id_                 = p_broker_api_->Login(ip.c_str(), port, user.c_str(), password.c_str(), sock_type, local_ip.c_str());
+        
         if(session_id_ != 0) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
             p_logger_->error("Login failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);

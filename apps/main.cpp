@@ -219,7 +219,6 @@ int main(int argc,char* argv[]) {
     wcloginrequest.server_port                  = trade_server_port   ;
     wcloginrequest.agent_fingerprint.local_ip   = trade_server_ip     ; //? not certain
     wc_trader.login(wcloginrequest);
-
     std::cout << "--------------Login successfully----------------" << std::endl;
     wct::WCLoginResponse response; 
     response.session_id = p_adapted_api->get_session_id();
