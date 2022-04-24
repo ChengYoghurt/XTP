@@ -5,6 +5,10 @@
 namespace wct     {
 namespace api     {
 
+    void AdaptedSpi::on_login(WCLoginResponse const& response){
+        p_spi_->on_login(response);
+    }
+
     void AdaptedSpi::OnDisconnected(uint64_t session_id, int reason) {
         p_logger_->error("Disconnected, session_id = {}, reason = {}", session_id, reason);
         p_spi_->on_disconnected(error_id_t::not_connected_to_server);
@@ -138,6 +142,8 @@ namespace api     {
             return error_id_t::not_login;
         }
         else {
+            WCLoginResponse response;
+            p_spi_->on_login(response);
             return error_id_t::success;
         }
     }
