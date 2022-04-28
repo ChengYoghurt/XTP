@@ -3,10 +3,12 @@
 #XTPTrade information
 # side,price_type use ASCII
 Test: 
- server_ip: "119.3.103.38"
- server_port: 6002
- username: "253191000198"
- password: "RnancU1F"
+ server_ip: "122.112.139.0"
+ server_port: 6102
+ username0: "253191000198"
+ password0: "RnancU1F"
+ username: "253191000194"
+ password: "7nF6hsuD"
  client_id: 3
  path_linux: "/root/log/"
  path: "D:\\test\\"
@@ -15,7 +17,7 @@ Test:
  order:
   -
     client_order_id: 1
-    instrument_id: 600090
+    instrument_id: 6000439
     price: 7.0
     quantity: 200
     side: 66
@@ -23,7 +25,7 @@ Test:
  cancel_order_id: 
  query_position_is_true: true
  query_position_is_all: true
- query_position_instrument: 600001
+ query_position_instrument: 600439
  query_balance_is_true_account: true
  query_balance_is_true_broker: true
  hb_interval: 15

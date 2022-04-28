@@ -96,12 +96,27 @@ inline market_t get_belonged_market(instrument_id_t instrument) {
 inline std::string instrument_to_str(l2agg::instrument_id_t instrument) {
 
     std::string instrument_str(instrument_len, '0');
+    std::stringstream StrStm;
     for(int instrument_index = instrument_len - 1; instrument ; --instrument_index)
     {
-        instrument_str[instrument_index] = instrument%10;
+        StrStm<<instrument%10;
+        StrStm>>instrument_str[instrument_index];
         instrument /= 10;
     }
     return instrument_str;
 }
 
+/*inline std::string instrument_to_str(l2agg::instrument_id_t instrument) {
 
+    std::string instrument_str(instrument_len, '0');
+    std::stringstream StrStm;
+    for(int instrument_index = instrument_len - 1; instrument ; --instrument_index)
+    {
+        StrStm<<instrument%10;
+        std::cout<<instrument<<"this change"<<std::endl;
+        instrument_str[instrument_index] = instrument%10;
+        std::cout<<instrument_str<<"   "<<instrument_index<<"this"<<std::endl;
+        instrument /= 10;
+    }
+    return instrument_str;
+}*/

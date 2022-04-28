@@ -217,16 +217,17 @@ int main(int argc,char* argv[]) {
     wcloginrequest.password                     = trade_password      ;
     wcloginrequest.server_ip                    = trade_server_ip     ;
     wcloginrequest.server_port                  = trade_server_port   ;
-    wcloginrequest.agent_fingerprint.local_ip   = trade_server_ip     ; //? not certain
+    wcloginrequest.agent_fingerprint.local_ip   = "192.168.0.204"     ; //? not certain
+    //std::cout<<trade_username<<std::endl<<trade_password<<std::endl<<trade_server_ip<<std::endl<<trade_server_port<<std::endl;
+    wcloginrequest.agent_fingerprint.token      = "b8aa7173bba3470e390d787219b2112e";
     wc_trader.login(wcloginrequest);
     std::cout << "--------------Login successfully----------------" << std::endl;
-    wct::WCLoginResponse response; 
-    response.session_id = p_adapted_api->get_session_id();
-    response.error_id = wct::error_id_t::success;
+    //wct::WCLoginResponse response; 
+    //response.session_id = p_adapted_api->get_session_id();
+    //response.error_id = wct::error_id_t::success;
     //wc_trader.on_login(response);////////////////////////////////
-    wct::price_t account_avail = 50000000; 
+    wct::price_t account_avail = 5000000.0; 
     wc_trader.init_account_avail(account_avail); 
-
     std::ofstream querylog;
     querylog.open(query_data, std::ios::app);
 
@@ -251,27 +252,27 @@ int main(int argc,char* argv[]) {
             wc_trader.execute_place_order(local_order_id, stock, side, vol, limit_price);
         }*/
 
-    for (size_t i = 0 ; i <= vec_orderid.size() ; i++) {
+    for (size_t i = 0 ; i < vec_orderid.size() ; i++) {
         wct::order_id_t last_order_id = vec_orderid[i];
         wc_trader.cancel_order(last_order_id);
     }
 
-    for (size_t i = 0 ; i <= vec_orderid.size() ; i++) {
+    for (size_t i = 0 ; i < vec_orderid.size() ; i++) {
         wct::order_id_t last_order_id = vec_orderid[i];
         wc_trader.execute_cancel_order(last_order_id);
     }
 
-    if (query_position_is_true) {
+    /*if (query_position_is_true) {
         holdingofgiveninstr = wc_trader.query_holdings(query_position_instrument);
-        querylog << "query_position" << std::endl;
-        querylog << "holding: "      << holdingofgiveninstr.holding
-                 << "available: "    << holdingofgiveninstr.available
+        querylog << "query_position: " << query_position_instrument << std::endl;
+        querylog << "holding: "        << holdingofgiveninstr.holding
+                 << "available: "      << holdingofgiveninstr.available
                  << std::endl;
-    } 
+    }*/
 
-    if (query_position_is_all) {
+    /*if (query_position_is_all) {
         positioninfo = wc_trader.query_holdings();
-    }
+    }*/
 
     if (query_balance_is_true_account) {
         balanceinfo = wc_trader.query_balance_from_account();
