@@ -262,13 +262,13 @@ int main(int argc,char* argv[]) {
         wc_trader.execute_cancel_order(last_order_id);
     }
 
-    /*if (query_position_is_true) {
+    if (query_position_is_true) {
         holdingofgiveninstr = wc_trader.query_holdings(query_position_instrument);
         querylog << "query_position: " << query_position_instrument << std::endl;
         querylog << "holding: "        << holdingofgiveninstr.holding
                  << "available: "      << holdingofgiveninstr.available
                  << std::endl;
-    }*/
+    }
 
     /*if (query_position_is_all) {
         positioninfo = wc_trader.query_holdings();
