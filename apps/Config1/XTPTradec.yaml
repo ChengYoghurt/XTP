@@ -5,10 +5,8 @@
 Test: 
  server_ip: "122.112.139.0"
  server_port: 6102
- username0: "253191000198"
- password0: "RnancU1F"
- username: "253191000194"
- password: "7nF6hsuD"
+ username: "253191000198"
+ password: "RnancU1F"
  client_id: 3
  path_linux: "/root/log/"
  path: "D:\\test\\"
