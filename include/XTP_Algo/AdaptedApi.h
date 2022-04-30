@@ -12,6 +12,7 @@
 namespace wct     {
 namespace api     {
 
+// algo type 
 enum class algo_type_t{ 
     unknown    = 0,
     TWAP       = 3510, 
@@ -20,6 +21,7 @@ enum class algo_type_t{
     VWAP_PLUS  = 3102,
 };
 
+// algo login info
 struct AlgoLoginConfig{
     std::string algo_server_ip;
     int algo_server_port;
@@ -27,7 +29,7 @@ struct AlgoLoginConfig{
     std::string algo_password;
     std::string local_ip;
 };
-
+// algo order static info 
 struct AlgoConfig{
     std::string algo_name;
     algo_type_t algo_type;
@@ -35,6 +37,12 @@ struct AlgoConfig{
     bool expire_action;
     double paticipation_rate;
     int style;
+};
+
+// user order info 
+struct UserOrderInfo{
+    uint64_t xtp_strategy_id;
+    instrument_id_t instrument_id;
 };
 
 class AdaptedSpi: public BrokerSpi
@@ -46,21 +54,20 @@ public:
     {}
     virtual ~AdaptedSpi() = default;
     u_int64_t qurry_xtp_id(order_id_t client_order_id) ;
+    void on_login(session_t session_);
+    bool setinstrument(order_id_t const& strategy_id,instrument_id_t const& instrument_id);
 protected:
     virtual void OnDisconnected(uint64_t session_id, int reason); 
     virtual void OnAlgoDisconnected(int reason); 
-//    virtual void OnAlgoConnected(){};
-//    virtual void OnQueryPosition(ApiPosition *position, ApiText *error_info, ApiRequestID request_id, bool is_last, uint64_t session_id) ;
-//    virtual void OnQueryAsset(ApiBalance *asset, ApiText *error_info, ApiRequestID request_id, bool is_last, uint64_t session_id) ;
-    
+
     virtual void OnALGOUserEstablishChannel(char* user, XTPRI* error_info, uint64_t session_id);
     virtual void OnInsertAlgoOrder(ApiInsertReport* strategy_info, XTPRI *error_info, uint64_t session_id);
+
     virtual void OnStrategyStateReport(ApiOrderReport* strategy_state, uint64_t session_id);
 	virtual void OnCancelAlgoOrder(ApiOrderCancelReport* strategy_info, XTPRI *error_info, uint64_t session_id);
-//    virtual void OnOrderEvent(ApiOrderReport *order_info, ApiText error_info, uint64_t session_id);
-//    virtual void OnTradeEvent(ApiTradeReport *trade_info, uint64_t session_id);
-//    virtual void OnCancelOrderError(ApiOrderCancelReject *cancel_info, ApiText *error_info, uint64_t session_id);
-    bool setinstrument(order_id_t const&strategy_id,instrument_id_t const&instrument_id);
+
+   
+
 protected:
     static order_status_t simplify_status(ApiOrderStatus) ;
 
@@ -68,17 +75,20 @@ protected:
     uint32_t trade_id_;
     std::unique_ptr<WCSpi> p_spi_;
     std::shared_ptr<spdlog::logger> p_logger_;
-    std::unordered_map<order_id_t,instrument_id_t> strategy_to_instrument_id;
-    std::unordered_map<order_id_t,u_int64_t> strategy_to_xtp_id;
-};
+    std::unordered_map<order_id_t,UserOrderInfo> strategy_to_order_info;
+};/* class AdaptedSpi */
 
 class AdaptedApi : public wct::api::WCApi
 {
 public:
-    AdaptedApi::AdaptedApi(AlgoLoginConfig const& algo_login_config, AlgoConfig const& algo_config)
+    AdaptedApi::AdaptedApi(AlgoLoginConfig const& algo_login_config, AlgoConfig const& algo_config,uint32_t client_id, std::string filepath)
         :algo_config_(algo_config),
-        algo_login_config_(algo_login_config)
-    {}
+        algo_login_config_(algo_login_config),
+        p_logger_(spdlog::get("AdaptedApi"))
+    {
+        p_broker_api_ = BrokerApi::CreateTraderApi(client_id,filepath.c_str());
+        p_spi_ = nullptr;
+    }
     virtual ~AdaptedApi() ;
     virtual std::string version() const noexcept ;
     virtual error_id_t login(WCLoginRequest const& request);
@@ -105,7 +115,6 @@ protected:
     uint64_t session_id_;
     std::unique_ptr<AdaptedSpi> p_spi_;
     std::shared_ptr<spdlog::logger> p_logger_;
-    std::unordered_map<order_id_t,uint64_t> strategy_id_wctoxtp;
     AlgoLoginConfig algo_login_config_;
     AlgoConfig algo_config_;
 };  /* class AdaptedApi */

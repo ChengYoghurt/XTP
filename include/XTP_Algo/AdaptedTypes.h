@@ -9,20 +9,20 @@ using BrokerApi                      = XTP::API::TraderApi                     ;
 using BrokerSpi                      = XTP::API::TraderSpi                     ;
 
 // Export Spi Types
-using ApiBalance                     = XTPQueryAssetRsp                        ; //asset include balance   
+//using ApiBalance                     = XTPQueryAssetRsp                        ; //asset include balance   
 //using ApiBorrowingSecurity           = com::tradex::api::TRXBorrowingSecurity          ;
 //using ApiCreditAsset                 = com::tradex::api::TRXCreditAsset                ;
 //using ApiFinancingLiability          = com::tradex::api::TRXFinancingLiability         ;
 //using ApiLoginResponse               = com::tradex::api::TRXLoginResponse              ;
-using ApiOrderCancelReport          = XTPStrategyInfoStruct                    ;
-using ApiOrderReport                 = XTPStrategyStateReportStruct                            ;
+using ApiOrderCancelReport           = XTPStrategyInfoStruct                   ;
+using ApiOrderReport                 = XTPStrategyStateReportStruct            ;
 using ApiOrderStatus                 = XTPStrategyStateType                    ;
 using ApiPosition                    = XTPQueryStkPositionRsp                  ;
 using ApiInsertReport                = XTPStrategyInfoStruct                   ;   
 //using ApiSecurityLiability           = com::tradex::api::TRXSecurityLiability          ;
 //using ApiServerType                  = com::tradex::api::TRXServerType                 ;
 //using ApiSide                        = com::tradex::api::TRXSide                       ;
-using ApiTradeReport                 = XTPTradeReport                          ;
+//using ApiTradeReport                 = XTPTradeReport                          ;
 //using ApiTradeUnitConnStatusNotice   = com::tradex::api::TRXTradeUnitConnStatusNotice  ;
 using ApiText                        = XTPRI                                   ;
 //using ApiQureryTradeReport           = XTPQueryTradeRsp;
