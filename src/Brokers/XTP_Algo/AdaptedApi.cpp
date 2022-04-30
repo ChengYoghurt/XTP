@@ -32,14 +32,12 @@ namespace api     {
         order_rsp.average_price    = strategy_state->m_strategy_market_price;//no average but has market
         //order_rsp.order_status     = simplify_status(strategy_state->order_status);
         order_rsp.error_id         = error_id_t::unknown;
-        //order_rsp.transaction_time = strategy_state->update_time % 1'000000'000;  // no transaction time
+        //// no transaction time
         order_rsp.host_time        = timestamp_t::now();
         p_spi_->on_order_event(order_rsp);
     };
+    
     void AdaptedSpi::OnCancelAlgoOrder(ApiOrderCancelReport *cancel_info, ApiText *error_info, uint64_t session_id) {
-      /*  if(!OrderID(cancel_info->client_order_id).is_from_trader(trade_id_)) {
-            return;
-        }*///no such
         if(error_info->error_id != 0){
             WCCancelRejectedResponse order_rsp;
             order_rsp.client_order_id  =cancel_info->m_client_strategy_id;
@@ -47,6 +45,14 @@ namespace api     {
             p_spi_->on_cancel_rejected(order_rsp);
         }
     }
+
+    void AdaptedSpi::on_login(session_t session_id){
+        WCLoginResponse login_rsp;
+        login_rsp.session_id = session_id;
+        login_rsp.error_id = error_id_t::success;
+        p_spi_->on_login(login_rsp);
+    }
+
     bool AdaptedSpi::setinstrument(order_id_t const&strategy_id,instrument_id_t const&instrument_id){
         strategy_to_instrument_id[strategy_id] = instrument_id;
         return true;
@@ -54,29 +60,7 @@ namespace api     {
     u_int64_t AdaptedSpi::qurry_xtp_id(order_id_t client_order_id){
         return strategy_to_xtp_id[client_order_id];
     }
-/*
-    AdaptedApi::AdaptedApi(std::string const&algo_login_config_file ="Config/AlgoLoginConfig.yaml"){
-        std::string today_str { get_today_str() };
-        check_file_exist(algo_login_config_file);
-        YAML::Node login_config = YAML::LoadFile(algo_login_config_file);
-        
-        YAML_GET_FIELD(algo_login_config_.algo_server_ip  , login_config, server_ip  );
-        YAML_GET_FIELD(algo_login_config_.algo_server_port, login_config, server_port);
-        YAML_GET_FIELD(algo_login_config_.algo_username   , login_config, username   );
-        YAML_GET_FIELD(algo_login_config_.algo_password   , login_config, password   );
-      
-        std::string algo_config_file;
-        YAML_GET_FIELD(algo_config_file                   , login_config, AlgoConfigfile );
-        check_file_exist(algo_config_file);
-        YAML::Node config = YAML::LoadFile(algo_config_file);
 
-        YAML_GET_FIELD(algo_config_.algo_name        , config, algo_name        );
-        YAML_GET_FIELD(algo_config_.expire_action    , config, expire_action    );
-        YAML_GET_FIELD(algo_config_.limit_action     , config, limit_action     );
-        YAML_GET_FIELD(algo_config_.paticipation_rate, config, paticipation_rate);
-        YAML_GET_FIELD(algo_config_.style            , config, style            );
-    }
-*/
     error_id_t AdaptedApi::register_spi(std::unique_ptr<WCSpi> p_spi) {
         p_spi_ = std::make_unique<AdaptedSpi>(std::move(p_spi));
         // RegisterSpi return value is void
@@ -124,6 +108,7 @@ namespace api     {
             p_logger_->error("EstablishChannel failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
             return error_id_t::not_login;
         }
+        p_spi_->on_login(session_id_);
         return error_id_t::success;
         
     }
@@ -138,41 +123,11 @@ namespace api     {
 
     int AdaptedApi::get_trading_day() {
         std::string trading_day_str = p_broker_api_->GetTradingDay();
-        return std::stoi(trading_day_str);
+        return 0;//the trading day type is not clear
     }
 
     error_id_t AdaptedApi::place_order(WCOrderRequest const& request) {
-/*        ApiSingleOrder single_order;
-        std::memset(&single_order, 0, sizeof(single_order));
-        //single_order.trade_unit = trade_unit_;
-        single_order.order_client_id = request.client_order_id;
-        std::snprintf(single_order.ticker, sizeof(single_order.ticker), "%06d", request.instrument);
-        switch ((wct::market_t)get_belonged_market(request.instrument)) {
-            case market_t::sh: 
-            case market_t::shsecond: 
-                single_order.market = ApiMarket::XTP_MKT_SH_A; 
-                break;
-            case market_t::sz: 
-            case market_t::szsecond: 
-                single_order.market = ApiMarket::XTP_MKT_SZ_A; 
-                break;
-            default: single_order.market = ApiMarket::XTP_MKT_UNKNOWN; break;
-        }
-        single_order.price = request.price;
-        single_order.quantity = request.volume;
-        single_order.side = (request.side == side_t::buy) ? XTP_SIDE_BUY : XTP_SIDE_SELL;
-        single_order.price_type = ApiPriceType::XTP_PRICE_LIMIT;
-        single_order.business_type = ApiBusiness::XTP_BUSINESS_TYPE_CASH; 
-     // single_order.algo_parameters = nullptr; // not use algorithms trading
 
-        int xtp_order_id = p_broker_api_->InsertOrder(&single_order,session_id_);
-        strategy_id_wctoxtp[request.client_order_id] = xtp_order_id;
-        if (xtp_order_id) {
-            const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            p_logger_->error("InsertOrder failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
-            return error_id_t::unknown;
-        }
-        else */return error_id_t::success;
     }
 
     error_id_t AdaptedApi::cancel_order(WCOrderCancelRequest const& request) {
@@ -219,6 +174,7 @@ namespace api     {
             case side_t::buy: side = "BUY";
                 break;
             case side_t::sell: side = "SELL";
+                break;
             default:
                 break;
             }
@@ -227,36 +183,56 @@ namespace api     {
                 break;
                 case algo_type_t::TWAP_PLUS:
                 case algo_type_t::VWAP_PLUS:
-                strategy_param = "{\"start_time\": \"" +
-                start_time + "\", \"end_time\": \"" +
-                end_time   + "\", \"ticker\": \"" +
-                std::to_string(basket_leg.instrument) + "\", \"market\": \"" +
-                market     + "\", \"side\": \"" +
-                side       + "\", \"quantity\": " +
-                std::to_string(basket_leg.volume) + "\", \"limit_action\": " +
-                limit_action + ", \"expire_action\": " +
-                expire_action + ", \"price\": " + 
-                std::to_string(basket_leg.price) +" }";
+                strategy_param += "{\"start_time\": \"" ;
+                strategy_param += start_time ;
+                strategy_param += "\", \"end_time\": \"" ;
+                strategy_param += end_time   ;
+                strategy_param += "\", \"ticker\": \"" ;
+                strategy_param += std::to_string(basket_leg.instrument) ;
+                strategy_param += "\", \"market\": \"" ;
+                strategy_param += market     ;
+                strategy_param += "\", \"side\": \"" ;
+                strategy_param += side       ;
+                strategy_param += "\", \"quantity\": " ;
+                strategy_param += std::to_string(basket_leg.volume) ;
+                strategy_param += "\", \"limit_action\": " ;
+                strategy_param += limit_action ;
+                strategy_param += ", \"expire_action\": " ;
+                strategy_param +=expire_action ;
+                strategy_param += ", \"price\": " ;
+                strategy_param += std::to_string(basket_leg.price) ;
+                strategy_param +=" }";
                 break;
                 case algo_type_t::TWAP:
                 case algo_type_t::VWAP:
-                strategy_param = "{\"start_time\": \"" +
-                start_time + "\", \"end_time\": \"" +
-                end_time   + "\", \"market\": \"" +
-                market     + "\", \"ticker\": \"" +
-                std::to_string(basket_leg.instrument) + "\", \"side\": \"" +
-                side       + "\", \"quantity\": " +
-                std::to_string(basket_leg.volume) + ", \"price\": " + 
-                std::to_string(basket_leg.price)  + ", \"business_type\": \"" +
-                "CASH" + "\", \"participation_rate\": " +
-                std::to_string(algo_config_.paticipation_rate)  +", \"style\"" +
-                std::to_string(algo_config_.style) + " }";
+                strategy_param += "{\"start_time\": \""  ;
+                strategy_param += start_time ;
+                strategy_param += "\", \"end_time\": \"" ;
+                strategy_param += end_time ;  
+                strategy_param += "\", \"market\": \""   ;
+                strategy_param += market ;
+                strategy_param += "\", \"ticker\": \""   ;
+                strategy_param += std::to_string(basket_leg.instrument);
+                strategy_param += "\", \"side\": \""     ;
+                strategy_param += side ;       
+                strategy_param += "\", \"quantity\": "   ;
+                strategy_param +=std::to_string(basket_leg.volume);
+                strategy_param += ", \"price\": "        ; 
+                strategy_param += std::to_string(basket_leg.price);
+                strategy_param += ", \"business_type\": \"";
+                strategy_param += "CASH" ;
+                strategy_param += "\", \"participation_rate\": ";
+                strategy_param += std::to_string(algo_config_.paticipation_rate);
+                strategy_param +=", \"style\"";
+                strategy_param += std::to_string(algo_config_.style);
+                strategy_param += " }";
                 break;
                 default:break;
             }
-            //another solution:malloc 
-            char strategy_param_c[1024];
-            sprintf(strategy_param_c,strategy_param.c_str());
+
+            int constexpr k_max = 1024;
+            char strategy_param_c[k_max];
+            snprintf(strategy_param_c,k_max,strategy_param.c_str());
             int ret = p_broker_api_->InsertAlgoOrder(strategy_type,basket_leg.client_order_id,strategy_param_c,session_id_);        
             if (ret) {
                 const  ApiText* error_info = p_broker_api_->GetApiLastError();
