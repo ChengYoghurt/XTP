@@ -5,7 +5,8 @@
 namespace wct     {
 namespace api     {
 
-    void AdaptedSpi::onlogin(WCLoginResponse const& response){
+    void AdaptedSpi::onLogin(WCLoginResponse const& response) {
+        p_logger_->info("Login Successfully");
         p_spi_->on_login(response);
     }
 
@@ -93,11 +94,11 @@ namespace api     {
         pos_rsp.latest_volume    = position->total_qty          ;
         pos_rsp.available_volume = position->sellable_qty       ;
         pos_rsp.is_last          = is_last                      ; 
-        
+
         if(error_info == nullptr || error_info->error_id == 0) {
             pos_rsp.error_id = error_id_t::success;
         } 
-        else if(position->ticker[0] == '\0') {
+        else if(position->ticker[0] == '\0') { //FIXME:Should I use get_belonged_market to set error_id?
             pos_rsp.error_id = error_id_t::wrong_instrument_id;
         }
         else {
@@ -114,7 +115,7 @@ namespace api     {
         asset_rsp.total_asset       = asset->total_asset      ;
         if(error_info == nullptr || error_info->error_id == 0) {
             asset_rsp.error_id = error_id_t::success;
-        } else {
+        }  else {
             asset_rsp.error_id = error_id_t::unknown;
         }
         p_spi_->on_query_balance(asset_rsp);
@@ -142,9 +143,9 @@ namespace api     {
         p_broker_api_->SetSoftwareKey(request.agent_fingerprint.token.c_str());
 
         session_id_                 = p_broker_api_->Login(ip.c_str(), port, user.c_str(), password.c_str(), sock_type, local_ip.c_str());
-        const  ApiText* error_info = p_broker_api_->GetApiLastError();
 
         if(session_id_ == 0) {
+            const  ApiText* error_info  = p_broker_api_->GetApiLastError();
             p_logger_->error("Login failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
             return error_id_t::not_login;
         }
@@ -152,7 +153,7 @@ namespace api     {
             WCLoginResponse response;
             response.session_id = session_id_;
             response.error_id = error_id_t::success;
-            p_spi_->onlogin(response);
+            p_spi_->onLogin(response);
             return error_id_t::success;
         }
     }
