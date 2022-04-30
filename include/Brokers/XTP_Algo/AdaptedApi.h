@@ -56,6 +56,8 @@ public:
     u_int64_t qurry_xtp_id(order_id_t client_order_id) ;
     void on_login(session_t session_);
     bool setinstrument(order_id_t const& strategy_id,instrument_id_t const& instrument_id);
+    std::condition_variable cv_established_;
+    bool established_channel_;
 protected:
     virtual void OnDisconnected(uint64_t session_id, int reason); 
     virtual void OnAlgoDisconnected(int reason); 
@@ -65,7 +67,7 @@ protected:
 
     virtual void OnStrategyStateReport(ApiOrderReport* strategy_state, uint64_t session_id);
 	virtual void OnCancelAlgoOrder(ApiOrderCancelReport* strategy_info, XTPRI *error_info, uint64_t session_id);
-
+    
    
 
 protected:
@@ -76,6 +78,7 @@ protected:
     std::unique_ptr<WCSpi> p_spi_;
     std::shared_ptr<spdlog::logger> p_logger_;
     std::unordered_map<order_id_t,UserOrderInfo> strategy_to_order_info;
+    
 };/* class AdaptedSpi */
 
 class AdaptedApi : public wct::api::WCApi

@@ -147,6 +147,10 @@ namespace api     {
         if(session_id_ == 0) {
             const  ApiText* error_info  = p_broker_api_->GetApiLastError();
             p_logger_->error("Login failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
+            WCLoginResponse response;
+            response.session_id = session_id_;
+            response.error_id = error_id_t::not_login;
+            p_spi_->onLogin(response);
             return error_id_t::not_login;
         }
         else {
