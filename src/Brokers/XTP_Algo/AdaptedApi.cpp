@@ -62,6 +62,7 @@ namespace api     {
         strategy_to_order_info[client_order_id].instrument_id = instrument_id;
         return true;
     }
+
     u_int64_t AdaptedSpi::qurry_xtp_id(order_id_t client_order_id){
         auto order_info_item = strategy_to_order_info.find(client_order_id);
         if(order_info_item !=strategy_to_order_info.end()){
@@ -73,6 +74,28 @@ namespace api     {
         }
         p_logger_->error("not in allrecords");
         return 0;
+    }
+    order_status_t simplify_status(ApiOrderStatus const& order_status){
+        order_status_t local_order_status;
+        switch(order_status){
+        case XTP_STRATEGY_STATE_CREATING  : local_order_status = order_status_t::unknown;
+        break;
+        case XTP_STRATEGY_STATE_CREATED   :
+        case XTP_STRATEGY_STATE_STARTING  : local_order_status = order_status_t::created;
+        break;
+        case XTP_STRATEGY_STATE_STARTED   : local_order_status = order_status_t::accepted;
+        break;
+        case XTP_STRATEGY_STATE_STOPPING  :
+        case XTP_STRATEGY_STATE_STOPPED   : 
+        case XTP_STRATEGY_STATE_DESTROYING:
+        case XTP_STRATEGY_STATE_DESTROYED : local_order_status = order_status_t::completed;
+        break;
+        case XTP_STRATEGY_STATE_ERROR     : local_order_status = order_status_t::rejected;   
+        break;
+        default: local_order_status = order_status_t::unknown; 
+        break;
+        }
+        return local_order_status;
     }
 
     error_id_t AdaptedApi::register_spi(std::unique_ptr<WCSpi> p_spi) {

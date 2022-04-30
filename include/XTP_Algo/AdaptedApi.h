@@ -69,7 +69,7 @@ protected:
    
 
 protected:
-    static order_status_t simplify_status(ApiOrderStatus) ;
+    static order_status_t simplify_status(ApiOrderStatus const& order_status) ;
 
 protected:
     uint32_t trade_id_;
