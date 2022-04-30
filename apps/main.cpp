@@ -233,79 +233,79 @@ int main(int argc,char* argv[]) {
     wcloginrequest.agent_fingerprint.token      = "b8aa7173bba3470e390d787219b2112e";
     wc_trader.login(wcloginrequest);
     std::cout << "--------------Login successfully----------------" << std::endl;
-    //wct::WCLoginResponse response; 
-    //response.session_id = p_adapted_api->get_session_id();
-    //response.error_id = wct::error_id_t::success;
-    //wc_trader.on_login(response);////////////////////////////////
-    // wct::price_t account_avail = 5000000.0; 
-    // wc_trader.init_account_avail(account_avail); 
-    // std::ofstream querylog;
-    // querylog.open(query_data, std::ios::trunc);
+    // wct::WCLoginResponse response; 
+    // response.session_id = p_adapted_api->get_session_id();
+    // response.error_id = wct::error_id_t::success;
+    // wc_trader.on_login(response);////////////////////////////////
+    wct::price_t account_avail = 5000000.0; 
+    wc_trader.init_account_avail(account_avail); 
+    std::ofstream querylog;
+    querylog.open(query_data, std::ios::trunc);
 
-    // std::vector<wct::order_id_t> vec_orderid;
+    std::vector<wct::order_id_t> vec_orderid;
 
-    // for (uint32_t i = 0 ; i < order_count ; i++) {
-    //     wct::order_id_t local_order_id;
-    //     wct::instrument_id_t stock  = vec_wcorderrequest[i].instrument  ;
-    //     wct::side_t side            = vec_wcorderrequest[i].side        ;
-    //     wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
-    //     wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
-    //     wct::millisec_t expire_ms   = 100                               ;
-    //     local_order_id = wc_trader.place_order(stock, side, vol, limit_price, expire_ms);
-    //     vec_orderid.push_back(local_order_id);
-    // }
+    for (uint32_t i = 0 ; i < order_count ; i++) {
+        wct::order_id_t local_order_id;
+        wct::instrument_id_t stock  = vec_wcorderrequest[i].instrument  ;
+        wct::side_t side            = vec_wcorderrequest[i].side        ;
+        wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
+        wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
+        wct::millisec_t expire_ms   = 100                               ;
+        local_order_id = wc_trader.place_order(stock, side, vol, limit_price, expire_ms);
+        vec_orderid.push_back(local_order_id);
+    }
 
-    //     /*for (uint32_t i = 0 ; i < order_count ; i++) {
-    //         wct::instrument_id_t stock     = vec_wcorderrequest[i].instrument  ;
-    //         wct::side_t side            = vec_wcorderrequest[i].side        ;
-    //         wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
-    //         wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
-    //         wc_trader.execute_place_order(local_order_id, stock, side, vol, limit_price);
-    //     }*/
+        /*for (uint32_t i = 0 ; i < order_count ; i++) {
+            wct::instrument_id_t stock     = vec_wcorderrequest[i].instrument  ;
+            wct::side_t side            = vec_wcorderrequest[i].side        ;
+            wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
+            wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
+            wc_trader.execute_place_order(local_order_id, stock, side, vol, limit_price);
+        }*/
 
-    // for (size_t i = 0 ; i < vec_orderid.size() ; i++) {
-    //     wct::order_id_t last_order_id = vec_orderid[i];
-    //     wc_trader.cancel_order(last_order_id);
-    // }
+    for (size_t i = 0 ; i < vec_orderid.size() ; i++) {
+        wct::order_id_t last_order_id = vec_orderid[i];
+        wc_trader.cancel_order(last_order_id);
+    }
 
-    // for (size_t i = 0 ; i < vec_orderid.size() ; i++) {
-    //     wct::order_id_t last_order_id = vec_orderid[i];
-    //     wc_trader.execute_cancel_order(last_order_id);
-    // }
+    for (size_t i = 0 ; i < vec_orderid.size() ; i++) {
+        wct::order_id_t last_order_id = vec_orderid[i];
+        wc_trader.execute_cancel_order(last_order_id);
+    }
 
-    // if (query_position_is_true) {
-    //     holdingofgiveninstr = wc_trader.query_holdings(query_position_instrument);
-    //     querylog << "query_position: " << query_position_instrument << std::endl;
-    //     querylog << "holding: "        << holdingofgiveninstr.holding
-    //              << "available: "      << holdingofgiveninstr.available
-    //              << std::endl;
-    // }
+    if (query_position_is_true) {
+        holdingofgiveninstr = wc_trader.query_holdings(query_position_instrument);
+        querylog << "query_position: " << query_position_instrument << std::endl;
+        querylog << "holding: "        << holdingofgiveninstr.holding
+                 << "available: "      << holdingofgiveninstr.available
+                 << std::endl;
+    }
 
-    // /*if (query_position_is_all) {
-    //     positioninfo = wc_trader.query_holdings();
-    // }*/
+    /*if (query_position_is_all) {
+        positioninfo = wc_trader.query_holdings();
+    }*/
 
-    // if (query_balance_is_true_account) {
-    //     balanceinfo = wc_trader.query_balance_from_account();
-    //     querylog << "query_balance_account" <<std::endl; 
-    //     querylog << "initial_balance: "     << balanceinfo.initial_balance
-    //              << "available_balance: "   << balanceinfo.available_balance
-    //              << "market_value: "        << balanceinfo.market_value
-    //              << "total_asset: "         << balanceinfo.total_asset
-    //              << std::endl;
-    // }
+    if (query_balance_is_true_account) {
+        balanceinfo = wc_trader.query_balance_from_account();
+        querylog << "query_balance_account" <<std::endl; 
+        querylog << "initial_balance: "     << balanceinfo.initial_balance
+                 << "available_balance: "   << balanceinfo.available_balance
+                 << "market_value: "        << balanceinfo.market_value
+                 << "total_asset: "         << balanceinfo.total_asset
+                 << std::endl;
+    }
 
-    // if (query_balance_is_true_broker) {
-    //     balanceinfo = wc_trader.query_balance_from_broker();
-    //     querylog << "query_balance_account" << std::endl; 
-    //     querylog << "initial_balance: "     << balanceinfo.initial_balance
-    //              << "available_balance: "   << balanceinfo.available_balance
-    //              << "market_value: "        << balanceinfo.market_value
-    //              << "total_asset: "         << balanceinfo.total_asset
-    //              << std::endl;
-    // }
+    if (query_balance_is_true_broker) {
+        balanceinfo = wc_trader.query_balance_from_broker();
+        querylog << "query_balance_account" << std::endl; 
+        querylog << "initial_balance: "     << balanceinfo.initial_balance
+                 << "available_balance: "   << balanceinfo.available_balance
+                 << "market_value: "        << balanceinfo.market_value
+                 << "total_asset: "         << balanceinfo.total_asset
+                 << std::endl;
+    }
         
-    // querylog.close();
+    querylog.close();
     // Wait for SIGINT to continue
 
     p_logger->info("Start Working and wait SIGINT to stop");
