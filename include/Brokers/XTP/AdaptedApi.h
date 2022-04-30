@@ -19,6 +19,7 @@ public:
         : p_logger_(spdlog::get("AdaptedSpi"))
         , p_spi_(std::move(p_spi))
     {}
+    void onlogin(WCLoginResponse const& response) ;
     virtual ~AdaptedSpi() = default;
 protected:
     virtual void OnDisconnected(uint64_t session_id, int reason); 

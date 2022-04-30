@@ -5,6 +5,10 @@
 namespace wct     {
 namespace api     {
 
+    void AdaptedSpi::onlogin(WCLoginResponse const& response){
+        p_spi_->on_login(response);
+    }
+
     void AdaptedSpi::OnDisconnected(uint64_t session_id, int reason) {
         p_logger_->error("Disconnected, session_id = {}, reason = {}", session_id, reason);
         p_spi_->on_disconnected(error_id_t::not_connected_to_server);
@@ -83,7 +87,19 @@ namespace api     {
 
     void AdaptedSpi::OnQueryPosition(ApiPosition *position, ApiText *error_info, ApiRequestID request_id, bool is_last, uint64_t session_id) {
         WCPositionResponse pos_rsp;
+
+        if (position->ticker[0] == '\0') return;
+        // Debug
+        int i = 0;
+        while (position->ticker[i] != '\0'){
+            std::cout << "i: " << i <<  std::endl;
+            std::cout<< position->ticker[i++];
+        }
+        std::cout << std::endl;
+        
+
         pos_rsp.instrument       = std::atoi(position->ticker)  ;
+        std::cout<<pos_rsp.instrument<<"   "<<position->ticker<<"p"<<std::endl;
         pos_rsp.yesterday_volume = position->yesterday_position ;
         pos_rsp.latest_volume    = position->total_qty          ;
         pos_rsp.available_volume = position->sellable_qty       ;
@@ -129,15 +145,20 @@ namespace api     {
         std::string password        = request.password                  ;
         XTP_PROTOCOL_TYPE sock_type = XTP_PROTOCOL_TCP                  ;
         std::string local_ip        = request.agent_fingerprint.local_ip;
+        p_broker_api_->SetSoftwareKey(request.agent_fingerprint.token.c_str());
 
         session_id_                 = p_broker_api_->Login(ip.c_str(), port, user.c_str(), password.c_str(), sock_type, local_ip.c_str());
-        
-        if(session_id_ != 0) {
-            const  ApiText* error_info = p_broker_api_->GetApiLastError();
+        const  ApiText* error_info = p_broker_api_->GetApiLastError();
+
+        if(session_id_ == 0) {
             p_logger_->error("Login failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
             return error_id_t::not_login;
         }
         else {
+            WCLoginResponse response;
+            response.session_id = session_id_;
+            response.error_id = error_id_t::success;
+            p_spi_->onlogin(response);
             return error_id_t::success;
         }
     }
@@ -152,7 +173,8 @@ namespace api     {
 
     int AdaptedApi::get_trading_day() {
         std::string trading_day_str = p_broker_api_->GetTradingDay();
-        return std::stoi(trading_day_str);
+        return 0;
+        //return std::stoi(trading_day_str);
     }
 
     error_id_t AdaptedApi::place_order(WCOrderRequest const& request) {
@@ -224,6 +246,12 @@ namespace api     {
             market_t instrument_market = (wct::market_t)get_belonged_market(request.instrument);
             std::string instrument_str = instrument_to_str(request.instrument);
             if (instrument_market == market_t::sh || instrument_market == market_t::shsecond) {
+                // Debug
+                std::cout << "instrument id: "<< instrument_str.c_str()
+                        << "session_id: " << session_id_ 
+                        << "request_id: " << get_request_id()
+                        << std::endl;
+
                 int ret = p_broker_api_->QueryPosition(instrument_str.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SH_A);
                 if (ret) {
                 const  ApiText* error_info = p_broker_api_->GetApiLastError();
