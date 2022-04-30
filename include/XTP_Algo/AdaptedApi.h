@@ -39,6 +39,12 @@ struct AlgoConfig{
     int style;
 };
 
+// user order info 
+struct UserOrderInfo{
+    uint64_t xtp_strategy_id;
+    instrument_id_t instrument_id;
+};
+
 class AdaptedSpi: public BrokerSpi
 {
 public:
@@ -49,6 +55,7 @@ public:
     virtual ~AdaptedSpi() = default;
     u_int64_t qurry_xtp_id(order_id_t client_order_id) ;
     void on_login(session_t session_);
+    bool setinstrument(order_id_t const& strategy_id,instrument_id_t const& instrument_id);
 protected:
     virtual void OnDisconnected(uint64_t session_id, int reason); 
     virtual void OnAlgoDisconnected(int reason); 
@@ -59,7 +66,7 @@ protected:
     virtual void OnStrategyStateReport(ApiOrderReport* strategy_state, uint64_t session_id);
 	virtual void OnCancelAlgoOrder(ApiOrderCancelReport* strategy_info, XTPRI *error_info, uint64_t session_id);
 
-    bool setinstrument(order_id_t const&strategy_id,instrument_id_t const&instrument_id);
+   
 
 protected:
     static order_status_t simplify_status(ApiOrderStatus) ;
@@ -68,8 +75,7 @@ protected:
     uint32_t trade_id_;
     std::unique_ptr<WCSpi> p_spi_;
     std::shared_ptr<spdlog::logger> p_logger_;
-    std::unordered_map<order_id_t,instrument_id_t> strategy_to_instrument_id;
-    std::unordered_map<order_id_t,u_int64_t> strategy_to_xtp_id;
+    std::unordered_map<order_id_t,UserOrderInfo> strategy_to_order_info;
 };/* class AdaptedSpi */
 
 class AdaptedApi : public wct::api::WCApi
@@ -109,7 +115,6 @@ protected:
     uint64_t session_id_;
     std::unique_ptr<AdaptedSpi> p_spi_;
     std::shared_ptr<spdlog::logger> p_logger_;
-    std::unordered_map<order_id_t,uint64_t> strategy_id_wctoxtp_;
     AlgoLoginConfig algo_login_config_;
     AlgoConfig algo_config_;
 };  /* class AdaptedApi */

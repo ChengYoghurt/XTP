@@ -12,7 +12,7 @@ namespace api     {
     }
     void AdaptedSpi::OnAlgoDisconnected(int reason) {
         p_logger_->error("AlgoDisconnected, reason = {}",reason);
-    //    p_spi_->on_disconnected(error_id_t::not_connected_to_server);
+        //the system will automatically reconnet
     }
     void AdaptedSpi::OnALGOUserEstablishChannel(char* user, XTPRI* error_info, uint64_t session_id) {
 
@@ -21,11 +21,14 @@ namespace api     {
 
     }
     void AdaptedSpi::OnStrategyStateReport(ApiOrderReport* strategy_state, uint64_t session_id) {
+        if(strategy_to_order_info.find(strategy_state->m_strategy_info.m_client_strategy_id)==strategy_to_order_info.end()){
+            p_logger_->warn("not in records, perhaps placed by another client_id");
+            return;
+        }
         WCOrderResponse order_rsp;
         std::memset(&order_rsp, 0, sizeof(order_rsp));
         order_rsp.client_order_id  = strategy_state->m_strategy_info.m_client_strategy_id;
-        strategy_to_xtp_id[order_rsp.client_order_id] = strategy_state->m_strategy_info.m_xtp_strategy_id;
-        order_rsp.instrument       =strategy_to_instrument_id[order_rsp.client_order_id];
+        order_rsp.instrument       =strategy_to_order_info[order_rsp.client_order_id].instrument_id;
         order_rsp.volume           = strategy_state->m_strategy_qty;
         order_rsp.price            = strategy_state->m_strategy_execution_price;
         order_rsp.traded           = strategy_state->m_strategy_execution_qty;
@@ -34,9 +37,11 @@ namespace api     {
         order_rsp.error_id         = error_id_t::unknown;
         //// no transaction time
         order_rsp.host_time        = timestamp_t::now();
+
+        strategy_to_order_info[order_rsp.client_order_id].xtp_strategy_id = strategy_state->m_strategy_info.m_xtp_strategy_id;
         p_spi_->on_order_event(order_rsp);
     };
-    
+
     void AdaptedSpi::OnCancelAlgoOrder(ApiOrderCancelReport *cancel_info, ApiText *error_info, uint64_t session_id) {
         if(error_info->error_id != 0){
             WCCancelRejectedResponse order_rsp;
@@ -53,12 +58,21 @@ namespace api     {
         p_spi_->on_login(login_rsp);
     }
 
-    bool AdaptedSpi::setinstrument(order_id_t const&strategy_id,instrument_id_t const&instrument_id){
-        strategy_to_instrument_id[strategy_id] = instrument_id;
+    bool AdaptedSpi::setinstrument(order_id_t const&client_order_id,instrument_id_t const&instrument_id){
+        strategy_to_order_info[client_order_id].instrument_id = instrument_id;
         return true;
     }
     u_int64_t AdaptedSpi::qurry_xtp_id(order_id_t client_order_id){
-        return strategy_to_xtp_id[client_order_id];
+        auto order_info_item = strategy_to_order_info.find(client_order_id);
+        if(order_info_item !=strategy_to_order_info.end()){
+            if(order_info_item->second.xtp_strategy_id == 0){
+                p_logger_->error("place wait insert or callback");
+                return 0;
+            }
+            return order_info_item->second.xtp_strategy_id;
+        }
+        p_logger_->error("not in allrecords");
+        return 0;
     }
 
     error_id_t AdaptedApi::register_spi(std::unique_ptr<WCSpi> p_spi) {
@@ -158,6 +172,9 @@ namespace api     {
             std::string strategy_param;
             std::string market;
             std::string side;
+            
+            p_spi_->setinstrument(basket_leg.client_order_id,basket_leg.instrument);
+            
             switch ((wct::market_t)get_belonged_market(basket_leg.instrument)) {
                 case market_t::sh: 
                 case market_t::shsecond: 
@@ -238,11 +255,13 @@ namespace api     {
                 const  ApiText* error_info = p_broker_api_->GetApiLastError();
                 p_logger_->error("InsertAlgoOrder failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
             }
+           
         }
         return error_id_t::success;
     }
     error_id_t AdaptedApi::cancel_basket_order(WCBasketOrderCancelRequest const& request){
         uint32_t strategy_xtp_id = p_spi_->qurry_xtp_id(request.client_order_id);
+        if(strategy_xtp_id == 0) return error_id_t::unknown;
         int ret = p_broker_api_->CancelAlgoOrder(true, strategy_xtp_id, session_id_);
 
         if (ret) {
