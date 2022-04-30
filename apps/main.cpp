@@ -38,6 +38,17 @@ void usage(const char* call_name) {
 }
 
 int main(int argc,char* argv[]) {
+    // register signal function 
+    struct sigaction act;
+    struct sigaction oact;
+    act.sa_handler = sig_int;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = 0;
+    act.sa_flags |= SA_RESTART;
+    if (sigaction(SIGINT, &act, &oact) < 0) {
+        std::cerr << "signal(SIGINT) error" << std::endl;
+        return -1;
+    }
 
     std::string config_file { "Config/KuafuConfig.yaml"};
     std::string today_str { get_today_str() };
@@ -226,89 +237,96 @@ int main(int argc,char* argv[]) {
     //response.session_id = p_adapted_api->get_session_id();
     //response.error_id = wct::error_id_t::success;
     //wc_trader.on_login(response);////////////////////////////////
-    wct::price_t account_avail = 5000000.0; 
-    wc_trader.init_account_avail(account_avail); 
-    std::ofstream querylog;
-    querylog.open(query_data, std::ios::app);
+    // wct::price_t account_avail = 5000000.0; 
+    // wc_trader.init_account_avail(account_avail); 
+    // std::ofstream querylog;
+    // querylog.open(query_data, std::ios::trunc);
 
-    std::vector<wct::order_id_t> vec_orderid;
+    // std::vector<wct::order_id_t> vec_orderid;
 
-    for (uint32_t i = 0 ; i < order_count ; i++) {
-        wct::order_id_t local_order_id;
-        wct::instrument_id_t stock  = vec_wcorderrequest[i].instrument  ;
-        wct::side_t side            = vec_wcorderrequest[i].side        ;
-        wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
-        wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
-        wct::millisec_t expire_ms   = 100                               ;
-        local_order_id = wc_trader.place_order(stock, side, vol, limit_price, expire_ms);
-        vec_orderid.push_back(local_order_id);
-    }
+    // for (uint32_t i = 0 ; i < order_count ; i++) {
+    //     wct::order_id_t local_order_id;
+    //     wct::instrument_id_t stock  = vec_wcorderrequest[i].instrument  ;
+    //     wct::side_t side            = vec_wcorderrequest[i].side        ;
+    //     wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
+    //     wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
+    //     wct::millisec_t expire_ms   = 100                               ;
+    //     local_order_id = wc_trader.place_order(stock, side, vol, limit_price, expire_ms);
+    //     vec_orderid.push_back(local_order_id);
+    // }
 
-        /*for (uint32_t i = 0 ; i < order_count ; i++) {
-            wct::instrument_id_t stock     = vec_wcorderrequest[i].instrument  ;
-            wct::side_t side            = vec_wcorderrequest[i].side        ;
-            wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
-            wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
-            wc_trader.execute_place_order(local_order_id, stock, side, vol, limit_price);
-        }*/
+    //     /*for (uint32_t i = 0 ; i < order_count ; i++) {
+    //         wct::instrument_id_t stock     = vec_wcorderrequest[i].instrument  ;
+    //         wct::side_t side            = vec_wcorderrequest[i].side        ;
+    //         wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
+    //         wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
+    //         wc_trader.execute_place_order(local_order_id, stock, side, vol, limit_price);
+    //     }*/
 
-    for (size_t i = 0 ; i < vec_orderid.size() ; i++) {
-        wct::order_id_t last_order_id = vec_orderid[i];
-        wc_trader.cancel_order(last_order_id);
-    }
+    // for (size_t i = 0 ; i < vec_orderid.size() ; i++) {
+    //     wct::order_id_t last_order_id = vec_orderid[i];
+    //     wc_trader.cancel_order(last_order_id);
+    // }
 
-    for (size_t i = 0 ; i < vec_orderid.size() ; i++) {
-        wct::order_id_t last_order_id = vec_orderid[i];
-        wc_trader.execute_cancel_order(last_order_id);
-    }
+    // for (size_t i = 0 ; i < vec_orderid.size() ; i++) {
+    //     wct::order_id_t last_order_id = vec_orderid[i];
+    //     wc_trader.execute_cancel_order(last_order_id);
+    // }
 
-    if (query_position_is_true) {
-        holdingofgiveninstr = wc_trader.query_holdings(query_position_instrument);
-        querylog << "query_position: " << query_position_instrument << std::endl;
-        querylog << "holding: "        << holdingofgiveninstr.holding
-                 << "available: "      << holdingofgiveninstr.available
-                 << std::endl;
-    }
+    // if (query_position_is_true) {
+    //     holdingofgiveninstr = wc_trader.query_holdings(query_position_instrument);
+    //     querylog << "query_position: " << query_position_instrument << std::endl;
+    //     querylog << "holding: "        << holdingofgiveninstr.holding
+    //              << "available: "      << holdingofgiveninstr.available
+    //              << std::endl;
+    // }
 
-    /*if (query_position_is_all) {
-        positioninfo = wc_trader.query_holdings();
-    }*/
+    // /*if (query_position_is_all) {
+    //     positioninfo = wc_trader.query_holdings();
+    // }*/
 
-    if (query_balance_is_true_account) {
-        balanceinfo = wc_trader.query_balance_from_account();
-        querylog << "query_balance_account" <<std::endl; 
-        querylog << "initial_balance: "     << balanceinfo.initial_balance
-                 << "available_balance: "   << balanceinfo.available_balance
-                 << "market_value: "        << balanceinfo.market_value
-                 << "total_asset: "         << balanceinfo.total_asset
-                 << std::endl;
-    }
+    // if (query_balance_is_true_account) {
+    //     balanceinfo = wc_trader.query_balance_from_account();
+    //     querylog << "query_balance_account" <<std::endl; 
+    //     querylog << "initial_balance: "     << balanceinfo.initial_balance
+    //              << "available_balance: "   << balanceinfo.available_balance
+    //              << "market_value: "        << balanceinfo.market_value
+    //              << "total_asset: "         << balanceinfo.total_asset
+    //              << std::endl;
+    // }
 
-    if (query_balance_is_true_broker) {
-        balanceinfo = wc_trader.query_balance_from_broker();
-        querylog << "query_balance_account" <<std::endl; 
-        querylog << "initial_balance: "     << balanceinfo.initial_balance
-                 << "available_balance: "   << balanceinfo.available_balance
-                 << "market_value: "        << balanceinfo.market_value
-                 << "total_asset: "         << balanceinfo.total_asset
-                 << std::endl;
-    }
+    // if (query_balance_is_true_broker) {
+    //     balanceinfo = wc_trader.query_balance_from_broker();
+    //     querylog << "query_balance_account" << std::endl; 
+    //     querylog << "initial_balance: "     << balanceinfo.initial_balance
+    //              << "available_balance: "   << balanceinfo.available_balance
+    //              << "market_value: "        << balanceinfo.market_value
+    //              << "total_asset: "         << balanceinfo.total_asset
+    //              << std::endl;
+    // }
         
-    querylog.close();
+    // querylog.close();
+    // Wait for SIGINT to continue
 
-
+    p_logger->info("Start Working and wait SIGINT to stop");
     sigset_t zeromask;
+    sigemptyset(&zeromask);
     while(quit_flag == 0) {
         sigsuspend(&zeromask);
     }
+    std::cout << std::endl;
+    std::cerr << std::endl;
+    p_logger->warn("Get SIGINT");
     wc_trader.stop();
     wc_trader_th.join();
 
+    // Save stream data
     std::string dumplogpath;
     YAML_GET_FIELD(dumplogpath, config, Dump_log_output);
-    dumplogpath = dumplogpath + get_time_str() + ".log";
+    std::cout << "get_today_str(): " << get_today_str() << std::endl;
     std::ofstream dumplogfile;
     dumplogfile.open(dumplogpath, std::ios::app);
+    p_logger->info("Dumping data to log...");
     wc_trader.dump_log(dumplogfile);
     dumplogfile.close();
 
