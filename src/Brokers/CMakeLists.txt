@@ -33,7 +33,7 @@ if ("XTP" IN_LIST broker_apis)
         ${AdaptedApi}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/${BrokerApi}>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/Brokers/${BrokerApi}>
     )
     target_sources(
         ${AdaptedApi}
@@ -49,7 +49,7 @@ if ("XTP" IN_LIST broker_apis)
     add_library(AdaptedApi::${BrokerApi} ALIAS ${AdaptedApi})
 endif()
 
-list(APPEND broker_apis "XTP_Algo")
+#list(APPEND broker_apis "XTP_Algo")
 set(broker_apis ${broker_apis} PARENT_SCOPE)
 if ("XTP_Algo" IN_LIST broker_apis)
     set(BrokerApi "XTP_Algo")
@@ -59,7 +59,7 @@ if ("XTP_Algo" IN_LIST broker_apis)
     target_include_directories(
         ${AdaptedApi}
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/Brokers>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/Brokers/${BrokerApi}>
     )
     target_sources(

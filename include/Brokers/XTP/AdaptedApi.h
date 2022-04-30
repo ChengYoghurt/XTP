@@ -1,6 +1,6 @@
 #pragma once
 
-#include "XTP/AdaptedTypes.h"
+#include "AdaptedTypes.h"
 #include "WCTrader/TraderTypes.h"
 #include "WCTrader/WCApi.h"
 #include "spdlog/spdlog.h"
