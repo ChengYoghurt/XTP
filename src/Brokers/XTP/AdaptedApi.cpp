@@ -88,7 +88,8 @@ namespace api     {
     void AdaptedSpi::OnQueryPosition(ApiPosition *position, ApiText *error_info, ApiRequestID request_id, bool is_last, uint64_t session_id) {
         WCPositionResponse pos_rsp;
         pos_rsp.instrument       = std::atoi(position->ticker)  ;
-        std::cout<<pos_rsp.instrument<<"   "<<position->ticker<<"p"<<std::endl;
+        std::string ticker       = position->ticker; 
+        std::cout<<pos_rsp.instrument<<"   "<<ticker<<"p"<<std::endl;
         pos_rsp.yesterday_volume = position->yesterday_position ;
         pos_rsp.latest_volume    = position->total_qty          ;
         pos_rsp.available_volume = position->sellable_qty       ;
