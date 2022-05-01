@@ -94,7 +94,9 @@ public:
         p_spi_ = nullptr;
     }
     virtual ~AdaptedApi(){
+        p_broker_api_->Logout(session_id_);
         p_broker_api_->Release();
+
     } ;
     virtual std::string version() const noexcept ;
     virtual error_id_t login(WCLoginRequest const& request);
