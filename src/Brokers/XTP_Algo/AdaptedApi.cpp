@@ -131,6 +131,7 @@ namespace api     {
         if(ret == 0) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
             p_logger_->error("Login failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
+            p_spi_->on_login(ret);
             return error_id_t::not_login;
         }
         session_id_ = ret;

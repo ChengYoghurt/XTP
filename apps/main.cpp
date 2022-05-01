@@ -266,8 +266,8 @@ int main(int argc,char* argv[]) {
     #ifdef _ALGO 
     // Place basket order
     //TODO:Remaing param needs to fill in
-    timestamp_t algo_start_time              ;
-    timestamp_t algo_end_time                ;
+    wct::timestamp_t algo_start_time              ;
+    wct::timestamp_t algo_end_time                ;
     //TODO:Need to update the order map?
     // place_order returns last order_id of sibling
     wct::order_id_t algo_basket_order_id = wc_trader.place_algo_basket(algo_end_time, algo_start_time);
@@ -289,10 +289,8 @@ int main(int argc,char* argv[]) {
         wct::order_id_t last_order_id = vec_orderid[i];
         wc_trader.execute_cancel_order(last_order_id);
     }
-    #endif //_ALGO
 
     // Query_holdings
-    #ifndef _ALGO
     std::ofstream querylog;
     querylog.open(query_data, std::ios::app);
     if (query_position_is_true) {
