@@ -54,7 +54,7 @@ public:
     {}
     virtual ~AdaptedSpi() = default;
     u_int64_t qurry_xtp_id(order_id_t client_order_id) ;
-    void on_login(session_t session_);
+    void on_login(session_t session_, error_id_t error_id);
     bool setinstrument(order_id_t const& strategy_id,instrument_id_t const& instrument_id);
     std::condition_variable cv_established_;
     bool established_channel_;

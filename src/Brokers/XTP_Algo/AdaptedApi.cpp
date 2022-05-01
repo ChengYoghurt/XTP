@@ -61,10 +61,17 @@ namespace api     {
         }
     }
 
-    void AdaptedSpi::on_login(session_t session_id){
+    void AdaptedSpi::on_login(session_t session_id, error_id_t error_id) {
         WCLoginResponse login_rsp;
         login_rsp.session_id = session_id;
-        login_rsp.error_id = error_id_t::success;
+        login_rsp.error_id = error_id;
+        if(error_id == error_id_t::success) {
+            p_logger_->info("Login Successfully");
+
+        }
+        else {
+            p_logger_->error("Login Failed");
+        }
         p_spi_->on_login(login_rsp);
     }
 
@@ -127,11 +134,12 @@ namespace api     {
         std::string password        = request.password                  ;
         XTP_PROTOCOL_TYPE sock_type = XTP_PROTOCOL_TCP                  ;
         std::string local_ip        = request.agent_fingerprint.local_ip;
+        p_broker_api_->SetSoftwareKey(request.agent_fingerprint.token.c_str());
         int ret                     = p_broker_api_->Login(ip.c_str(), port, user.c_str(), password.c_str(), sock_type, local_ip.c_str());//oms server
         if(ret == 0) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
             p_logger_->error("Login failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
-            p_spi_->on_login(ret);
+            p_spi_->on_login(ret, error_id_t::not_login);
             return error_id_t::not_login;
         }
         session_id_ = ret;
@@ -147,6 +155,7 @@ namespace api     {
         if(ret != 0) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
             p_logger_->error("LoginAlgo failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
+            p_spi_->on_login(session_id_, error_id_t::not_login);
             return error_id_t::not_login;
         }
 
@@ -163,13 +172,13 @@ namespace api     {
                 std::unique_lock lk(mutex);
                 //FIXME:
                 // if(p_spi_->cv_established_.wait_for(lk, std::chrono::seconds(3), [&move(p_spi_)]{return p_spi_->established_channel_;})) {
-                //     p_spi_->on_login(session_id_);
-                //     return error_id_t::success;
+                    p_spi_->on_login(session_id_, error_id_t::success);
+                    return error_id_t::success;
                 // }
             }
         } 
         // Call on_login even if Establish failed
-        p_spi_->on_login(session_id_);
+        p_spi_->on_login(session_id_, error_id_t::not_login);
         return error_id_t::not_login;
     }
 
