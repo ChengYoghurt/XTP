@@ -1,0 +1,9 @@
+%YAML 1.2
+---
+# Algo Config
+algo_type:
+algo_name:
+limit_action:
+expire_action:
+paticipation_rate:
+style:
