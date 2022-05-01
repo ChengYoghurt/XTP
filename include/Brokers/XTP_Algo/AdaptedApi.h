@@ -4,7 +4,7 @@
 #include "WCTrader/TraderTypes.h"
 #include "WCTrader/WCApi.h"
 #include "spdlog/spdlog.h"
-
+#include <condition_variable>
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
@@ -84,7 +84,7 @@ protected:
 class AdaptedApi : public wct::api::WCApi
 {
 public:
-    AdaptedApi::AdaptedApi(AlgoLoginConfig const& algo_login_config, AlgoConfig const& algo_config,uint32_t client_id, std::string filepath)
+    AdaptedApi(AlgoLoginConfig const& algo_login_config, AlgoConfig const& algo_config,uint32_t client_id, std::string filepath)
         :algo_config_(algo_config),
         algo_login_config_(algo_login_config),
         p_logger_(spdlog::get("AdaptedApi"))
@@ -99,7 +99,7 @@ public:
     ApiRequestID get_request_id() ;
     uint64_t get_session_id();
     error_id_t register_spi(std::unique_ptr<WCSpi> p_spi) ;
-    error_id_t place_order(WCOrderRequest const& request){} ;
+    error_id_t place_order(WCOrderRequest const& request) ;
     error_id_t cancel_order(WCOrderCancelRequest const& request) ;
     error_id_t query_balance() ;
     error_id_t query_position(WCPositionQueryRequest const& request);

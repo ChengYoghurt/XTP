@@ -20,7 +20,7 @@
 #include <signal.h>
 #include <thread>
 
-
+#define _ALGO
 
 std::atomic<bool> quit_flag = false;
 
@@ -203,8 +203,19 @@ int main(int argc,char* argv[]) {
     p_logger->info("algo tradeLocalIp    = {}", algo_trade_local_ip       );
     #endif
     p_logger->info("LogConfig            = {}", log_config_file           );
-
+    #ifdef _ALGO
+    wct::api::AlgoLoginConfig p_algo_login_config;
+    wct::api::AlgoConfig p_algo_config;
+    p_algo_login_config.algo_password = trade_password;
+    p_algo_login_config.algo_username = trade_username;
+    p_algo_login_config.algo_server_ip = algo_trade_server_ip;
+    p_algo_login_config.algo_server_port = algo_trade_server_port;
+    //TODO algo info should be readed from yaml
+    auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>(p_algo_login_config, p_algo_config, client_id, filepath);
+    #else
     auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>(client_id, filepath);
+
+    #endif
     auto p_wc_trader_config = std::make_unique<wct::WCTraderConfig>();
     
     wct::WCTrader wc_trader(
@@ -235,16 +246,19 @@ int main(int argc,char* argv[]) {
     
     std::vector<wct::order_id_t> vec_orderid;
     for (uint32_t i = 0 ; i < order_count ; i++) {
+        
         wct::order_id_t local_order_id;
         wct::instrument_id_t stock  = vec_wcorderrequest[i].instrument  ;
         wct::side_t side            = vec_wcorderrequest[i].side        ;
         wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
         wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
         wct::millisec_t expire_ms   = 100                               ;
+        #ifdef _ALGO
+        wc_trader.add_algo_leg(stock, vol, side);
+        #else
         local_order_id = wc_trader.place_order(stock, side, vol, limit_price, expire_ms);
         vec_orderid.push_back(local_order_id);
-        #ifdef _ALGO
-        add_algo_leg(stock, vol, side);
+
         #endif
 
     }
@@ -278,6 +292,7 @@ int main(int argc,char* argv[]) {
     #endif //_ALGO
 
     // Query_holdings
+    #ifndef _ALGO
     std::ofstream querylog;
     querylog.open(query_data, std::ios::app);
     if (query_position_is_true) {
@@ -314,7 +329,7 @@ int main(int argc,char* argv[]) {
     }
         
     querylog.close();
-
+    #endif
     // Wait for SIGINT to continue
     p_logger->info("Start Working and wait SIGINT to stop");
     sigset_t zeromask;
