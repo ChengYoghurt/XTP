@@ -266,11 +266,11 @@ int main(int argc,char* argv[]) {
     #ifdef _ALGO 
     // Place basket order
     //TODO:Remaing param needs to fill in
-    timestamp_t start_time              ;
-    timestamp_t end_time                ;
+    timestamp_t algo_start_time              ;
+    timestamp_t algo_end_time                ;
     //TODO:Need to update the order map?
     // place_order returns last order_id of sibling
-    wct::order_id_t algo_basket_order_id = wc_trader.place_algo_basket(end_time, start_time);
+    wct::order_id_t algo_basket_order_id = wc_trader.place_algo_basket(algo_end_time, algo_start_time);
     wc_trader.manual_stop_waiting_orders();
     wc_trader.print_incomplete_orders();
     // End of place basket order
