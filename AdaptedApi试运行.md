@@ -4,6 +4,13 @@
 
 【04/22】可以编译并运行XTP_main，但运行不正确，login fail
 
+【05/01】
+
+- XTP_main可以正常query，但login有问题导致最后报错FATAL
+
+- Algo的adaptedApi.cpp中有一函数使用了cv，其lambda表达式参数还未正确设置
+- Algo部分main代码YAML读取，Login|place_basket一系列流程|cancel_orders以写入，未测试
+
 ## 2.代码调整
 
 【04/22】
@@ -43,8 +50,7 @@
      build/apps存放的是apps的code编译的结果，同理build/src和build/tests都是这样。
 
      我目前build文件夹的布局是这样：
-
-     ![image-20220422195414857](C:\Users\13514\AppData\Roaming\Typora\typora-user-images\image-20220422195414857.png)
+    [见pdf]
 
   通过在build下执行:
 
@@ -64,5 +70,42 @@
 
 ​		具体可参见Launch.json中的cwd设置。
 
-<img src="C:\Users\13514\AppData\Roaming\Typora\typora-user-images\image-20220422195623516.png" alt="image-20220422195623516" style="zoom: 50%;" />
-   【图片请见pdf】
+
+
+【05/01】
+
+- feat/cmake
+
+  删除了feat/main中的部分注释代码。
+
+  目前正在用该分支代码进行调试XTP_main。
+
+- feat/xtpalgo
+
+  1. 修改了KuafuConfig.yaml，用于给XTP与XTP_Algo设置不同的dump和query路径
+
+  2. 在adaptedApi.cpp中，对login之后等待算法通道成功建立使用了cv条件变量
+
+  3. 在main.cpp中，使用了以下结构进行选择编译
+
+     ```c++
+     #ifdef _ALGO
+     ...
+     #else
+     ...
+     #endef
+     ```
+
+- 目前运行结果图
+
+  1. core dumped
+  [见pdf]
+
+  2. disconnected之后，成功退出
+  [见pdf]
+
+
+- 目前build文件夹结构图
+  [见pdf]
+
+- PS ctrl + shift + v (for windows)可以启动vscode对markdown文档的预览
