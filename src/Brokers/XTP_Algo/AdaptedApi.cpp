@@ -15,6 +15,16 @@ namespace api     {
         //the system will automatically reconnet
     }
     void AdaptedSpi::OnALGOUserEstablishChannel(char* user, XTPRI* error_info, uint64_t session_id) {
+        if (error_info == nullptr || error_info->error_id == 0) {
+            established_channel_ = true;
+            cv_established_.notify_one();
+            p_logger_->info("ALGOUserEstablishChannel successfully");
+        }
+        else {
+            p_logger_->error("ALGOUserEstablishChannel failed, error_id = {}, msg = {}", 
+            error_info->error_id, error_info->error_msg);
+        }
+        
 
     }
     void AdaptedSpi::OnInsertAlgoOrder(ApiInsertReport* strategy_info, XTPRI *error_info, uint64_t session_id) {
@@ -143,11 +153,23 @@ namespace api     {
         if(ret != 0) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
             p_logger_->error("EstablishChannel failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
-            return error_id_t::not_login;
         }
+        else {
+            p_logger_->info("Waiting to establish channel...");
+            std::mutex mutex;
+            p_spi_->established_channel_ = false;
+            {
+                std::unique_lock lk(mutex);
+                //FIXME:
+                if(p_spi_->cv_established_.wait_for(lk, std::chrono::seconds(3), [&move(p_spi_)]{return p_spi_->established_channel_;})) {
+                    p_spi_->on_login(session_id_);
+                    return error_id_t::success;
+                }
+            }
+        } 
+        // Call on_login even if Establish failed
         p_spi_->on_login(session_id_);
-        return error_id_t::success;
-        
+        return error_id_t::not_login;
     }
 
     ApiRequestID AdaptedApi::get_request_id() {
