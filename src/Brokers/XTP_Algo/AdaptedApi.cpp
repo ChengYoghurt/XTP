@@ -200,6 +200,9 @@ namespace api     {
     error_id_t AdaptedApi::query_credit_balance(){
 
     }
+    error_id_t AdaptedApi::query_position(WCPositionQueryRequest const& request){
+
+    }
 
     error_id_t AdaptedApi::place_basket_order(WCBasketOrderRequest const& request){
         uint32_t strategy_type = static_cast<uint32_t>(algo_config_.algo_type);
