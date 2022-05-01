@@ -88,13 +88,7 @@ namespace api     {
 
     void AdaptedSpi::OnQueryPosition(ApiPosition *position, ApiText *error_info, ApiRequestID request_id, bool is_last, uint64_t session_id) {
         WCPositionResponse pos_rsp;
-
         pos_rsp.instrument       = std::atoi(position->ticker)  ;
-<<<<<<< HEAD
-        std::string ticker       = position->ticker; 
-        std::cout<<pos_rsp.instrument<<"   "<<ticker<<"p"<<std::endl;
-=======
->>>>>>> 4078348a3f238a3933eb8601a30441e72a19611e
         pos_rsp.yesterday_volume = position->yesterday_position ;
         pos_rsp.latest_volume    = position->total_qty          ;
         pos_rsp.available_volume = position->sellable_qty       ;
@@ -247,10 +241,10 @@ namespace api     {
             std::string instrument_str = instrument_to_str(request.instrument);
             if (instrument_market == market_t::sh || instrument_market == market_t::shsecond) {
                 // Debug
-                std::cout << "instrument id: "<< instrument_str.c_str()
+                /*std::cout << "instrument id: "<< instrument_str.c_str()
                         << "session_id: " << session_id_ 
                         << "request_id: " << get_request_id()
-                        << std::endl;
+                        << std::endl;*/
 
                 int ret = p_broker_api_->QueryPosition(instrument_str.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SH_A);
                 if (ret) {
