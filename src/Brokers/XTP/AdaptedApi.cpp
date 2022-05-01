@@ -64,6 +64,7 @@ namespace api     {
         }
 
     AdaptedApi::~AdaptedApi(){
+        p_broker_api_->Logout(session_id_);
         p_broker_api_->Release();
     }
 
