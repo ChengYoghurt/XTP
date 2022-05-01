@@ -5,9 +5,18 @@
 namespace wct     {
 namespace api     {
 
-    void AdaptedSpi::onLogin(WCLoginResponse const& response) {
-        p_logger_->info("Login Successfully");
-        p_spi_->on_login(response);
+    void AdaptedSpi::onLogin(session_t session_id, error_id_t error_id) {
+        WCLoginResponse login_rsp;
+        login_rsp.session_id = session_id;
+        login_rsp.error_id = error_id;
+        if(error_id == error_id_t::success) {
+            p_logger_->info("Login Successfully");
+
+        }
+        else {
+            p_logger_->error("Login Failed");
+        }
+        p_spi_->on_login(login_rsp);
     }
 
     void AdaptedSpi::OnDisconnected(uint64_t session_id, int reason) {
@@ -147,13 +156,14 @@ namespace api     {
         if(session_id_ == 0) {
             const  ApiText* error_info  = p_broker_api_->GetApiLastError();
             p_logger_->error("Login failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
+            p_spi_->onLogin(session_id_, error_id_t::not_login);
             return error_id_t::not_login;
         }
         else {
             WCLoginResponse response;
             response.session_id = session_id_;
             response.error_id = error_id_t::success;
-            p_spi_->onLogin(response);
+            p_spi_->onLogin(session_id_, error_id_t::success);
             return error_id_t::success;
         }
     }
