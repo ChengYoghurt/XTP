@@ -14,7 +14,7 @@ INTERFACE
 target_link_libraries(
     XTP_Algo
 INTERFACE
-    XTP::XTP
+    #XTP::XTP
     xtpquoteapi
     xtptraderapi_xalgo
 )

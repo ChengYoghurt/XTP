@@ -34,7 +34,7 @@ if ("main" IN_LIST target_apps)
             ${target_name}
         PUBLIC
             ${target_main}.cpp
-            ${CMAKE_SOURCE_DIR}/src/quote_spi.cpp
+            #${CMAKE_SOURCE_DIR}/src/quote_spi.cpp
         )
 
         target_include_directories(
