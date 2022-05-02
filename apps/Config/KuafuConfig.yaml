@@ -7,6 +7,7 @@ TDFReplayFromStart: true
 
 # Trade Config
 TradeConfig: Config/XTPTradec.yaml
+AlgoTradeConfig: Config/AlgoLoginConfig.yaml
 TradeAccount: Test
 TradeReplayFromStart: true
 
@@ -23,5 +24,7 @@ Calendar: Data/Static/calendar.csv
 
 # Write
 DataDump: Data/Somewhere
-Dump_log_output: Data/dump_log/${today}
-Query_data: Data/query_data/${today}
+Dump_log_output: Data/dump_log/XTP/${today}
+Dump_log_output_algo: Data/dump_log/XTP_Algo/${today}
+Query_data: Data/query_data/XTP/${today}
+Query_data_algo: Data/query_data/XTP_Algo/${today}

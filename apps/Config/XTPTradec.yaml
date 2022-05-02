@@ -7,6 +7,8 @@ Test:
  server_port: 6102
  username: "253191000198"
  password: "RnancU1F"
+ local_ip: "192.168.0.204"
+ tokenkey: "b8aa7173bba3470e390d787219b2112e"
  client_id: 3
  path_linux: "/root/log/"
  path: "D:\\test\\"
@@ -15,7 +17,7 @@ Test:
  order:
   -
     client_order_id: 1
-    instrument_id: 600439
+    instrument_id: 688001
     price: 7.0
     quantity: 200
     side: 66
@@ -23,7 +25,7 @@ Test:
  cancel_order_id: 
  query_position_is_true: true
  query_position_is_all: true
- query_position_instrument: 600439
+ query_position_instrument: 688001
  query_balance_is_true_account: true
  query_balance_is_true_broker: true
  hb_interval: 15

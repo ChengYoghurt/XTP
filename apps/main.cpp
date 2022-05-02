@@ -92,6 +92,8 @@ int main(int argc,char* argv[]) {
     int trade_server_port      ;
     std::string trade_username ;
     std::string trade_password ;
+    std::string local_ip       ;
+    std::string tokenkey       ;
     std::string filepath; 
     int log_level;
     // trade account config addtional 
@@ -120,50 +122,29 @@ int main(int argc,char* argv[]) {
     YAML_GET_FIELD(trade_username   , trade_account, username   );
     YAML_GET_FIELD(trade_password   , trade_account, password   );
     YAML_GET_FIELD(filepath         , trade_account, path       );
+    YAML_GET_FIELD(local_ip         , trade_account, local_ip   );
+    YAML_GET_FIELD(tokenkey         , trade_account, tokenkey   );
     // yaml 初始化 additional
     YAML_GET_FIELD(client_id         , trade_account, client_id        );   
     YAML_GET_FIELD(heat_beat_interval, trade_account, hb_interval      );
 
- //   YAML_GET_FIELD(trade_exchange_sh      , trade_account, exchange_id_sh       );
- //   YAML_GET_FIELD(trade_exchange_sz      , trade_account, exchange_id_sz       );
-
-/*
-    if (use_yaml) {
-        YAML::Node node_instruments   = trade_account["instrument_sh"];
-        instrument_count_sh         = node_instruments.size();
-
-        for (int i = 0 ; i < instrument_count_sh ; i++ ) {
-            std::string temp_instrument   = node_instruments[i].as<std::string>();
-            vec_instruments_sh.push_back(temp_instrument);
-        }
-            
-        node_instruments   = trade_account["instrument_sz"];
-        instrument_count_sz         = node_instruments.size();
-        
-        for (int i = 0 ; i < instrument_count_sz ; i++ ) {
-            std::string temp_instrument   = node_instruments[i].as<std::string>();
-            vec_instruments_sz.push_back(temp_instrument);
-        }
-
-    } 
-*/
     //not clear if yamlgetfield can convert node to other types like side_t
     //order config
-    YAML::Node node_orders  ;// = trade_account["order"];        
+    YAML::Node node_orders = trade_account["order"];        
     uint32_t order_count     = node_orders.size();
     std::vector<wct::WCOrderRequest> vec_wcorderrequest;
-
-    /*for (uint32_t i = 0 ; i < order_count ; i++) {
+    for (uint32_t i = 0 ; i < order_count ; i++) {
         wct::WCOrderRequest wcorderrequest;
         wcorderrequest.instrument       = node_orders[i]["instrument_id"].as<wct::instrument_id_t>();
         wcorderrequest.client_order_id  = wct::order_id_t(node_orders[i]["client_order_id"].as<uint32_t>());
         wcorderrequest.market           = (wct::market_t)get_belonged_market(wcorderrequest.instrument);
         wcorderrequest.price            = node_orders[i]["price"].as<wct::price_t>();
-        wcorderrequest.volume           = node_orders[i]["volume"].as<wct::volume_t>();
+        wcorderrequest.volume           = node_orders[i]["quantity"].as<wct::volume_t>();
         wcorderrequest.side             = (wct::side_t)node_orders[i]["side"].as<uint32_t>();
         wcorderrequest.price_type       = (wct::price_type_t)node_orders[i]["price_type"].as<uint32_t>();
         vec_wcorderrequest.emplace_back(wcorderrequest);
-    }*/
+    }
+
     //concel order config
     YAML::Node node_cancel_orders  ;// = trade_account["cancel_order_id"];        ;
     uint32_t cancel_order_count     = node_cancel_orders.size();;
@@ -171,7 +152,7 @@ int main(int argc,char* argv[]) {
 
     for (uint32_t i = 0 ; i < cancel_order_count ; i++) {
         wct::WCOrderCancelRequest wccancelreq;
-        wccancelreq.client_order_id = wct::order_id_t(node_cancel_orders[i].as<uint32_t>());//? not certain
+        wccancelreq.client_order_id = wct::order_id_t(node_cancel_orders[i].as<uint32_t>());
         vec_wccancelreq.emplace_back(wccancelreq);
     }
     //qurry config
@@ -220,7 +201,7 @@ int main(int argc,char* argv[]) {
     std::thread wc_trader_th = std::thread(&wct::WCTrader::run, &wc_trader);
 
     wct::WCLoginRequest wcloginrequest     ;
-    wct::HoldingInfo holdingofgiveninstr   ;
+    wct::HoldingInfo instrument_holdings   ;
     wct::BalanceInfo balanceinfo           ;
     wct::PositionInfo positioninfo         ;
 
@@ -228,40 +209,30 @@ int main(int argc,char* argv[]) {
     wcloginrequest.password                     = trade_password      ;
     wcloginrequest.server_ip                    = trade_server_ip     ;
     wcloginrequest.server_port                  = trade_server_port   ;
-    wcloginrequest.agent_fingerprint.local_ip   = "192.168.0.204"     ; //? not certain
-    //std::cout<<trade_username<<std::endl<<trade_password<<std::endl<<trade_server_ip<<std::endl<<trade_server_port<<std::endl;
-    wcloginrequest.agent_fingerprint.token      = "b8aa7173bba3470e390d787219b2112e";
+    wcloginrequest.agent_fingerprint.local_ip   = local_ip            ;
+    wcloginrequest.agent_fingerprint.token      = tokenkey            ;
     wc_trader.login(wcloginrequest);
-    std::cout << "--------------Login successfully----------------" << std::endl;
-    // wct::WCLoginResponse response; 
-    // response.session_id = p_adapted_api->get_session_id();
-    // response.error_id = wct::error_id_t::success;
-    // wc_trader.on_login(response);////////////////////////////////
-    wct::price_t account_avail = 5000000.0; 
+    //wct::WCLoginResponse response; 
+    //response.session_id = p_adapted_api->get_session_id();
+    //response.error_id = wct::error_id_t::success;
+    wct::price_t account_avail = 50000000.0; 
     wc_trader.init_account_avail(account_avail); 
+
     std::ofstream querylog;
-    querylog.open(query_data, std::ios::trunc);
+    querylog.open(query_data, std::ios::app);
 
     std::vector<wct::order_id_t> vec_orderid;
-
     for (uint32_t i = 0 ; i < order_count ; i++) {
         wct::order_id_t local_order_id;
         wct::instrument_id_t stock  = vec_wcorderrequest[i].instrument  ;
-        wct::side_t side            = vec_wcorderrequest[i].side        ;
+        wct::side_t side            = wct::side_t::buy                  ;
         wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
         wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
         wct::millisec_t expire_ms   = 100                               ;
         local_order_id = wc_trader.place_order(stock, side, vol, limit_price, expire_ms);
+        //wc_trader.execute_place_order(local_order_id, stock, side, vol, limit_price);
         vec_orderid.push_back(local_order_id);
     }
-
-        /*for (uint32_t i = 0 ; i < order_count ; i++) {
-            wct::instrument_id_t stock     = vec_wcorderrequest[i].instrument  ;
-            wct::side_t side            = vec_wcorderrequest[i].side        ;
-            wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
-            wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
-            wc_trader.execute_place_order(local_order_id, stock, side, vol, limit_price);
-        }*/
 
     for (size_t i = 0 ; i < vec_orderid.size() ; i++) {
         wct::order_id_t last_order_id = vec_orderid[i];
@@ -273,36 +244,38 @@ int main(int argc,char* argv[]) {
         wc_trader.execute_cancel_order(last_order_id);
     }
 
+    // Debug Query_holdings
     if (query_position_is_true) {
-        holdingofgiveninstr = wc_trader.query_holdings(query_position_instrument);
+        instrument_holdings = wc_trader.query_holdings(query_position_instrument);
         querylog << "query_position: " << query_position_instrument << std::endl;
-        querylog << "holding: "        << holdingofgiveninstr.holding
-                 << "available: "      << holdingofgiveninstr.available
-                 << std::endl;
+        querylog << "holding: "        << instrument_holdings.holding << "\t" 
+                 << "available: "      << instrument_holdings.available
+                 << std::endl << std::endl;
     }
 
     /*if (query_position_is_all) {
         positioninfo = wc_trader.query_holdings();
     }*/
+    // End of Query_holdings
 
     if (query_balance_is_true_account) {
         balanceinfo = wc_trader.query_balance_from_account();
         querylog << "query_balance_account" <<std::endl; 
-        querylog << "initial_balance: "     << balanceinfo.initial_balance
-                 << "available_balance: "   << balanceinfo.available_balance
-                 << "market_value: "        << balanceinfo.market_value
+        querylog << "initial_balance: "     << balanceinfo.initial_balance << "\t" 
+                 << "available_balance: "   << balanceinfo.available_balance << "\t" 
+                 << "market_value: "        << balanceinfo.market_value << "\t" 
                  << "total_asset: "         << balanceinfo.total_asset
-                 << std::endl;
+                 << std::endl << std::endl;
     }
 
     if (query_balance_is_true_broker) {
         balanceinfo = wc_trader.query_balance_from_broker();
-        querylog << "query_balance_account" << std::endl; 
-        querylog << "initial_balance: "     << balanceinfo.initial_balance
-                 << "available_balance: "   << balanceinfo.available_balance
-                 << "market_value: "        << balanceinfo.market_value
+        querylog << "query_balance_broker" << std::endl; 
+        querylog << "initial_balance: "     << balanceinfo.initial_balance << "\t" 
+                 << "available_balance: "   << balanceinfo.available_balance << "\t" 
+                 << "market_value: "        << balanceinfo.market_value << "\t" 
                  << "total_asset: "         << balanceinfo.total_asset
-                 << std::endl;
+                 << std::endl << std::endl;
     }
         
     querylog.close();
@@ -321,6 +294,7 @@ int main(int argc,char* argv[]) {
     wc_trader_th.join();
 
     // Save stream data
+    
     std::string dumplogpath;
     YAML_GET_FIELD(dumplogpath, config, Dump_log_output);
     std::cout << "get_today_str(): " << get_today_str() << std::endl;
@@ -329,6 +303,7 @@ int main(int argc,char* argv[]) {
     p_logger->info("Dumping data to log...");
     wc_trader.dump_log(dumplogfile);
     dumplogfile.close();
+    
 
     return 0;
 }
