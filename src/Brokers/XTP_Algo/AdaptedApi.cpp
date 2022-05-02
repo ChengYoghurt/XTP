@@ -156,7 +156,7 @@ namespace api     {
               algo_login_config_.algo_server_ip.c_str(), 
               algo_login_config_.algo_server_port,
               algo_login_config_.algo_username.c_str(), 
-              "123456", 
+              algo_login_config_.algo_password.c_str(), 
               algo_sock_type);//algo server
         p_logger_->info("login algo");
         if(ret != 0) {

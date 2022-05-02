@@ -98,6 +98,7 @@ int main(int argc,char* argv[]) {
     int log_level              ;
 
     std::string algo_trade_server_ip;
+    std::string algo_trade_password ;
     int algo_trade_server_port      ;
     std::string algo_trade_local_ip ;
     std::string algo_config         ;
@@ -141,6 +142,7 @@ int main(int argc,char* argv[]) {
     YAML::Node algo_trade_config     = YAML::LoadFile(algo_trade_config_file);
     YAML_GET_FIELD(algo_trade_server_ip  , algo_trade_config, server_ip    );
     YAML_GET_FIELD(algo_trade_server_port, algo_trade_config, server_port  );
+    YAML_GET_FIELD(algo_trade_password   , algo_trade_config, password     );
     YAML_GET_FIELD(algo_trade_local_ip   , algo_trade_config, algo_local_ip     );
     YAML_GET_FIELD(algo_config           , algo_trade_config, algo_config_file  );
     #endif
@@ -206,7 +208,7 @@ int main(int argc,char* argv[]) {
     #ifdef _ALGO
     wct::api::AlgoLoginConfig p_algo_login_config;
     wct::api::AlgoConfig p_algo_config;
-    p_algo_login_config.algo_password = trade_password;
+    p_algo_login_config.algo_password = algo_trade_password;
     p_algo_login_config.algo_username = trade_username;
     p_algo_login_config.algo_server_ip = algo_trade_server_ip;
     p_algo_login_config.algo_server_port = algo_trade_server_port;
