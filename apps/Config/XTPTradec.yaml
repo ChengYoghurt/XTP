@@ -17,7 +17,7 @@ Test:
  order:
   -
     client_order_id: 1
-    instrument_id: 600439
+    instrument_id: 688001
     price: 7.0
     quantity: 200
     side: 66

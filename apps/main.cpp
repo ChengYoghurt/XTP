@@ -130,9 +130,20 @@ int main(int argc,char* argv[]) {
 
     //not clear if yamlgetfield can convert node to other types like side_t
     //order config
-    YAML::Node node_orders  ;// = trade_account["order"];        
+    YAML::Node node_orders = trade_account["order"];        
     uint32_t order_count     = node_orders.size();
     std::vector<wct::WCOrderRequest> vec_wcorderrequest;
+    for (uint32_t i = 0 ; i < order_count ; i++) {
+        wct::WCOrderRequest wcorderrequest;
+        wcorderrequest.instrument       = node_orders[i]["instrument_id"].as<wct::instrument_id_t>();
+        wcorderrequest.client_order_id  = wct::order_id_t(node_orders[i]["client_order_id"].as<uint32_t>());
+        wcorderrequest.market           = (wct::market_t)get_belonged_market(wcorderrequest.instrument);
+        wcorderrequest.price            = node_orders[i]["price"].as<wct::price_t>();
+        wcorderrequest.volume           = node_orders[i]["quantity"].as<wct::volume_t>();
+        wcorderrequest.side             = (wct::side_t)node_orders[i]["side"].as<uint32_t>();
+        wcorderrequest.price_type       = (wct::price_type_t)node_orders[i]["price_type"].as<uint32_t>();
+        vec_wcorderrequest.emplace_back(wcorderrequest);
+    }
 
     //concel order config
     YAML::Node node_cancel_orders  ;// = trade_account["cancel_order_id"];        ;
@@ -204,7 +215,7 @@ int main(int argc,char* argv[]) {
     //wct::WCLoginResponse response; 
     //response.session_id = p_adapted_api->get_session_id();
     //response.error_id = wct::error_id_t::success;
-    wct::price_t account_avail = 5000000.0; 
+    wct::price_t account_avail = 50000000.0; 
     wc_trader.init_account_avail(account_avail); 
 
     std::ofstream querylog;
@@ -214,11 +225,12 @@ int main(int argc,char* argv[]) {
     for (uint32_t i = 0 ; i < order_count ; i++) {
         wct::order_id_t local_order_id;
         wct::instrument_id_t stock  = vec_wcorderrequest[i].instrument  ;
-        wct::side_t side            = vec_wcorderrequest[i].side        ;
+        wct::side_t side            = wct::side_t::buy                  ;
         wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
         wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
         wct::millisec_t expire_ms   = 100                               ;
         local_order_id = wc_trader.place_order(stock, side, vol, limit_price, expire_ms);
+        //wc_trader.execute_place_order(local_order_id, stock, side, vol, limit_price);
         vec_orderid.push_back(local_order_id);
     }
 
@@ -238,7 +250,7 @@ int main(int argc,char* argv[]) {
         querylog << "query_position: " << query_position_instrument << std::endl;
         querylog << "holding: "        << instrument_holdings.holding << "\t" 
                  << "available: "      << instrument_holdings.available
-                 << std::endl;
+                 << std::endl << std::endl;
     }
 
     /*if (query_position_is_all) {
@@ -253,17 +265,17 @@ int main(int argc,char* argv[]) {
                  << "available_balance: "   << balanceinfo.available_balance << "\t" 
                  << "market_value: "        << balanceinfo.market_value << "\t" 
                  << "total_asset: "         << balanceinfo.total_asset
-                 << std::endl;
+                 << std::endl << std::endl;
     }
 
     if (query_balance_is_true_broker) {
         balanceinfo = wc_trader.query_balance_from_broker();
-        querylog << "query_balance_account" << std::endl; 
+        querylog << "query_balance_broker" << std::endl; 
         querylog << "initial_balance: "     << balanceinfo.initial_balance << "\t" 
                  << "available_balance: "   << balanceinfo.available_balance << "\t" 
                  << "market_value: "        << balanceinfo.market_value << "\t" 
                  << "total_asset: "         << balanceinfo.total_asset
-                 << std::endl;
+                 << std::endl << std::endl;
     }
         
     querylog.close();
