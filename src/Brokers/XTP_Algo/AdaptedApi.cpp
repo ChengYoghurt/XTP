@@ -143,26 +143,32 @@ namespace api     {
             return error_id_t::not_login;
         }
         session_id_ = ret;
-
+        p_logger_->info("login oms successfully");
         XTP_PROTOCOL_TYPE algo_sock_type = XTP_PROTOCOL_TCP                  ;
+        //this is for test,need to modified
+        p_logger_->info("ip = {},port = {},name = {},pw= {}",algo_login_config_.algo_server_ip,algo_login_config_.algo_server_port,
+        algo_login_config_.algo_username,algo_login_config_.algo_password);
         ret = p_broker_api_->LoginALGO(
               algo_login_config_.algo_server_ip.c_str(), 
               algo_login_config_.algo_server_port,
               algo_login_config_.algo_username.c_str(), 
-              algo_login_config_.algo_password.c_str(), 
-              algo_sock_type, 
-              algo_login_config_.local_ip.c_str());//algo server
+              "123456", 
+              algo_sock_type);//algo server
+        p_logger_->info("login algo");
         if(ret != 0) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
             p_logger_->error("LoginAlgo failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
             p_spi_->on_login(session_id_, error_id_t::not_login);
             return error_id_t::not_login;
+        }else{
+            p_logger_->info("LoginAlgo successfully");
         }
-
+    
         ret = p_broker_api_->ALGOUserEstablishChannel(ip.c_str(), port, user.c_str(), password.c_str(),session_id_) ; //oms server                   
         if(ret != 0) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
             p_logger_->error("EstablishChannel failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
+            
         }
         else {
             p_logger_->info("Waiting to establish channel...");

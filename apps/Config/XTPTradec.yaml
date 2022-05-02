@@ -4,9 +4,9 @@
 # side,price_type use ASCII
 Test: 
  server_ip: "122.112.139.0"
- server_port: 6102
- username: "253191000198"
- password: "RnancU1F"
+ server_port: 6202
+ username: "315011679"
+ password: "JnmQ92Bb"
  client_id: 3
  path_linux: "/root/log/"
  path: "D:\\test\\"

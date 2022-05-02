@@ -1,10 +1,10 @@
 %YAML 1.2
 ---
 # AlgoLogin Config
-Test:
- server_ip: "119.3.103.38"
- server_port: 6002
- username: "253191000198"
- password: "RnancU1F"
- local_ip: "127.0.0.1"
- algo_config: Config/AlgoConfig.yaml
+
+server_ip: "119.3.40.4"
+server_port: 8602
+username: "315011679"
+password: "123456"
+algo_local_ip: "127.0.0.1"
+algo_config_file: Config/AlgoConfig.yaml
