@@ -115,6 +115,8 @@ namespace api     {
         return local_order_status;
     }
 
+    
+
     error_id_t AdaptedApi::register_spi(std::unique_ptr<WCSpi> p_spi) {
         p_spi_ = std::make_unique<AdaptedSpi>(std::move(p_spi));
         // RegisterSpi return value is void
@@ -175,14 +177,19 @@ namespace api     {
         else {
             p_logger_->info("Waiting to establish channel...");
             std::mutex mutex;
-            p_spi_->established_channel_ = false;
+            if(!p_spi_->check_established()){
+                p_spi_->set_established(true);
+            }
+
             {
                 std::unique_lock lk(mutex);
-                //FIXME:
-                // if(p_spi_->cv_established_.wait_for(lk, std::chrono::seconds(3), [&move(p_spi_)]{return p_spi_->established_channel_;})) {
+                bool established_ret = p_spi_->cv_established_.wait_for(lk, std::chrono::seconds(3), [this]{return p_spi_->check_established();});
+                if(established_ret) {
+                    p_logger_->debug("CV return, Channel established!");
                     p_spi_->on_login(session_id_, error_id_t::success);
                     return error_id_t::success;
-                // }
+                }
+                p_logger_->debug("CV timed out, Channel establish failed!");
             }
         } 
         // Call on_login even if Establish failed

@@ -57,7 +57,13 @@ public:
     void on_login(session_t session_, error_id_t error_id);
     bool setinstrument(order_id_t const& strategy_id,instrument_id_t const& instrument_id);
     std::condition_variable cv_established_;
-    bool established_channel_;
+    bool check_established() const {
+        return established_channel_;
+    }
+    void set_established(bool is_established) {
+        established_channel_ = is_established;
+    };
+    
 protected:
     virtual void OnDisconnected(uint64_t session_id, int reason); 
     virtual void OnAlgoDisconnected(int reason); 
@@ -78,6 +84,7 @@ protected:
     std::unique_ptr<WCSpi> p_spi_;
     std::shared_ptr<spdlog::logger> p_logger_;
     std::unordered_map<order_id_t,UserOrderInfo> strategy_to_order_info;
+    bool established_channel_;
     
 };/* class AdaptedSpi */
 
