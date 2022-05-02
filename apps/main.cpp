@@ -304,6 +304,5 @@ int main(int argc,char* argv[]) {
     wc_trader.dump_log(dumplogfile);
     dumplogfile.close();
     
-
     return 0;
 }

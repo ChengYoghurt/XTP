@@ -92,8 +92,9 @@ namespace api     {
             return;
         }*/
         WCCancelRejectedResponse order_rsp;
-        order_rsp.client_order_id  =order_id_xtptowc[cancel_info->order_xtp_id];
+        order_rsp.client_order_id  = order_id_xtptowc[cancel_info->order_xtp_id];
         order_rsp.error_id         = error_id_t::unknown;
+        p_logger_->error("CancelOrder failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
         p_spi_->on_cancel_rejected(order_rsp);
     }
 
@@ -209,7 +210,7 @@ namespace api     {
 
         int xtp_order_id = p_broker_api_->InsertOrder(&single_order,session_id_);
         order_id_wctoxtp[request.client_order_id] = xtp_order_id;
-        if (xtp_order_id) {
+        if (!xtp_order_id) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
             p_logger_->error("InsertOrder failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
             return error_id_t::unknown;
@@ -219,7 +220,7 @@ namespace api     {
 
     error_id_t AdaptedApi::cancel_order(WCOrderCancelRequest const& request) {
         int ret = p_broker_api_->CancelOrder(order_id_wctoxtp[request.client_order_id],session_id_);
-        if (ret) {
+        if (!ret) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
             p_logger_->error("CancelOrder failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
             return error_id_t::unknown;

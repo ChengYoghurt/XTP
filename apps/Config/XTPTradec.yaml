@@ -11,7 +11,7 @@ Test:
  tokenkey: "b8aa7173bba3470e390d787219b2112e"
  client_id: 3
  path_linux: "/root/log/"
- path: "D:\\test\\"
+ path: "./test"
  exchange_id_sh: 1
  exchange_id_sz: 2
  order:
