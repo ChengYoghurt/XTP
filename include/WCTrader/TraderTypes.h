@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "NumericTime.h"
+#include "WCNumericTime.h"
 #include "OrderID.h"
 #include "ErrorMessage.h"
 #include <unordered_map>
@@ -25,7 +25,7 @@ namespace wct {
     using decimal_t       = uint64_t            ;
     using price_t         = double              ;  // price = decimal / 10000.0
     using volume_t        = uint64_t            ; 
-    using timestamp_t     = kf::NumericTime     ;
+    using timestamp_t     = wcdb::NumericTime   ;
     using trade_sn_t      = std::array<char, 64>;
     using message_t       = std::array<char, 64>;
     using account_name_t  = std::array<char, 64>;
