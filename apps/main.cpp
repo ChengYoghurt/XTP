@@ -146,8 +146,8 @@ int main(int argc,char* argv[]) {
     }
 
     //concel order config
-    YAML::Node node_cancel_orders  ;// = trade_account["cancel_order_id"];        ;
-    uint32_t cancel_order_count     = node_cancel_orders.size();;
+    YAML::Node node_cancel_orders  ;// = trade_account["cancel_order_id"];
+    uint32_t cancel_order_count     = node_cancel_orders.size();
     std::vector<wct::WCOrderCancelRequest> vec_wccancelreq;
 
     for (uint32_t i = 0 ; i < cancel_order_count ; i++) {
@@ -197,6 +197,7 @@ int main(int argc,char* argv[]) {
         std::move(p_wc_trader_config), 
         std::move(p_adapted_api)
     ); 
+    wc_trader.load_risk_config("Config/RiskManagement.yaml");
 
     std::thread wc_trader_th = std::thread(&wct::WCTrader::run, &wc_trader);
 
