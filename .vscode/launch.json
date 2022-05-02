@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         // tests
         {
             "name": "KuafuTest",
@@ -32,10 +33,10 @@
         },
         // apps
         {
-            "name": "XTP_main",
+            "name": "XTP_Algo_main",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/apps/XTP_main",
+            "program": "${workspaceFolder}/build/apps/XTP_Algo_main",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build",

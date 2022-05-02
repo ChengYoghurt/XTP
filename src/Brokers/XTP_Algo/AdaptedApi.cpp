@@ -135,7 +135,9 @@ namespace api     {
         XTP_PROTOCOL_TYPE sock_type = XTP_PROTOCOL_TCP                  ;
         std::string local_ip        = request.agent_fingerprint.local_ip;
         p_broker_api_->SetSoftwareKey(request.agent_fingerprint.token.c_str());
+        std::cout << "About to Login" << '\n';
         int ret                     = p_broker_api_->Login(ip.c_str(), port, user.c_str(), password.c_str(), sock_type, local_ip.c_str());//oms server
+        std::cout << "After Login" << '\n';
         if(ret == 0) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
             p_logger_->error("Login failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
