@@ -146,7 +146,7 @@ int main(int argc,char* argv[]) {
     }
 
     //concel order config
-    YAML::Node node_cancel_orders  ;// = trade_account["cancel_order_id"];
+    YAML::Node node_cancel_orders  ;// = trade_account["cancel_order_id"];        ;
     uint32_t cancel_order_count     = node_cancel_orders.size();
     std::vector<wct::WCOrderCancelRequest> vec_wccancelreq;
 
@@ -197,6 +197,7 @@ int main(int argc,char* argv[]) {
         std::move(p_wc_trader_config), 
         std::move(p_adapted_api)
     ); 
+
     wc_trader.load_risk_config("Config/RiskManagement.yaml");
 
     std::thread wc_trader_th = std::thread(&wct::WCTrader::run, &wc_trader);
@@ -232,6 +233,7 @@ int main(int argc,char* argv[]) {
         wct::millisec_t expire_ms   = 100                               ;
         local_order_id = wc_trader.place_order(stock, side, vol, limit_price, expire_ms);
         //wc_trader.execute_place_order(local_order_id, stock, side, vol, limit_price);
+        //wc_trader.execute_cancel_order(local_order_id);
         vec_orderid.push_back(local_order_id);
     }
 
@@ -240,10 +242,10 @@ int main(int argc,char* argv[]) {
         wc_trader.cancel_order(last_order_id);
     }
 
-    for (size_t i = 0 ; i < vec_orderid.size() ; i++) {
+    /*for (size_t i = 0 ; i < vec_orderid.size() ; i++) {
         wct::order_id_t last_order_id = vec_orderid[i];
         wc_trader.execute_cancel_order(last_order_id);
-    }
+    }*/
 
     // Debug Query_holdings
     if (query_position_is_true) {

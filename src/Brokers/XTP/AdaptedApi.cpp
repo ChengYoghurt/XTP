@@ -28,12 +28,13 @@ namespace api     {
        /* if(order_info->is_child_order) {
             return; // skip all child order //?
         }*////no such
-        if(!OrderID(order_info->order_client_id).is_from_trader(trade_id_)) {
+        /*if(!OrderID(order_info->order_client_id).is_from_trader(trade_id_)) {
             return;
         }
-        if(order_id_xtptowc[order_info->order_xtp_id] = 0){
+        if(order_id_xtptowc[order_info->order_xtp_id] == 0){
             order_id_xtptowc[order_info->order_xtp_id] = order_info->order_client_id;
-        }
+        }*/
+        order_id_xtptowc[order_info->order_xtp_id] = OrderID(order_info->order_client_id);
         WCOrderResponse order_rsp;
         std::memset(&order_rsp, 0, sizeof(order_rsp));
         order_rsp.client_order_id  = order_info->order_client_id;
@@ -69,12 +70,13 @@ namespace api     {
     }
 
     void AdaptedSpi::OnTradeEvent(ApiTradeReport *trade_info, uint64_t session_id) {
-        if(!OrderID(trade_info->order_client_id).is_from_trader(trade_id_)) {
+        /*if(!OrderID(trade_info->order_client_id).is_from_trader(trade_id_)) {
             return;
         }
-        if(order_id_xtptowc[trade_info->order_xtp_id] = 0){
+        if(order_id_xtptowc[trade_info->order_xtp_id] == 0){
             order_id_xtptowc[trade_info->order_xtp_id] = trade_info->order_client_id;
-        }
+        }*/
+        order_id_xtptowc[trade_info->order_xtp_id] = OrderID(trade_info->order_client_id);
         WCTradeResponse trade_rsp;
         std::memset(&trade_rsp, 0, sizeof(trade_rsp));
         trade_rsp.client_order_id  = trade_info->order_client_id;
@@ -93,8 +95,9 @@ namespace api     {
         }*/
         WCCancelRejectedResponse order_rsp;
         order_rsp.client_order_id  = order_id_xtptowc[cancel_info->order_xtp_id];
-        order_rsp.error_id         = error_id_t::unknown;
-        p_logger_->error("CancelOrder failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
+        //order_rsp.error_id         = error_id_t::unknown;
+        order_rsp.error_id         = error_id_t(error_info->error_id);
+        p_logger_->error("onCancelOrder failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
         p_spi_->on_cancel_rejected(order_rsp);
     }
 
