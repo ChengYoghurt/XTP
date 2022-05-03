@@ -16,9 +16,9 @@ namespace api     {
     }
     void AdaptedSpi::OnALGOUserEstablishChannel(char* user, XTPRI* error_info, uint64_t session_id) {
         if (error_info == nullptr || error_info->error_id == 0) {
+            p_logger_->info("ALGOUserEstablishChannel successfully");
             established_channel_ = true;
             cv_established_.notify_one();
-            p_logger_->info("ALGOUserEstablishChannel successfully");
         }
         else {
             p_logger_->error("ALGOUserEstablishChannel failed, error_id = {}, msg = {}", 
@@ -84,12 +84,12 @@ namespace api     {
         auto order_info_item = strategy_to_order_info.find(client_order_id);
         if(order_info_item !=strategy_to_order_info.end()){
             if(order_info_item->second.xtp_strategy_id == 0){
-                p_logger_->error("place wait insert or callback");
+                p_logger_->debug("place wait insert or callback");
                 return 0;
             }
             return order_info_item->second.xtp_strategy_id;
         }
-        p_logger_->error("not in allrecords");
+        p_logger_->debug("not in allrecords");
         return 0;
     }
     order_status_t simplify_status(ApiOrderStatus const& order_status){
@@ -178,7 +178,7 @@ namespace api     {
             p_logger_->info("Waiting to establish channel...");
             std::mutex mutex;
             if(!p_spi_->check_established()){
-                p_spi_->set_established(true);
+                p_spi_->set_established(false);
             }
 
             {

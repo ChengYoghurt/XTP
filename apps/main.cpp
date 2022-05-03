@@ -356,7 +356,7 @@ int main(int argc,char* argv[]) {
     dumplogfile.open(dumplogpath, std::ios::app);
     p_logger->info("Dumping data to log...");
     dumplogfile.close();
-    
+    p_logger->info("Dumping completed");
 
     return 0;
 }
