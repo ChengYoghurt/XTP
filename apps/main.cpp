@@ -214,9 +214,7 @@ int main(int argc,char* argv[]) {
     wcloginrequest.agent_fingerprint.local_ip   = local_ip            ;
     wcloginrequest.agent_fingerprint.token      = tokenkey            ;
     wc_trader.login(wcloginrequest);
-    //wct::WCLoginResponse response; 
-    //response.session_id = p_adapted_api->get_session_id();
-    //response.error_id = wct::error_id_t::success;
+    
     wct::price_t account_avail = 50000000.0; 
     wc_trader.init_account_avail(account_avail); 
 
@@ -230,10 +228,9 @@ int main(int argc,char* argv[]) {
         wct::side_t side            = wct::side_t::buy                  ;
         wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
         wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
-        wct::millisec_t expire_ms   = 100                               ;
+        wct::millisec_t expire_ms   = 0                                 ;
         local_order_id = wc_trader.place_order(stock, side, vol, limit_price, expire_ms);
         //wc_trader.execute_place_order(local_order_id, stock, side, vol, limit_price);
-        //wc_trader.execute_cancel_order(local_order_id);
         vec_orderid.push_back(local_order_id);
     }
 

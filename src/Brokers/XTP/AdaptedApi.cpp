@@ -11,7 +11,6 @@ namespace api     {
         login_rsp.error_id = error_id;
         if(error_id == error_id_t::success) {
             p_logger_->info("Login Successfully");
-
         }
         else {
             p_logger_->error("Login Failed");
@@ -25,7 +24,7 @@ namespace api     {
     }
 
     void  AdaptedSpi::OnOrderEvent(ApiOrderReport *order_info, ApiText error_info, uint64_t session_id) {
-       /* if(order_info->is_child_order) {
+        /*if(order_info->is_child_order) {
             return; // skip all child order //?
         }*////no such
         /*if(!OrderID(order_info->order_client_id).is_from_trader(trade_id_)) {
@@ -47,6 +46,7 @@ namespace api     {
         order_rsp.error_id         = error_id_t::unknown;
         order_rsp.transaction_time = order_info->update_time % 1'000000'000;  // drop YYYYMMDD and only keep HHMMSSsss
         order_rsp.host_time        = timestamp_t::now();
+        p_logger_->info("OnOrderEvent, OrderID = {}", order_info->order_client_id);
         p_spi_->on_order_event(order_rsp);
     }
 
@@ -85,6 +85,7 @@ namespace api     {
         trade_rsp.trade_price      = trade_info->price;
         trade_rsp.transaction_time = trade_info->trade_time % 1'000000'000;
         trade_rsp.host_time        = timestamp_t::now();
+        p_logger_->info("OnTradeEvent, OrderID = {}", trade_info->order_client_id);
         p_spi_->on_trade_event(trade_rsp);
     }
 
@@ -95,8 +96,6 @@ namespace api     {
         }*/
         WCCancelRejectedResponse order_rsp;
         order_rsp.client_order_id  = order_id_xtptowc[cancel_info->order_xtp_id];
-        std::cout<<cancel_info->order_xtp_id<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
-        //order_rsp.error_id         = error_id_t::unknown;
         order_rsp.error_id         = error_id_t(error_info->error_id);
         p_logger_->error("onCancelOrder failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
         p_spi_->on_cancel_rejected(order_rsp);
@@ -111,6 +110,7 @@ namespace api     {
         pos_rsp.is_last          = is_last                      ; 
 
         if(error_info == nullptr || error_info->error_id == 0) {
+            p_logger_->info("OnQueryPosition, tickerid = {}", pos_rsp.instrument);
             pos_rsp.error_id = error_id_t::success;
         } 
         else if(position->ticker[0] == '\0') { //FIXME:Should I use get_belonged_market to set error_id?
@@ -212,9 +212,9 @@ namespace api     {
         single_order.business_type = ApiBusiness::XTP_BUSINESS_TYPE_CASH; 
      // single_order.algo_parameters = nullptr; // not use algorithms trading
 
-        int xtp_order_id = p_broker_api_->InsertOrder(&single_order,session_id_);
+        uint64_t xtp_order_id = p_broker_api_->InsertOrder(&single_order,session_id_);
         order_id_wctoxtp[request.client_order_id] = xtp_order_id;
-        std::cout<<xtp_order_id<<"THIS IS PLACEORDER";
+        p_logger_->info("place_order, xtp_order_id = {}", xtp_order_id);
         if (!xtp_order_id) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
             p_logger_->error("InsertOrder failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
@@ -224,8 +224,8 @@ namespace api     {
     }
 
     error_id_t AdaptedApi::cancel_order(WCOrderCancelRequest const& request) {
-        int ret = p_broker_api_->CancelOrder(order_id_wctoxtp[request.client_order_id],session_id_);
-        std::cout<<order_id_wctoxtp[request.client_order_id]<<"THIS IS CANCELORDER";
+        int ret = p_broker_api_->CancelOrder(order_id_wctoxtp[request.client_order_id],session_id_);//加锁
+        p_logger_->info("cancel_order, xtp_order_id = {}", order_id_wctoxtp[request.client_order_id]);
         if (!ret) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
             p_logger_->error("CancelOrder failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
