@@ -49,7 +49,7 @@ if ("XTP" IN_LIST broker_apis)
     add_library(AdaptedApi::${BrokerApi} ALIAS ${AdaptedApi})
 endif()
 
-#list(APPEND broker_apis "XTP_Algo")
+list(APPEND broker_apis "XTP_Algo")
 set(broker_apis ${broker_apis} PARENT_SCOPE)
 if ("XTP_Algo" IN_LIST broker_apis)
     set(BrokerApi "XTP_Algo")

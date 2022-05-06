@@ -5,15 +5,71 @@
 
 namespace wct     {
 namespace api     {
-
+    error_id_t map_error_id (int32_t xtp_error_id) {
+        error_id_t wctrader_error_id;
+        switch(xtp_error_id){
+        // 10200000 Login to quote server failed
+        // 10200003 Login to quote server failed: invalid parameters
+        // 10210000 Login to oms server failed
+        // 10210003 Login to oms server failed: invalid parameters
+        case 10200000 : 
+        case 10200003 : 
+        case 10210000 : 
+        case 10210003 : wctrader_error_id = error_id_t::not_login;
+        break;
+        // TODO case ? : wctrader_error_id = error_id_t::login_timeout;
+        break;
+        case 10200006 : 
+        case 10210006 : wctrader_error_id = error_id_t::not_connected_to_server;
+        break;
+        // 11000030 Authentication Failed! User or password is not correct
+        case 11000030 : wctrader_error_id = error_id_t::fail_authentication;
+        break;
+        // 11000303 Failed to check order
+        // 11000316	Failed to check order id
+        // 11000317 Failed to check original order id
+        case 11000303 : 
+        case 11000316 : 
+        case 11000317 : wctrader_error_id = error_id_t::wrong_client_order_id;   
+        break;
+        // 11000010 Failed to get ticker quotes, ticker does not exist or cannot be traded
+        // 11000404 Failed to check ticker
+        // 11200003 unknown ticker id
+        case 11000010 :
+        case 11000404 :
+        case 11200003 : wctrader_error_id = error_id_t::wrong_instrument_id;   
+        break;
+        // 11010562 Invalid market
+        // 11000108 Parameter market invalid
+        case 11010562 : 
+        case 11000108 : wctrader_error_id = error_id_t::wrong_market_id;
+        // TODO case ? : wctrader_error_id = error_id_t::wrong_request_id;   
+        break;
+        // 11000452 User query frequency limited
+        case 11000452 : wctrader_error_id = error_id_t::too_freq_query;   
+        break;
+        // 11000450 Too much order,order frequency limited
+        case 11000450 : wctrader_error_id = error_id_t::too_freq_trade;   
+        break;
+        // 11000343 Target order already finished
+        case 11000343 : wctrader_error_id = error_id_t::cancel_after_traded;   
+        break;
+        default: wctrader_error_id = error_id_t::unknown; 
+        break;
+        }
+        return wctrader_error_id;
+    }
+    
     void AdaptedSpi::OnDisconnected(uint64_t session_id, int reason) {
         p_logger_->error("OnDisconnected, session_id = {}, reason = {}", session_id, reason);
         p_spi_->on_disconnected(error_id_t::not_connected_to_server);
     }
+
     void AdaptedSpi::OnAlgoDisconnected(int reason) {
         p_logger_->error("OnAlgoDisconnected, reason = {}",reason);
         //the system will automatically reconnet
     }
+
     void AdaptedSpi::OnALGOUserEstablishChannel(char* user, XTPRI* error_info, uint64_t session_id) {
         if (error_info == nullptr || error_info->error_id == 0) {
             established_channel_ = true;
@@ -24,11 +80,10 @@ namespace api     {
             p_logger_->error("OnALGOUserEstablishChannel, Failed, error_id = {}, msg = {}", 
             error_info->error_id, error_info->error_msg);
         }
-        
-
     }
+
     void AdaptedSpi::OnInsertAlgoOrder(ApiInsertReport* strategy_info, XTPRI *error_info, uint64_t session_id) {
-        if (error_info == nullptr || error_info.error_id == 0) {
+        if (error_info == nullptr || error_info->error_id == 0) {
             p_logger_->debug("OnInsertAlgoOrder, Successfully");
             if (strategy_info) {
                 p_logger_->info("OnInsertAlgoOrder, strategy_type = {}, strategy_state = {}, client_strategy_id = {}, xtp_strategy_id = {}", 
@@ -36,13 +91,12 @@ namespace api     {
                 strategy_info->m_strategy_state,
                 strategy_info->m_client_strategy_id,
                 strategy_info->m_xtp_strategy_id);
-
             }
         }
         else {
             p_logger_->error("InsertAlgoOrder, Failed, error_id = {}, error_msg = {}",
-            error_info.error_id,
-            error_info.error_msg)
+            error_info->error_id,
+            error_info->error_msg);
         }
     }
 
@@ -60,7 +114,7 @@ namespace api     {
         order_rsp.traded           = strategy_state->m_strategy_execution_qty;
         order_rsp.average_price    = strategy_state->m_strategy_market_price;//no average but has market
         //order_rsp.order_status     = simplify_status(strategy_state->order_status);
-        order_rsp.error_id         = error_id_t::unknown;
+        order_rsp.error_id         = map_error_id(strategy_state->m_error_info.error_id);
         //// no transaction time
         order_rsp.host_time        = timestamp_t::now();
 
@@ -84,10 +138,9 @@ namespace api     {
             if(cancel_info) {
                 WCCancelRejectedResponse order_rsp;
                 order_rsp.client_order_id  = cancel_info->m_client_strategy_id;
-                order_rsp.error_id         = error_id_t::unknown; //TODO error_id map
+                order_rsp.error_id         = map_error_id(error_info->error_id);
                 p_spi_->on_cancel_rejected(order_rsp);
             }
-
         }
     }
 
@@ -122,6 +175,7 @@ namespace api     {
         p_logger_->error("not in allrecords");
         return 0;
     }
+
     order_status_t simplify_status(ApiOrderStatus const& order_status){
         order_status_t local_order_status;
         switch(order_status){
