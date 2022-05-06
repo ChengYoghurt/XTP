@@ -18,7 +18,7 @@ namespace api     {
         if (error_info == nullptr || error_info->error_id == 0) {
             established_channel_ = true;
             cv_established_.notify_one();
-            p_logger_->info("ALGOUserEstablishChannel successfully");
+            p_logger_->debug("ALGOUserEstablishChannel successfully");
         }
         else {
             p_logger_->error("ALGOUserEstablishChannel failed, error_id = {}, msg = {}", 
@@ -28,8 +28,24 @@ namespace api     {
 
     }
     void AdaptedSpi::OnInsertAlgoOrder(ApiInsertReport* strategy_info, XTPRI *error_info, uint64_t session_id) {
+        if (error_info == nullptr || error_info.error_id == 0) {
+            p_logger_->debug("InsertAlgoOrder successfully");
+            if (strategy_info) {
+                p_logger_->info("strategy_type = {}, strategy_state = {}, client_strategy_id = {}, xtp_strategy_id = {}", 
+                strategy_info->m_strategy_type,
+                strategy_info->m_strategy_state,
+                strategy_info->m_client_strategy_id,
+                strategy_info->m_xtp_strategy_id);
 
+            }
+        }
+        else {
+            p_logger_->error("InsertAlgoOrder failed, error_id = {}, error_msg = {}",
+            error_info.error_id,
+            error_info.error_msg)
+        }
     }
+    
     void AdaptedSpi::OnStrategyStateReport(ApiOrderReport* strategy_state, uint64_t session_id) {
         if(strategy_to_order_info.find(strategy_state->m_strategy_info.m_client_strategy_id)==strategy_to_order_info.end()){
             p_logger_->warn("not in records, perhaps placed by another client_id");

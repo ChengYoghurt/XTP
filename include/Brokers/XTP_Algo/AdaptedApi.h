@@ -101,8 +101,11 @@ public:
         p_spi_ = nullptr;
     }
     virtual ~AdaptedApi(){
+        p_logger_->info("Releasing broker api...");
         p_broker_api_->Logout(session_id_);
+        p_logger_->info("Broker api log out");
         p_broker_api_->Release();
+        p_logger_->info("Broker api released");
 
     } ;
     virtual std::string version() const noexcept ;
