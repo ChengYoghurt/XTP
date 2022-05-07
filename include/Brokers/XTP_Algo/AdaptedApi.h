@@ -101,12 +101,11 @@ public:
         p_spi_ = nullptr;
     }
     virtual ~AdaptedApi(){
-        int ret = p_broker_api_->Logout(session_id_);
-        if(ret == 0){
-            p_logger_->debug("logout, session_id = {}", session_id_);
-        }else{
-            p_logger_->debug("logout failed");
-        }
+        p_logger_->debug("Releasing broker api...");
+        p_broker_api_->Logout(session_id_);
+        p_logger_->debug("Broker api log out");
+        p_logger_->debug("Broker api released");
+
     } ;
     virtual std::string version() const noexcept ;
     virtual error_id_t login(WCLoginRequest const& request);

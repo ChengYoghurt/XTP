@@ -5,15 +5,73 @@
 
 namespace wct     {
 namespace api     {
-
+    error_id_t map_error_id (int32_t xtp_error_id) {
+        error_id_t wctrader_error_id;
+        switch(xtp_error_id){
+        // 10200000 Login to quote server failed
+        // 10200003 Login to quote server failed: invalid parameters
+        // 10210000 Login to oms server failed
+        // 10210003 Login to oms server failed: invalid parameters
+        case 10200000 : 
+        case 10200003 : 
+        case 10210000 : 
+        case 10210003 : wctrader_error_id = error_id_t::not_login;
+        break;
+        // TODO case ? : wctrader_error_id = error_id_t::login_timeout;
+        break;
+        case 10200006 : 
+        case 10210006 : wctrader_error_id = error_id_t::not_connected_to_server;
+        break;
+        // 11000030 Authentication Failed! User or password is not correct
+        case 11000030 : wctrader_error_id = error_id_t::fail_authentication;
+        break;
+        // 11000303 Failed to check order
+        // 11000316	Failed to check order id
+        // 11000317 Failed to check original order id
+        case 11000303 : 
+        case 11000316 : 
+        case 11000317 : wctrader_error_id = error_id_t::wrong_client_order_id;   
+        break;
+        // 11000010 Failed to get ticker quotes, ticker does not exist or cannot be traded
+        // 11000404 Failed to check ticker
+        // 11200003 unknown ticker id
+        // 11000350 Find none record
+        case 11000010 :
+        case 11000404 :
+        case 11200003 : 
+        case 11000350 : wctrader_error_id = error_id_t::wrong_instrument_id;   
+        break;
+        // 11010562 Invalid market
+        // 11000108 Parameter market invalid
+        case 11010562 : 
+        case 11000108 : wctrader_error_id = error_id_t::wrong_market_id;
+        // TODO case ? : wctrader_error_id = error_id_t::wrong_request_id;   
+        break;
+        // 11000452 User query frequency limited
+        case 11000452 : wctrader_error_id = error_id_t::too_freq_query;   
+        break;
+        // 11000450 Too much order,order frequency limited
+        case 11000450 : wctrader_error_id = error_id_t::too_freq_trade;   
+        break;
+        // 11000343 Target order already finished
+        case 11000343 : wctrader_error_id = error_id_t::cancel_after_traded;   
+        break;
+        default: wctrader_error_id = error_id_t::unknown; 
+        break;
+        }
+        return wctrader_error_id;
+    }
+    
     void AdaptedSpi::OnDisconnected(uint64_t session_id, int reason) {
-        p_logger_->error("Disconnected, session_id = {}, reason = {}", session_id, reason);
+        p_logger_->error("OnDisconnected, session_id = {}, reason = {}", session_id, reason);
         p_spi_->on_disconnected(error_id_t::not_connected_to_server);
     }
+
     void AdaptedSpi::OnAlgoDisconnected(int reason) {
-        p_logger_->error("AlgoDisconnected, reason = {}",reason);
+        p_logger_->error("OnAlgoDisconnected, reason = {}",reason);
         //the system will automatically reconnet
     }
+
     void AdaptedSpi::OnALGOUserEstablishChannel(char* user, XTPRI* error_info, uint64_t session_id) {
         if (error_info == nullptr || error_info->error_id == 0) {
             p_logger_->info("ALGOUserEstablishChannel successfully");
@@ -21,43 +79,70 @@ namespace api     {
             cv_established_.notify_one();
         }
         else {
-            p_logger_->error("ALGOUserEstablishChannel failed, error_id = {}, msg = {}", 
+            p_logger_->error("OnALGOUserEstablishChannel, Failed, error_id = {}, msg = {}", 
             error_info->error_id, error_info->error_msg);
         }
-        
-
     }
+
     void AdaptedSpi::OnInsertAlgoOrder(ApiInsertReport* strategy_info, XTPRI *error_info, uint64_t session_id) {
-
+        if (error_info == nullptr || error_info->error_id == 0) {
+            p_logger_->debug("OnInsertAlgoOrder, Successfully");
+            if (strategy_info) {
+                p_logger_->info("OnInsertAlgoOrder, strategy_type = {}, strategy_state = {}, client_strategy_id = {}, xtp_strategy_id = {}", 
+                strategy_info->m_strategy_type,
+                strategy_info->m_strategy_state,
+                strategy_info->m_client_strategy_id,
+                strategy_info->m_xtp_strategy_id);
+            }
+        }
+        else {
+            p_logger_->error("InsertAlgoOrder, Failed, error_id = {}, error_msg = {}",
+            error_info->error_id,
+            error_info->error_msg);
+        }
     }
+
     void AdaptedSpi::OnStrategyStateReport(ApiOrderReport* strategy_state, uint64_t session_id) {
         if(strategy_to_order_info.find(strategy_state->m_strategy_info.m_client_strategy_id)==strategy_to_order_info.end()){
-            p_logger_->warn("not in records, perhaps placed by another client_id");
+            p_logger_->warn("OnStrategyStateReport, not in records, perhaps placed by another client_id");
             return;
         }
         WCOrderResponse order_rsp;
         std::memset(&order_rsp, 0, sizeof(order_rsp));
         order_rsp.client_order_id  = strategy_state->m_strategy_info.m_client_strategy_id;
-        order_rsp.instrument       =strategy_to_order_info[order_rsp.client_order_id].instrument_id;
+        order_rsp.instrument       = strategy_to_order_info[order_rsp.client_order_id].instrument_id;
         order_rsp.volume           = strategy_state->m_strategy_qty;
         order_rsp.price            = strategy_state->m_strategy_execution_price;
         order_rsp.traded           = strategy_state->m_strategy_execution_qty;
         order_rsp.average_price    = strategy_state->m_strategy_market_price;//no average but has market
         order_rsp.order_status     = order_status_t::accepted;
-        order_rsp.error_id         = error_id_t::unknown;
+        order_rsp.error_id         = map_error_id(strategy_state->m_error_info.error_id);
         //// no transaction time
         order_rsp.host_time        = timestamp_t::now();
 
         strategy_to_order_info[order_rsp.client_order_id].xtp_strategy_id = strategy_state->m_strategy_info.m_xtp_strategy_id;
+        p_logger_->debug("OnStrategyStateReport, Successfully");
         p_spi_->on_order_event(order_rsp);
     };
 
     void AdaptedSpi::OnCancelAlgoOrder(ApiOrderCancelReport *cancel_info, ApiText *error_info, uint64_t session_id) {
-        if(error_info->error_id != 0){
-            WCCancelRejectedResponse order_rsp;
-            order_rsp.client_order_id  =cancel_info->m_client_strategy_id;
-            order_rsp.error_id         = error_id_t::unknown;
-            p_spi_->on_cancel_rejected(order_rsp);
+        if(error_info == nullptr || error_info->error_id == 0) {
+            p_logger_->debug("OnCancelAlgoOrder, Successfully");
+            if (cancel_info) {
+                p_logger_->info("OnCancelAlgoOrder, strategy_type = {}, strategy_state = {}, client_strategy_id = {}, xtp_strategy_id = {}", 
+                cancel_info->m_strategy_type,
+                cancel_info->m_strategy_state,
+                cancel_info->m_client_strategy_id,
+                cancel_info->m_xtp_strategy_id);
+            }
+        }
+        else {
+            if(cancel_info) {
+                WCCancelRejectedResponse order_rsp;
+                order_rsp.client_order_id  = cancel_info->m_client_strategy_id;
+                order_rsp.error_id         = map_error_id(error_info->error_id);
+                p_spi_->on_cancel_rejected(order_rsp);
+            }
         }
     }
 
@@ -66,11 +151,11 @@ namespace api     {
         login_rsp.session_id = session_id;
         login_rsp.error_id = error_id;
         if(error_id == error_id_t::success) {
-            p_logger_->info("Login Successfully");
+            p_logger_->debug("on_login, Successfully");
 
         }
         else {
-            p_logger_->error("Login Failed");
+            p_logger_->error("on_login, Failed");
         }
         p_spi_->on_login(login_rsp);
     }
@@ -137,45 +222,47 @@ namespace api     {
         XTP_PROTOCOL_TYPE sock_type = XTP_PROTOCOL_TCP                  ;
         std::string local_ip        = request.agent_fingerprint.local_ip;
         p_broker_api_->SetSoftwareKey(request.agent_fingerprint.token.c_str());
-        std::cout << "About to Login" << '\n';
         int ret                     = p_broker_api_->Login(ip.c_str(), port, user.c_str(), password.c_str(), sock_type, local_ip.c_str());//oms server
-        std::cout << "After Login" << '\n';
         if(ret == 0) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            p_logger_->error("Login failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
+            p_logger_->error("Login, Failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
             p_spi_->on_login(ret, error_id_t::not_login);
             return error_id_t::not_login;
         }
         session_id_ = ret;
-        p_logger_->info("login oms successfully");
+        p_logger_->debug("Login oms Successfully");
         XTP_PROTOCOL_TYPE algo_sock_type = XTP_PROTOCOL_TCP                  ;
         //this is for test,need to modified
-        p_logger_->info("ip = {},port = {},name = {},pw= {}",algo_login_config_.algo_server_ip,algo_login_config_.algo_server_port,
-        algo_login_config_.algo_username,algo_login_config_.algo_password);
+        p_logger_->info("ip = {},port = {},name = {},pw= {}",
+                        algo_login_config_.algo_server_ip,
+                        algo_login_config_.algo_server_port,
+                        algo_login_config_.algo_username,
+                        algo_login_config_.algo_password);
+
         ret = p_broker_api_->LoginALGO(
               algo_login_config_.algo_server_ip.c_str(), 
               algo_login_config_.algo_server_port,
               algo_login_config_.algo_username.c_str(), 
               algo_login_config_.algo_password.c_str(), 
               algo_sock_type);//algo server
-        p_logger_->info("login algo");
+
         if(ret != 0) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            p_logger_->error("LoginAlgo failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
+            p_logger_->error("LoginAlgo, Failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
             p_spi_->on_login(session_id_, error_id_t::not_login);
             return error_id_t::not_login;
         }else{
-            p_logger_->info("LoginAlgo successfully");
+            p_logger_->debug("LoginAlgo, Successfully");
         }
     
         ret = p_broker_api_->ALGOUserEstablishChannel(ip.c_str(), port, user.c_str(), password.c_str(),session_id_) ; //oms server                   
         if(ret != 0) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            p_logger_->error("EstablishChannel failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
+            p_logger_->error("EstablishChannel Failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
             
         }
         else {
-            p_logger_->info("Waiting to establish channel...");
+            p_logger_->debug("Waiting to establish channel...");
             std::mutex mutex;
             if(!p_spi_->check_established()){
                 p_spi_->set_established(false);
@@ -189,10 +276,10 @@ namespace api     {
                     p_spi_->on_login(session_id_, error_id_t::success);
                     return error_id_t::success;
                 }
-                p_logger_->debug("CV timed out, Channel establish failed!");
+                p_logger_->error("CV timed out, Channel establish Failed!");
             }
         } 
-        // Call on_login even if Establish failed
+        // Call on_login even if Establish Failed
         p_spi_->on_login(session_id_, error_id_t::not_login);
         return error_id_t::not_login;
     }
@@ -340,7 +427,7 @@ namespace api     {
 
         if (ret) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            p_logger_->error("CancelAlgoOrder of all tickers failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+            p_logger_->error("CancelAlgoOrder of all tickers Failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
             return error_id_t::unknown;
         }
         return error_id_t::success;

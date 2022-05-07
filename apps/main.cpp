@@ -231,6 +231,7 @@ int main(int argc,char* argv[]) {
     p_logger->info("algo tradeLocalIp    = {}", algo_trade_local_ip       );
     #endif
     p_logger->info("LogConfig            = {}", log_config_file           );
+    
     #ifdef _ALGO
     wct::api::AlgoLoginConfig p_algo_login_config;
     wct::api::AlgoConfig p_algo_config;
