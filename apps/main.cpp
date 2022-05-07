@@ -88,7 +88,8 @@ int main(int argc,char* argv[]) {
     std::string trade_account_name;
 
     std::string algo_trade_config_file;
-    
+    std::string algo_info_config_file ;
+
     // trade account config
     std::string trade_server_ip;
     int trade_server_port      ;
@@ -101,8 +102,13 @@ int main(int argc,char* argv[]) {
     std::string algo_trade_password ;
     int algo_trade_server_port      ;
     std::string algo_trade_local_ip ;
-    std::string algo_config         ;
 
+    int algo_type;
+    std::string algo_name;
+    bool algo_limit_action;
+    bool algo_expire_action;
+    int algo_paticipation_rate;
+    int algo_style;
     // trade account config addtional 
     uint32_t client_id         ;
     uint32_t heat_beat_interval;
@@ -144,14 +150,34 @@ int main(int argc,char* argv[]) {
     YAML_GET_FIELD(algo_trade_server_port, algo_trade_config, server_port  );
     YAML_GET_FIELD(algo_trade_password   , algo_trade_config, password     );
     YAML_GET_FIELD(algo_trade_local_ip   , algo_trade_config, algo_local_ip     );
-    YAML_GET_FIELD(algo_config           , algo_trade_config, algo_config_file  );
+    YAML_GET_FIELD(algo_info_config_file , algo_trade_config, algo_config_file  );
+
+    check_file_exist(algo_info_config_file);
+    YAML::Node algo_info_config     = YAML::LoadFile(algo_info_config_file);
+    YAML_GET_FIELD(algo_type             , algo_info_config, algo_type        );
+    YAML_GET_FIELD(algo_name             , algo_info_config, algo_name        );
+    YAML_GET_FIELD(algo_limit_action     , algo_info_config, limit_action     );
+    YAML_GET_FIELD(algo_expire_action    , algo_info_config, expire_action    );
+    YAML_GET_FIELD(algo_paticipation_rate, algo_info_config, paticipation_rate);
+    YAML_GET_FIELD(algo_style            , algo_info_config, style            );
     #endif
 
     //order config
-    YAML::Node node_orders  ;// = trade_account["order"];        
+    YAML::Node node_orders   = trade_account["order"];        
     uint32_t order_count     = node_orders.size();
     std::vector<wct::WCOrderRequest> vec_wcorderrequest;
 
+    for (uint32_t i = 0 ; i < order_count ; i++) {
+        wct::WCOrderRequest wcorderrequest;
+        wcorderrequest.instrument       = node_orders[i]["instrument_id"].as<wct::instrument_id_t>();
+        wcorderrequest.client_order_id  = wct::order_id_t(node_orders[i]["client_order_id"].as<uint32_t>());
+        wcorderrequest.market           = (wct::market_t)get_belonged_market(wcorderrequest.instrument);
+        wcorderrequest.price            = node_orders[i]["price"].as<wct::price_t>();
+        wcorderrequest.volume           = node_orders[i]["quantity"].as<wct::volume_t>();
+        wcorderrequest.side             = (wct::side_t)node_orders[i]["side"].as<uint32_t>();
+        wcorderrequest.price_type       = (wct::price_type_t)node_orders[i]["price_type"].as<uint32_t>();
+        vec_wcorderrequest.emplace_back(wcorderrequest);
+    }
     //concel order config
     YAML::Node node_cancel_orders  ;// = trade_account["cancel_order_id"];        ;
     uint32_t cancel_order_count     = node_cancel_orders.size();
@@ -213,6 +239,13 @@ int main(int argc,char* argv[]) {
     p_algo_login_config.algo_server_ip = algo_trade_server_ip;
     p_algo_login_config.algo_server_port = algo_trade_server_port;
     //TODO algo info should be readed from yaml
+    p_algo_config.algo_name = algo_name;
+    p_algo_config.algo_type = (wct::api::algo_type_t)algo_type;
+    p_algo_config.expire_action = algo_expire_action;
+    p_algo_config.limit_action = algo_limit_action;
+    p_algo_config.paticipation_rate = algo_paticipation_rate;
+    p_algo_config.style = algo_style;
+    
     auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>(p_algo_login_config, p_algo_config, client_id, filepath);
     #else
     auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>(client_id, filepath);
@@ -268,8 +301,8 @@ int main(int argc,char* argv[]) {
     #ifdef _ALGO 
     // Place basket order
     //TODO:Remaing param needs to fill in
-    wct::timestamp_t algo_start_time              ;
-    wct::timestamp_t algo_end_time                ;
+    wct::timestamp_t algo_start_time = wcdb::NumericTime::now();
+    wct::timestamp_t algo_end_time("19:00:00.000");
     //TODO:Need to update the order map?
     // place_order returns last order_id of sibling
     wct::order_id_t algo_basket_order_id = wc_trader.place_algo_basket(algo_end_time, algo_start_time);

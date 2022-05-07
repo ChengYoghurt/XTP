@@ -43,7 +43,7 @@ namespace api     {
         order_rsp.price            = strategy_state->m_strategy_execution_price;
         order_rsp.traded           = strategy_state->m_strategy_execution_qty;
         order_rsp.average_price    = strategy_state->m_strategy_market_price;//no average but has market
-        //order_rsp.order_status     = simplify_status(strategy_state->order_status);
+        order_rsp.order_status     = order_status_t::accepted;
         order_rsp.error_id         = error_id_t::unknown;
         //// no transaction time
         order_rsp.host_time        = timestamp_t::now();
@@ -92,7 +92,7 @@ namespace api     {
         p_logger_->debug("not in allrecords");
         return 0;
     }
-    order_status_t simplify_status(ApiOrderStatus const& order_status){
+    order_status_t AdaptedSpi::simplify_status(ApiOrderStatus const& order_status){
         order_status_t local_order_status;
         switch(order_status){
         case XTP_STRATEGY_STATE_CREATING  : local_order_status = order_status_t::unknown;
@@ -232,7 +232,7 @@ namespace api     {
     error_id_t AdaptedApi::place_basket_order(WCBasketOrderRequest const& request){
         uint32_t strategy_type = static_cast<uint32_t>(algo_config_.algo_type);
         std::string start_time = std::string(request.start_time.str(),0,8);
-        std::string end_time   = std::string(request.start_time.str(),0,8);
+        std::string end_time   = std::string(request.end_time.str(),0,8);
         std::string limit_action;
         std::string expire_action;  
 
@@ -313,7 +313,7 @@ namespace api     {
                 strategy_param += "CASH" ;
                 strategy_param += "\", \"participation_rate\": ";
                 strategy_param += std::to_string(algo_config_.paticipation_rate);
-                strategy_param +=", \"style\"";
+                strategy_param +=", \"style\": ";
                 strategy_param += std::to_string(algo_config_.style);
                 strategy_param += " }";
                 break;
@@ -324,11 +324,12 @@ namespace api     {
             char strategy_param_c[k_max];
             snprintf(strategy_param_c,k_max,strategy_param.c_str());
             int ret = p_broker_api_->InsertAlgoOrder(strategy_type,basket_leg.client_order_id,strategy_param_c,session_id_);        
-            if (ret) {
+            if (ret != 0) {
                 const  ApiText* error_info = p_broker_api_->GetApiLastError();
-                p_logger_->error("InsertAlgoOrder failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+                p_logger_->debug("InsertAlgoOrder failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+            }else{
+                p_logger_->debug("InsertAlgoOrder success, basket_id = {}, param={},",basket_leg.client_order_id,strategy_param);
             }
-           
         }
         return error_id_t::success;
     }

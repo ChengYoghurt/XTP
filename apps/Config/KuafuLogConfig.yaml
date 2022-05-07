@@ -23,4 +23,7 @@ set_error_loggers:
   - default 
 
 set_debug_loggers:
+  - main
+  - AdaptedSpi
+  - AdaptedApi
   - default

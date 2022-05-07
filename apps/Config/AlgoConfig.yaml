@@ -1,9 +1,9 @@
 %YAML 1.2
 ---
 # Algo Config
-algo_type:
-algo_name:
-limit_action:
-expire_action:
-paticipation_rate:
-style:
+algo_type: 3510
+algo_name: VWAP
+limit_action: false
+expire_action: false
+paticipation_rate: 50
+style: 2
