@@ -11,14 +11,14 @@ Test:
  tokenkey: "b8aa7173bba3470e390d787219b2112e"
  client_id: 3
  path_linux: "/root/log/"
- path: "D:\\test\\"
+ path: "./test"
  exchange_id_sh: 1
  exchange_id_sz: 2
  order:
   -
     client_order_id: 1
     instrument_id: 688001
-    price: 7.0
+    price: 22.20
     quantity: 200
     side: 66
     price_type: 76
