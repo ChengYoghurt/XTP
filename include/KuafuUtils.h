@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <spdlog/fmt/ostr.h>
 
 #define instrument_len 6
 
@@ -95,28 +96,8 @@ inline market_t get_belonged_market(instrument_id_t instrument) {
 
 inline std::string instrument_to_str(l2agg::instrument_id_t instrument) {
 
-    std::string instrument_str(instrument_len, '0');
-    std::stringstream StrStm;
-    for(int instrument_index = instrument_len - 1; instrument ; --instrument_index)
-    {
-        StrStm<<instrument%10;
-        StrStm>>instrument_str[instrument_index];
-        instrument /= 10;
-    }
+    std::string instrument_str; 
+    instrument_str = fmt::format("{:06}", instrument);
     return instrument_str;
 }
 
-/*inline std::string instrument_to_str(l2agg::instrument_id_t instrument) {
-
-    std::string instrument_str(instrument_len, '0');
-    std::stringstream StrStm;
-    for(int instrument_index = instrument_len - 1; instrument ; --instrument_index)
-    {
-        StrStm<<instrument%10;
-        std::cout<<instrument<<"this change"<<std::endl;
-        instrument_str[instrument_index] = instrument%10;
-        std::cout<<instrument_str<<"   "<<instrument_index<<"this"<<std::endl;
-        instrument /= 10;
-    }
-    return instrument_str;
-}*/
