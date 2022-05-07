@@ -35,9 +35,11 @@ namespace api     {
         // 11000010 Failed to get ticker quotes, ticker does not exist or cannot be traded
         // 11000404 Failed to check ticker
         // 11200003 unknown ticker id
+        // 11000350 Find none record
         case 11000010 :
         case 11000404 :
-        case 11200003 : wctrader_error_id = error_id_t::wrong_instrument_id;   
+        case 11200003 : 
+        case 11000350 : wctrader_error_id = error_id_t::wrong_instrument_id;   
         break;
         // 11010562 Invalid market
         // 11000108 Parameter market invalid
