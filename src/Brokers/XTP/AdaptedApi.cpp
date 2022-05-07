@@ -5,6 +5,63 @@
 namespace wct     {
 namespace api     {
 
+    error_id_t map_error_id (int32_t xtp_error_id) {
+        error_id_t wctrader_error_id;
+        switch(xtp_error_id){
+        // 10200000 Login to quote server failed
+        // 10200003 Login to quote server failed: invalid parameters
+        // 10210000 Login to oms server failed
+        // 10210003 Login to oms server failed: invalid parameters
+        case 10200000 : 
+        case 10200003 : 
+        case 10210000 : 
+        case 10210003 : wctrader_error_id = error_id_t::not_login;
+        break;
+        // TODO case ? : wctrader_error_id = error_id_t::login_timeout;
+        break;
+        case 10200006 : 
+        case 10210006 : wctrader_error_id = error_id_t::not_connected_to_server;
+        break;
+        // 11000030 Authentication Failed! User or password is not correct
+        case 11000030 : wctrader_error_id = error_id_t::fail_authentication;
+        break;
+        // 11000303 Failed to check order
+        // 11000316	Failed to check order id
+        // 11000317 Failed to check original order id
+        case 11000303 : 
+        case 11000316 : 
+        case 11000317 : wctrader_error_id = error_id_t::wrong_client_order_id;   
+        break;
+        // 11000010 Failed to get ticker quotes, ticker does not exist or cannot be traded
+        // 11000404 Failed to check ticker
+        // 11200003 unknown ticker id
+        // 11000350 Find none record
+        case 11000010 :
+        case 11000404 :
+        case 11200003 : 
+        case 11000350 : wctrader_error_id = error_id_t::wrong_instrument_id;   
+        break;
+        // 11010562 Invalid market
+        // 11000108 Parameter market invalid
+        case 11010562 : 
+        case 11000108 : wctrader_error_id = error_id_t::wrong_market_id;
+        // TODO case ? : wctrader_error_id = error_id_t::wrong_request_id;   
+        break;
+        // 11000452 User query frequency limited
+        case 11000452 : wctrader_error_id = error_id_t::too_freq_query;   
+        break;
+        // 11000450 Too much order,order frequency limited
+        case 11000450 : wctrader_error_id = error_id_t::too_freq_trade;   
+        break;
+        // 11000343 Target order already finished
+        case 11000343 : wctrader_error_id = error_id_t::cancel_after_traded;   
+        break;
+        default: wctrader_error_id = error_id_t::unknown; 
+        break;
+        }
+        return wctrader_error_id;
+    }
+
     void AdaptedSpi::onLogin(session_t session_id, error_id_t error_id) {
         WCLoginResponse login_rsp;
         login_rsp.session_id = session_id;
@@ -113,11 +170,11 @@ namespace api     {
             p_logger_->info("OnQueryPosition, tickerid = {}", pos_rsp.instrument);
             pos_rsp.error_id = error_id_t::success;
         } 
-        else if(position->ticker[0] == '\0') { //FIXME:Should I use get_belonged_market to set error_id?
-            pos_rsp.error_id = error_id_t::wrong_instrument_id;
-        }
-        else {
-            pos_rsp.error_id = error_id_t::unknown;
+        else  { 
+            pos_rsp.error_id = map_error_id(error_info->error_id);
+            p_logger_->error("OnQueryPosition, error_id = {}, error_msg = {}",
+            error_info->error_id,
+            error_info->error_msg);
         }
         p_spi_->on_query_position(pos_rsp);
     }
@@ -131,7 +188,10 @@ namespace api     {
         if(error_info == nullptr || error_info->error_id == 0) {
             asset_rsp.error_id = error_id_t::success;
         }  else {
-            asset_rsp.error_id = error_id_t::unknown;
+            asset_rsp.error_id = map_error_id(error_info->error_id);
+            p_logger_->error("OnQueryPosition, error_id = {}, error_msg = {}",
+            error_info->error_id,
+            error_info->error_msg);
         }
         p_spi_->on_query_balance(asset_rsp);
     }
