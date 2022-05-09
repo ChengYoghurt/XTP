@@ -93,6 +93,11 @@ namespace api     {
                 strategy_info->m_strategy_state,
                 strategy_info->m_client_strategy_id,
                 strategy_info->m_xtp_strategy_id);
+
+                WCOrderResponse order_rsp;
+                order_rsp.client_order_id  = strategy_info->m_client_strategy_id;
+                order_rsp.order_status = order_status_t::accepted;
+                p_spi_->on_order_event(order_rsp);
             }
         }
         else {
@@ -105,7 +110,6 @@ namespace api     {
     void AdaptedSpi::OnStrategyStateReport(ApiOrderReport* strategy_state, uint64_t session_id) {
         if(strategy_to_order_info.find(strategy_state->m_strategy_info.m_client_strategy_id)==strategy_to_order_info.end()){
             p_logger_->warn("OnStrategyStateReport, not in records, perhaps placed by another client_id");
-            return;
         }
         WCOrderResponse order_rsp;
         std::memset(&order_rsp, 0, sizeof(order_rsp));
@@ -115,7 +119,7 @@ namespace api     {
         order_rsp.price            = strategy_state->m_strategy_execution_price;
         order_rsp.traded           = strategy_state->m_strategy_execution_qty;
         order_rsp.average_price    = strategy_state->m_strategy_market_price;//no average but has market
-        order_rsp.order_status     = order_status_t::accepted;
+        order_rsp.order_status     = simplify_status(strategy_state->m_strategy_info.m_strategy_state);
         order_rsp.error_id         = map_error_id(strategy_state->m_error_info.error_id);
         //// no transaction time
         order_rsp.host_time        = timestamp_t::now();
@@ -134,6 +138,10 @@ namespace api     {
                 cancel_info->m_strategy_state,
                 cancel_info->m_client_strategy_id,
                 cancel_info->m_xtp_strategy_id);
+                WCOrderResponse order_rsp;
+                order_rsp.client_order_id  = cancel_info->m_client_strategy_id;
+                order_rsp.order_status = order_status_t::canceled;
+                p_spi_->on_order_event(order_rsp);
             }
         }
         else {
@@ -180,8 +188,7 @@ namespace api     {
     order_status_t AdaptedSpi::simplify_status(ApiOrderStatus const& order_status){
         order_status_t local_order_status;
         switch(order_status){
-        case XTP_STRATEGY_STATE_CREATING  : local_order_status = order_status_t::unknown;
-        break;
+        case XTP_STRATEGY_STATE_CREATING  : 
         case XTP_STRATEGY_STATE_CREATED   :
         case XTP_STRATEGY_STATE_STARTING  : local_order_status = order_status_t::created;
         break;
@@ -430,6 +437,7 @@ namespace api     {
             p_logger_->error("CancelAlgoOrder of all tickers Failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
             return error_id_t::unknown;
         }
+        p_logger_->debug("CancelAlgoOrder success,cliet_id = {}",request.client_order_id);
         return error_id_t::success;
     }
 

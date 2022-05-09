@@ -95,6 +95,8 @@ int main(int argc,char* argv[]) {
     int trade_server_port      ;
     std::string trade_username ;
     std::string trade_password ;
+    std::string trade_local_ip ;
+    std::string trade_token    ;
     std::string filepath       ; 
     int log_level              ;
 
@@ -103,12 +105,12 @@ int main(int argc,char* argv[]) {
     int algo_trade_server_port      ;
     std::string algo_trade_local_ip ;
 
-    int algo_type;
-    std::string algo_name;
-    bool algo_limit_action;
-    bool algo_expire_action;
+    int algo_type             ;
+    std::string algo_name     ;
+    bool algo_limit_action    ;
+    bool algo_expire_action   ;
     int algo_paticipation_rate;
-    int algo_style;
+    int algo_style            ;
     // trade account config addtional 
     uint32_t client_id         ;
     uint32_t heat_beat_interval;
@@ -137,6 +139,8 @@ int main(int argc,char* argv[]) {
     YAML_GET_FIELD(trade_server_port, trade_account, server_port);
     YAML_GET_FIELD(trade_username   , trade_account, username   );
     YAML_GET_FIELD(trade_password   , trade_account, password   );
+    YAML_GET_FIELD(trade_local_ip   , trade_account, local_ip   );
+    YAML_GET_FIELD(trade_token      , trade_account, token      );
     YAML_GET_FIELD(filepath         , trade_account, path       );
     // yaml initiate additional
     YAML_GET_FIELD(client_id         , trade_account, client_id        );   
@@ -178,6 +182,9 @@ int main(int argc,char* argv[]) {
         wcorderrequest.price_type       = (wct::price_type_t)node_orders[i]["price_type"].as<uint32_t>();
         vec_wcorderrequest.emplace_back(wcorderrequest);
     }
+    #ifdef _ALGO
+    std::string algo_end_time_str  ; YAML_GET_FIELD(algo_end_time_str     , algo_info_config, end_time );
+    #endif
     //concel order config
     YAML::Node node_cancel_orders  ;// = trade_account["cancel_order_id"];        ;
     uint32_t cancel_order_count     = node_cancel_orders.size();
@@ -270,8 +277,8 @@ int main(int argc,char* argv[]) {
     wcloginrequest.password                     = trade_password      ;
     wcloginrequest.server_ip                    = trade_server_ip     ;
     wcloginrequest.server_port                  = trade_server_port   ;
-    wcloginrequest.agent_fingerprint.local_ip   = "192.168.0.204"     ;
-    wcloginrequest.agent_fingerprint.token      = "b8aa7173bba3470e390d787219b2112e";
+    wcloginrequest.agent_fingerprint.local_ip   = trade_local_ip      ;
+    wcloginrequest.agent_fingerprint.token      = trade_token         ;
     p_logger->info("User {} begin to login.", trade_username) ;
     wc_trader.login(wcloginrequest);
     // wct::WCLoginResponse response; 
@@ -303,7 +310,7 @@ int main(int argc,char* argv[]) {
     // Place basket order
     //TODO:Remaing param needs to fill in
     wct::timestamp_t algo_start_time = wcdb::NumericTime::now();
-    wct::timestamp_t algo_end_time("19:00:00.000");
+    wct::timestamp_t algo_end_time(algo_end_time_str);
     //TODO:Need to update the order map?
     // place_order returns last order_id of sibling
     wct::order_id_t algo_basket_order_id = wc_trader.place_algo_basket(algo_end_time, algo_start_time);
@@ -313,7 +320,7 @@ int main(int argc,char* argv[]) {
 
     // Cancel orders
     wc_trader.cancel_order(algo_basket_order_id);
-    //wc_trader.execute_cancel_order(local_order_id);
+    //wc_trader.execute_cancel_order(algo_basket_order_id);
     // End of cancel orders
     #else
     for (size_t i = 0 ; i < vec_orderid.size() ; i++) {
