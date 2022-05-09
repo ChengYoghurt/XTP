@@ -76,7 +76,7 @@ namespace api     {
     }
 
     void AdaptedSpi::OnDisconnected(uint64_t session_id, int reason) {
-        p_logger_->error("Disconnected, session_id = {}, reason = {}", session_id, reason);
+        p_logger_->error("Disconnected,session_id={},reason={}", session_id, reason);
         p_spi_->on_disconnected(error_id_t::not_connected_to_server);
     }
 
@@ -103,7 +103,7 @@ namespace api     {
         order_rsp.error_id         = error_id_t::unknown;
         order_rsp.transaction_time = order_info->update_time % 1'000000'000;  // drop YYYYMMDD and only keep HHMMSSsss
         order_rsp.host_time        = timestamp_t::now();
-        p_logger_->info("OnOrderEvent, OrderID = {}", order_info->order_client_id);
+        p_logger_->info("OnOrderEvent,OrderID={}", order_info->order_client_id);
         p_spi_->on_order_event(order_rsp);
     }
 
@@ -142,7 +142,7 @@ namespace api     {
         trade_rsp.trade_price      = trade_info->price;
         trade_rsp.transaction_time = trade_info->trade_time % 1'000000'000;
         trade_rsp.host_time        = timestamp_t::now();
-        p_logger_->info("OnTradeEvent, OrderID = {}", trade_info->order_client_id);
+        p_logger_->info("OnTradeEvent,OrderID={}", trade_info->order_client_id);
         p_spi_->on_trade_event(trade_rsp);
     }
 
@@ -154,7 +154,11 @@ namespace api     {
         WCCancelRejectedResponse order_rsp;
         order_rsp.client_order_id  = order_id_xtptowc[cancel_info->order_xtp_id];
         order_rsp.error_id         = error_id_t(error_info->error_id);
-        p_logger_->error("onCancelOrder failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
+        if(error_info->error_id == 11100000 && error_info->error_msg == "20096")
+            p_logger_->warn("OnCancelOrder warning,error_id={},error_message={},meaning all orders are done",error_info->error_id, error_info->error_msg);
+        else
+            p_logger_->error("OnCancelOrder failed,error_id={},error_message={}",error_info->error_id, error_info->error_msg);
+        
         p_spi_->on_cancel_rejected(order_rsp);
     }
 
@@ -167,12 +171,12 @@ namespace api     {
         pos_rsp.is_last          = is_last                      ; 
 
         if(error_info == nullptr || error_info->error_id == 0) {
-            p_logger_->info("OnQueryPosition, tickerid = {}", pos_rsp.instrument);
+            p_logger_->info("OnQueryPosition,tickerid={}", pos_rsp.instrument);
             pos_rsp.error_id = error_id_t::success;
         } 
         else  { 
             pos_rsp.error_id = map_error_id(error_info->error_id);
-            p_logger_->error("OnQueryPosition, error_id = {}, error_msg = {}",
+            p_logger_->error("OnQueryPosition,error_id={}, error_msg={}",
             error_info->error_id,
             error_info->error_msg);
         }
@@ -189,7 +193,7 @@ namespace api     {
             asset_rsp.error_id = error_id_t::success;
         }  else {
             asset_rsp.error_id = map_error_id(error_info->error_id);
-            p_logger_->error("OnQueryPosition, error_id = {}, error_msg = {}",
+            p_logger_->error("OnQueryPosition,error_id={}, error_msg={}",
             error_info->error_id,
             error_info->error_msg);
         }
@@ -221,7 +225,7 @@ namespace api     {
 
         if(session_id_ == 0) {
             const  ApiText* error_info  = p_broker_api_->GetApiLastError();
-            p_logger_->error("Login failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
+            p_logger_->error("Login failed,error_id={},error_message={}",error_info->error_id, error_info->error_msg);
             p_spi_->onLogin(session_id_, error_id_t::not_login);
             return error_id_t::not_login;
         }
@@ -274,10 +278,10 @@ namespace api     {
 
         uint64_t xtp_order_id = p_broker_api_->InsertOrder(&single_order,session_id_);
         order_id_wctoxtp[request.client_order_id] = xtp_order_id;
-        p_logger_->info("place_order, xtp_order_id = {}", xtp_order_id);
+        p_logger_->info("place_order,xtp_order_id={}", xtp_order_id);
         if (!xtp_order_id) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            p_logger_->error("InsertOrder failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+            p_logger_->error("InsertOrder failed,error_id={},error_message={}", error_info->error_id, error_info->error_msg);
             return error_id_t::unknown;
         }
         else return error_id_t::success;
@@ -285,10 +289,14 @@ namespace api     {
 
     error_id_t AdaptedApi::cancel_order(WCOrderCancelRequest const& request) {
         int ret = p_broker_api_->CancelOrder(order_id_wctoxtp[request.client_order_id],session_id_);//加锁
-        p_logger_->info("cancel_order, xtp_order_id = {}", order_id_wctoxtp[request.client_order_id]);
+        p_logger_->info("cancel_order,xtp_order_id = {}", order_id_wctoxtp[request.client_order_id]);
         if (!ret) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            p_logger_->error("CancelOrder failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+            //p_logger_->error("CancelOrder failed,error_id={},error_message={}", error_info->error_id, error_info->error_msg);
+            if(error_info->error_id == 11100000)
+                p_logger_->warn("OnCancelOrder warning,error_id={},error_message={},meaning all orders are done",error_info->error_id, error_info->error_msg);
+            else
+                p_logger_->error("OnCancelOrder failed,error_id={},error_message={}",error_info->error_id, error_info->error_msg);
             return error_id_t::unknown;
         }
         else return error_id_t::success;
@@ -298,7 +306,7 @@ namespace api     {
         int ret = p_broker_api_->QueryAsset(session_id_, get_request_id());
         if (ret) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            p_logger_->error("QueryAsset failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+            p_logger_->error("QueryAsset failed,error_id={},error_message={}", error_info->error_id, error_info->error_msg);
             return error_id_t::unknown;
         }
         else return error_id_t::success;
@@ -311,7 +319,7 @@ namespace api     {
             int ret = p_broker_api_->QueryPosition(NULL, session_id_, get_request_id());
             if (ret) {
                 const  ApiText* error_info = p_broker_api_->GetApiLastError();
-                p_logger_->error("QueryPosition of all tickers failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+                p_logger_->error("QueryPosition of all tickers failed,error_id={},error_message={}", error_info->error_id, error_info->error_msg);
                 return error_id_t::unknown;
             }
         }
@@ -328,7 +336,7 @@ namespace api     {
                 int ret = p_broker_api_->QueryPosition(instrument_str.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SH_A);
                 if (ret) {
                 const  ApiText* error_info = p_broker_api_->GetApiLastError();
-                p_logger_->error("QueryPosition of sh market failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+                p_logger_->error("QueryPosition of sh market failed,error_id={},error_message={}", error_info->error_id, error_info->error_msg);
                 return error_id_t::unknown;
                 }
             }
@@ -336,7 +344,7 @@ namespace api     {
                 int ret = p_broker_api_->QueryPosition(instrument_str.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SZ_A);
                 if (ret) {
                 const  ApiText* error_info = p_broker_api_->GetApiLastError();
-                p_logger_->error("QueryPosition of sz market failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+                p_logger_->error("QueryPosition of sz market failed,error_id={},error_message={}", error_info->error_id, error_info->error_msg);
                 return error_id_t::unknown;
                 }
             }
@@ -345,6 +353,7 @@ namespace api     {
     }
 
     error_id_t AdaptedApi::query_credit_balance(){
+
         return error_id_t::success;
     }
 
