@@ -110,10 +110,10 @@ namespace api     {
 
 
 
-    AdaptedApi::AdaptedApi(const uint32_t client_id, const std::string filepath) // TODO:ADD DEFAULT LEVEL AS INFO
+    AdaptedApi::AdaptedApi(const uint32_t client_id, const std::string filepath, XTP_LOG_LEVEL log_level) // TODO:ADD DEFAULT LEVEL AS INFO
         : p_logger_(spdlog::get("AdaptedApi"))    
         {
-            p_broker_api_ = BrokerApi::CreateTraderApi(client_id, filepath.c_str());
+            p_broker_api_ = BrokerApi::CreateTraderApi(client_id, filepath.c_str(), log_level);
             p_spi_ = nullptr;
         }
 
