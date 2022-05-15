@@ -66,8 +66,8 @@ protected:
     uint64_t session_id_;
     std::unique_ptr<AdaptedSpi> p_spi_;
     std::shared_ptr<spdlog::logger> p_logger_; 
-
     std::unordered_map<order_id_t,uint64_t> order_id_wctoxtp;
+    mutable std::mutex order_id_mutex;
 };  /* class AdaptedApi */
 
 } /* namespace wrapper */

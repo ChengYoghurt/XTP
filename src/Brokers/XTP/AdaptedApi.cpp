@@ -110,7 +110,7 @@ namespace api     {
 
 
 
-    AdaptedApi::AdaptedApi(const uint32_t client_id, const std::string filepath, XTP_LOG_LEVEL log_level) // TODO:ADD DEFAULT LEVEL AS INFO
+    AdaptedApi::AdaptedApi(const uint32_t client_id, const std::string filepath, XTP_LOG_LEVEL log_level) 
         : p_logger_(spdlog::get("AdaptedApi"))    
         {
             p_broker_api_ = BrokerApi::CreateTraderApi(client_id, filepath.c_str(), log_level);
@@ -273,7 +273,9 @@ namespace api     {
      // single_order.algo_parameters = nullptr; // not use algorithms trading
 
         uint64_t xtp_order_id = p_broker_api_->InsertOrder(&single_order,session_id_);
+        order_id_mutex.lock();
         order_id_wctoxtp[request.client_order_id] = xtp_order_id;
+        order_id_mutex.unlock();
         p_logger_->info("place_order,xtp_order_id={}", xtp_order_id);
         if (!xtp_order_id) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
@@ -283,9 +285,11 @@ namespace api     {
         else return error_id_t::success;
     }
 
-    error_id_t AdaptedApi::cancel_order(WCOrderCancelRequest const& request) { //TODO:Add mutable mutex
+    error_id_t AdaptedApi::cancel_order(WCOrderCancelRequest const& request) {
+        order_id_mutex.lock();
         int ret = p_broker_api_->CancelOrder(order_id_wctoxtp[request.client_order_id],session_id_);
-        p_logger_->info("cancel_order,xtp_order_id = {}", order_id_wctoxtp[request.client_order_id]);
+        p_logger_->info("cancel_order,xtp_order_id={}", order_id_wctoxtp[request.client_order_id]);
+        order_id_mutex.unlock();
         if (!ret) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
             //p_logger_->error("CancelOrder failed,error_id={},error_message={}", error_info->error_id, error_info->error_msg);
