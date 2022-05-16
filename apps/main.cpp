@@ -248,7 +248,6 @@ int main(int argc,char* argv[]) {
     p_algo_login_config.algo_server_ip = algo_trade_server_ip;
     p_algo_login_config.algo_server_port = algo_trade_server_port;
  
-    auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>(p_algo_login_config, p_algo_config, client_id, filepath, (wct::api::ApiLogLevel)log_level);
     //TODO algo info should be readed from yaml
     p_algo_config.algo_name = algo_name;
     p_algo_config.algo_type = (wct::api::algo_type_t)algo_type;
@@ -257,6 +256,8 @@ int main(int argc,char* argv[]) {
     p_algo_config.paticipation_rate = algo_paticipation_rate;
     p_algo_config.style = algo_style;
     
+    auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>(p_algo_login_config, p_algo_config, client_id, filepath, (wct::api::ApiLogLevel)log_level);
+
     #else
     auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>(client_id, filepath);
 

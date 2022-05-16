@@ -105,7 +105,7 @@ namespace api     {
             }
         }
         else {
-            p_logger_->error("InsertAlgoOrder,Failed,error_id={},error_msg={}",
+            p_logger_->error("OnInsertAlgoOrder,Failed,error_id={},error_msg={}",
             error_info->error_id,
             error_info->error_msg);
             WCOrderResponse order_rsp;
@@ -429,7 +429,6 @@ namespace api     {
                 break;
                 default:break;
             }
-
             int constexpr k_max = 1024;
             char strategy_param_c[k_max];
             snprintf(strategy_param_c,k_max,strategy_param.c_str());
@@ -438,7 +437,7 @@ namespace api     {
                 const  ApiText* error_info = p_broker_api_->GetApiLastError();
                 p_logger_->error("InsertAlgoOrder failed,error_id={},error_message={}", error_info->error_id, error_info->error_msg);
             }else{
-                p_logger_->debug("InsertAlgoOrder success,basket_id={},param={},",basket_leg.client_order_id,strategy_param);
+                p_logger_->debug("InsertAlgoOrder success,basket_id={},algo_type={},param={},",basket_leg.client_order_id, algo_config_.algo_type, strategy_param);
             }
         }
         return error_id_t::success;
