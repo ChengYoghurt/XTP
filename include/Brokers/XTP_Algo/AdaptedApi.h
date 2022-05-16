@@ -104,7 +104,6 @@ public:
         p_logger_->debug("Releasing broker api...");
         p_broker_api_->Logout(session_id_);
         p_logger_->debug("Broker api log out");
-        p_broker_api_->Release();
         p_logger_->debug("Broker api released");
 
     } ;

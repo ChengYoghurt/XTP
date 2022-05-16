@@ -22,7 +22,7 @@ find_package(XTP_Algo REQUIRED)
 find_package(spdlog REQUIRED)
 
 # start build AdaptedApi::broker_apis lib
-list(APPEND broker_apis "XTP")
+#list(APPEND broker_apis "XTP")
 set(broker_apis ${broker_apis} PARENT_SCOPE)
 message("Hi I'm AdaptedAPI::${broker_apis}")
 if ("XTP" IN_LIST broker_apis)

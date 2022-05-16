@@ -7,6 +7,8 @@ Test:
  server_port: 6202
  username: "315011679"
  password: "JnmQ92Bb"
+ local_ip: "192.168.0.204"
+ token: "b8aa7173bba3470e390d787219b2112e"
  client_id: 3
  path_linux: "/root/log/"
  path: "D:\\test\\"
