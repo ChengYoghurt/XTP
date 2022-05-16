@@ -91,7 +91,9 @@ namespace api     {
         if(order_id_xtptowc[order_info->order_xtp_id] == 0){
             order_id_xtptowc[order_info->order_xtp_id] = order_info->order_client_id;
         }*/
+        order_id_mutex.lock();
         order_id_xtptowc[order_info->order_xtp_id] = OrderID(order_info->order_client_id);
+        order_id_mutex.unlock();
         WCOrderResponse order_rsp;
         std::memset(&order_rsp, 0, sizeof(order_rsp));
         order_rsp.client_order_id  = OrderID(order_info->order_client_id);
@@ -129,7 +131,9 @@ namespace api     {
         if(order_id_xtptowc[trade_info->order_xtp_id] == 0){
             order_id_xtptowc[trade_info->order_xtp_id] = trade_info->order_client_id;
         }*/
+        order_id_mutex.lock();
         order_id_xtptowc[trade_info->order_xtp_id] = OrderID(trade_info->order_client_id);
+        order_id_mutex.unlock();
         WCTradeResponse trade_rsp;
         std::memset(&trade_rsp, 0, sizeof(trade_rsp));
         trade_rsp.client_order_id  = OrderID(trade_info->order_client_id);
@@ -148,7 +152,9 @@ namespace api     {
             return;
         }*/
         WCCancelRejectedResponse order_rsp;
+        order_id_mutex.lock();
         order_rsp.client_order_id  = order_id_xtptowc[cancel_info->order_xtp_id];
+        order_id_mutex.unlock();
         order_rsp.error_id         = error_id_t(error_info->error_id);
         if(error_info->error_id == 11100000 && error_info->error_msg == "20096")
             p_logger_->warn("OnCancelOrder warning,error_id={},error_message={},meaning all orders are done",error_info->error_id, error_info->error_msg);
