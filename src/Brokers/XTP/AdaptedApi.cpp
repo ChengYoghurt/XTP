@@ -292,7 +292,6 @@ namespace api     {
         p_logger_->info("cancel_order,xtp_order_id = {}", order_id_wctoxtp[request.client_order_id]);
         if (!ret) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            //p_logger_->error("CancelOrder failed,error_id={},error_message={}", error_info->error_id, error_info->error_msg);
             if(error_info->error_id == 11100000)
                 p_logger_->warn("OnCancelOrder warning,error_id={},error_message={},meaning all orders are done",error_info->error_id, error_info->error_msg);
             else
@@ -353,8 +352,15 @@ namespace api     {
     }
 
     error_id_t AdaptedApi::query_credit_balance(){
-
-        return error_id_t::success;
+        int ret = p_broker_api_->QueryCreditFundInfo(session_id_, request_id_);
+        if (ret) {
+            const  ApiText* error_info = p_broker_api_->GetApiLastError();
+            p_logger_->error("query_credit_balance failed,error_id={},error_message={}",error_info->error_id, error_info->error_msg);
+            return error_id_t::unknown;
+        }
+        else {
+            return error_id_t::success;
+        }
     }
 
     error_id_t AdaptedApi::place_basket_order(WCBasketOrderRequest const& request){

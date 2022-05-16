@@ -234,10 +234,21 @@ int main(int argc,char* argv[]) {
         vec_orderid.push_back(local_order_id);
     }
 
-    for (size_t i = 0 ; i < vec_orderid.size() ; i++) {
+    /*for(uint32_t i = 0 ; i < 1000 ; i++) {
+        wct::order_id_t local_order_id;
+        wct::instrument_id_t stock  = vec_wcorderrequest[0].instrument  ;
+        wct::side_t side            = wct::side_t::buy                  ;
+        wct::volume_t vol           = vec_wcorderrequest[0].volume      ;
+        wct::price_t limit_price    = vec_wcorderrequest[0].price       ;
+        wct::millisec_t expire_ms   = 0                                 ;
+        local_order_id = wc_trader.place_order(stock, side, vol, limit_price, expire_ms);
+        vec_orderid.push_back(local_order_id);
+    }*/
+
+    /*for (size_t i = 0 ; i < vec_orderid.size() ; i++) {
         wct::order_id_t last_order_id = vec_orderid[i];
         wc_trader.cancel_order(last_order_id);
-    }
+    }*/
 
     /*for (size_t i = 0 ; i < vec_orderid.size() ; i++) {
         wct::order_id_t last_order_id = vec_orderid[i];
