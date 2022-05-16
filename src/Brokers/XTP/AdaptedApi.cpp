@@ -40,12 +40,6 @@ namespace api     {
         p_spi_->on_order_event(order_rsp);
     }
 
-    AdaptedApi::AdaptedApi()
-        : p_logger_(spdlog::get("AdaptedApi"))
-        {
-            p_broker_api_ = BrokerApi::CreateTraderApi(1, "default.txt");
-            p_spi_ = nullptr;
-        }
 
     AdaptedApi::AdaptedApi(uint32_t client_id, std::string filepath)
         : p_logger_(spdlog::get("AdaptedApi"))    
@@ -99,7 +93,7 @@ namespace api     {
         if(error_info == nullptr || error_info->error_id == 0) {
             pos_rsp.error_id = error_id_t::success;
         } 
-        else if(position->ticker[0] == '\0') { //FIXME:Should I use get_belonged_market to set error_id?
+        else if(position->ticker[0] == '\0') {
             pos_rsp.error_id = error_id_t::wrong_instrument_id;
         }
         else {
@@ -147,7 +141,7 @@ namespace api     {
 
         if(session_id_ == 0) {
             const  ApiText* error_info  = p_broker_api_->GetApiLastError();
-            p_logger_->error("Login failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
+            p_logger_->error("Login failed,error_id={},error_message={}",error_info->error_id, error_info->error_msg);
             WCLoginResponse response;
             response.session_id = session_id_;
             response.error_id = error_id_t::not_login;
@@ -205,7 +199,7 @@ namespace api     {
         order_id_wctoxtp[request.client_order_id] = xtp_order_id;
         if (xtp_order_id) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            p_logger_->error("InsertOrder failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+            p_logger_->error("InsertOrder failed,error_id={},error_message={}", error_info->error_id, error_info->error_msg);
             return error_id_t::unknown;
         }
         else return error_id_t::success;
@@ -215,7 +209,7 @@ namespace api     {
         int ret = p_broker_api_->CancelOrder(order_id_wctoxtp[request.client_order_id],session_id_);
         if (ret) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            p_logger_->error("CancelOrder failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+            p_logger_->error("CancelOrder failed,error_id={},error_message={}", error_info->error_id, error_info->error_msg);
             return error_id_t::unknown;
         }
         else return error_id_t::success;
@@ -225,7 +219,7 @@ namespace api     {
         int ret = p_broker_api_->QueryAsset(session_id_, get_request_id());
         if (ret) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            p_logger_->error("QueryAsset failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+            p_logger_->error("QueryAsset failed,error_id={},error_message={}", error_info->error_id, error_info->error_msg);
             return error_id_t::unknown;
         }
         else return error_id_t::success;
@@ -238,7 +232,7 @@ namespace api     {
             int ret = p_broker_api_->QueryPosition(NULL, session_id_, get_request_id());
             if (ret) {
                 const  ApiText* error_info = p_broker_api_->GetApiLastError();
-                p_logger_->error("QueryPosition of all tickers failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+                p_logger_->error("QueryPosition of all tickers failed,error_id={},error_message={}", error_info->error_id, error_info->error_msg);
                 return error_id_t::unknown;
             }
         }
@@ -247,15 +241,15 @@ namespace api     {
             std::string instrument_str = instrument_to_str(request.instrument);
             if (instrument_market == market_t::sh || instrument_market == market_t::shsecond) {
                 // Debug
-                std::cout << "instrument id: "<< instrument_str.c_str()
-                        << "session_id: " << session_id_ 
-                        << "request_id: " << get_request_id()
-                        << std::endl;
+                // std::cout << "instrument id: "<< instrument_str.c_str()
+                //         << "session_id: " << session_id_ 
+                //         << "request_id: " << get_request_id()
+                //         << std::endl;
 
                 int ret = p_broker_api_->QueryPosition(instrument_str.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SH_A);
                 if (ret) {
                 const  ApiText* error_info = p_broker_api_->GetApiLastError();
-                p_logger_->error("QueryPosition of sh market failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+                p_logger_->error("QueryPosition of sh market failed,error_id={},error_message={}", error_info->error_id, error_info->error_msg);
                 return error_id_t::unknown;
                 }
             }
@@ -263,7 +257,7 @@ namespace api     {
                 int ret = p_broker_api_->QueryPosition(instrument_str.c_str(), session_id_, get_request_id(), ApiMarket::XTP_MKT_SZ_A);
                 if (ret) {
                 const  ApiText* error_info = p_broker_api_->GetApiLastError();
-                p_logger_->error("QueryPosition of sz market failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+                p_logger_->error("QueryPosition of sz market failed,error_id={},error_message={}", error_info->error_id, error_info->error_msg);
                 return error_id_t::unknown;
                 }
             }

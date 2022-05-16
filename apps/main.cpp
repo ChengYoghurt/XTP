@@ -144,6 +144,7 @@ int main(int argc,char* argv[]) {
     YAML_GET_FIELD(algo_trade_server_port, algo_trade_config, server_port  );
     YAML_GET_FIELD(algo_trade_password   , algo_trade_config, password     );
     YAML_GET_FIELD(algo_trade_local_ip   , algo_trade_config, algo_local_ip     );
+    YAML_GET_FIELD(log_level             , algo_trade_config, algo_log_level    );
     YAML_GET_FIELD(algo_config           , algo_trade_config, algo_config_file  );
     #endif
 
@@ -213,8 +214,8 @@ int main(int argc,char* argv[]) {
     p_algo_login_config.algo_username = trade_username;
     p_algo_login_config.algo_server_ip = algo_trade_server_ip;
     p_algo_login_config.algo_server_port = algo_trade_server_port;
-    //TODO algo info should be readed from yaml
-    auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>(p_algo_login_config, p_algo_config, client_id, filepath);
+ 
+    auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>(p_algo_login_config, p_algo_config, client_id, filepath, log_level);
     #else
     auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>(client_id, filepath);
 

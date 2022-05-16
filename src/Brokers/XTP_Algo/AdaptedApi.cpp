@@ -63,12 +63,15 @@ namespace api     {
     }
     
     void AdaptedSpi::OnDisconnected(uint64_t session_id, int reason) {
-        p_logger_->error("OnDisconnected, session_id = {}, reason = {}", session_id, reason);
+        switch(reason){
+            case 10200006: p_logger_->error("Disconnected from quote server,session_id={},reason={}", session_id, reason); 
+            case 10210006: p_logger_->error("Disconnected from trade server,session_id={},reason={}", session_id, reason); 
+        }
         p_spi_->on_disconnected(error_id_t::not_connected_to_server);
     }
 
     void AdaptedSpi::OnAlgoDisconnected(int reason) {
-        p_logger_->error("OnAlgoDisconnected, reason = {}",reason);
+        p_logger_->error("OnAlgoDisconnected,reason={}",reason);
         //the system will automatically reconnet
     }
 
@@ -76,19 +79,19 @@ namespace api     {
         if (error_info == nullptr || error_info->error_id == 0) {
             established_channel_ = true;
             cv_established_.notify_one();
-            p_logger_->debug("OnALGOUserEstablishChannel, Successfully");
+            p_logger_->debug("OnALGOUserEstablishChannel,Successfully");
         }
         else {
-            p_logger_->error("OnALGOUserEstablishChannel, Failed, error_id = {}, msg = {}", 
+            p_logger_->error("OnALGOUserEstablishChannel,Failed,error_id={},msg={}", 
             error_info->error_id, error_info->error_msg);
         }
     }
 
     void AdaptedSpi::OnInsertAlgoOrder(ApiInsertReport* strategy_info, XTPRI *error_info, uint64_t session_id) {
         if (error_info == nullptr || error_info->error_id == 0) {
-            p_logger_->debug("OnInsertAlgoOrder, Successfully");
+            p_logger_->debug("OnInsertAlgoOrder,Successfully");
             if (strategy_info) {
-                p_logger_->info("OnInsertAlgoOrder, strategy_type = {}, strategy_state = {}, client_strategy_id = {}, xtp_strategy_id = {}", 
+                p_logger_->info("OnInsertAlgoOrder,strategy_type={},strategy_state={},client_strategy_id={},xtp_strategy_id={}", 
                 strategy_info->m_strategy_type,
                 strategy_info->m_strategy_state,
                 strategy_info->m_client_strategy_id,
@@ -96,15 +99,17 @@ namespace api     {
             }
         }
         else {
-            p_logger_->error("InsertAlgoOrder, Failed, error_id = {}, error_msg = {}",
+            p_logger_->error("InsertAlgoOrder,Failed,error_id={},error_msg={}",
             error_info->error_id,
             error_info->error_msg);
         }
     }
 
     void AdaptedSpi::OnStrategyStateReport(ApiOrderReport* strategy_state, uint64_t session_id) {
+        strategy_to_order_mutex.lock();
         if(strategy_to_order_info.find(strategy_state->m_strategy_info.m_client_strategy_id)==strategy_to_order_info.end()){
-            p_logger_->warn("OnStrategyStateReport, not in records, perhaps placed by another client_id");
+            p_logger_->warn("OnStrategyStateReport,not in records,perhaps placed by another client_id");
+            strategy_to_order_mutex.unlock();
             return;
         }
         WCOrderResponse order_rsp;
@@ -121,15 +126,16 @@ namespace api     {
         order_rsp.host_time        = timestamp_t::now();
 
         strategy_to_order_info[order_rsp.client_order_id].xtp_strategy_id = strategy_state->m_strategy_info.m_xtp_strategy_id;
-        p_logger_->debug("OnStrategyStateReport, Successfully");
+        strategy_to_order_mutex.unlock();
+        p_logger_->debug("OnStrategyStateReport,Successfully");
         p_spi_->on_order_event(order_rsp);
     };
 
     void AdaptedSpi::OnCancelAlgoOrder(ApiOrderCancelReport *cancel_info, ApiText *error_info, uint64_t session_id) {
         if(error_info == nullptr || error_info->error_id == 0) {
-            p_logger_->debug("OnCancelAlgoOrder, Successfully");
+            p_logger_->debug("OnCancelAlgoOrder,Successfully");
             if (cancel_info) {
-                p_logger_->info("OnCancelAlgoOrder, strategy_type = {}, strategy_state = {}, client_strategy_id = {}, xtp_strategy_id = {}", 
+                p_logger_->info("OnCancelAlgoOrder,strategy_type={},strategy_state={},client_strategy_id={},xtp_strategy_id={}", 
                 cancel_info->m_strategy_type,
                 cancel_info->m_strategy_state,
                 cancel_info->m_client_strategy_id,
@@ -151,29 +157,34 @@ namespace api     {
         login_rsp.session_id = session_id;
         login_rsp.error_id = error_id;
         if(error_id == error_id_t::success) {
-            p_logger_->debug("on_login, Successfully");
+            p_logger_->debug("on_login,Successfully");
 
         }
         else {
-            p_logger_->error("on_login, Failed");
+            p_logger_->error("on_login,Failed");
         }
         p_spi_->on_login(login_rsp);
     }
 
     bool AdaptedSpi::setinstrument(order_id_t const&client_order_id,instrument_id_t const&instrument_id){
+        strategy_to_order_mutex.lock();
         strategy_to_order_info[client_order_id].instrument_id = instrument_id;
+        strategy_to_order_mutex.unlock();
         return true;
     }
 
     u_int64_t AdaptedSpi::qurry_xtp_id(order_id_t client_order_id){
+        strategy_to_order_mutex.lock();
         auto order_info_item = strategy_to_order_info.find(client_order_id);
         if(order_info_item !=strategy_to_order_info.end()){
+            strategy_to_order_mutex.unlock();
             if(order_info_item->second.xtp_strategy_id == 0){
                 p_logger_->error("place wait insert or callback");
                 return 0;
             }
             return order_info_item->second.xtp_strategy_id;
         }
+        strategy_to_order_mutex.unlock();
         p_logger_->error("not in allrecords");
         return 0;
     }
@@ -226,7 +237,7 @@ namespace api     {
         int ret                     = p_broker_api_->Login(ip.c_str(), port, user.c_str(), password.c_str(), sock_type, local_ip.c_str());//oms server
         if(ret == 0) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            p_logger_->error("Login, Failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
+            p_logger_->error("Login, Failed,error_id={},error_message={}",error_info->error_id, error_info->error_msg);
             p_spi_->on_login(ret, error_id_t::not_login);
             return error_id_t::not_login;
         }
@@ -234,7 +245,7 @@ namespace api     {
         p_logger_->debug("Login oms Successfully");
         XTP_PROTOCOL_TYPE algo_sock_type = XTP_PROTOCOL_TCP                  ;
         //this is for test,need to modified
-        p_logger_->info("ip = {},port = {},name = {},pw= {}",
+        p_logger_->info("ip={},port={},name={},pw={}",
                         algo_login_config_.algo_server_ip,
                         algo_login_config_.algo_server_port,
                         algo_login_config_.algo_username,
@@ -249,17 +260,17 @@ namespace api     {
 
         if(ret != 0) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            p_logger_->error("LoginAlgo, Failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+            p_logger_->error("LoginAlgo,Failed,error_id={},error_message={}", error_info->error_id, error_info->error_msg);
             p_spi_->on_login(session_id_, error_id_t::not_login);
             return error_id_t::not_login;
         }else{
-            p_logger_->debug("LoginAlgo, Successfully");
+            p_logger_->debug("LoginAlgo,Successfully");
         }
     
         ret = p_broker_api_->ALGOUserEstablishChannel(ip.c_str(), port, user.c_str(), password.c_str(),session_id_) ; //oms server                   
         if(ret != 0) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            p_logger_->error("EstablishChannel Failed, error_id = {}, error_message = {}",error_info->error_id, error_info->error_msg);
+            p_logger_->error("EstablishChannel Failed,error_id={},error_message={}",error_info->error_id, error_info->error_msg);
             
         }
         else {
@@ -273,11 +284,11 @@ namespace api     {
                 std::unique_lock lk(mutex);
                 bool established_ret = p_spi_->cv_established_.wait_for(lk, std::chrono::seconds(3), [this]{return p_spi_->check_established();});
                 if(established_ret) {
-                    p_logger_->debug("CV return, Channel established!");
+                    p_logger_->debug("CV return,Channel established!");
                     p_spi_->on_login(session_id_, error_id_t::success);
                     return error_id_t::success;
                 }
-                p_logger_->error("CV timed out, Channel establish Failed!");
+                p_logger_->error("CV timed out,Channel establish Failed!");
             }
         } 
         // Call on_login even if Establish Failed
@@ -414,7 +425,7 @@ namespace api     {
             int ret = p_broker_api_->InsertAlgoOrder(strategy_type,basket_leg.client_order_id,strategy_param_c,session_id_);        
             if (ret) {
                 const  ApiText* error_info = p_broker_api_->GetApiLastError();
-                p_logger_->error("InsertAlgoOrder Failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+                p_logger_->error("InsertAlgoOrder,Failed,error_id={},error_message={}", error_info->error_id, error_info->error_msg);
             }
            
         }
@@ -427,7 +438,7 @@ namespace api     {
 
         if (ret) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
-            p_logger_->error("CancelAlgoOrder of all tickers Failed, error_id = {}, error_message = {}", error_info->error_id, error_info->error_msg);
+            p_logger_->error("CancelAlgoOrder of all tickers Failed,error_id={},error_message={}", error_info->error_id, error_info->error_msg);
             return error_id_t::unknown;
         }
         return error_id_t::success;
