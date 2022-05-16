@@ -53,14 +53,14 @@ public:
         , p_spi_(std::move(p_spi))
     {}
     virtual ~AdaptedSpi() = default;
-    u_int64_t qurry_xtp_id(order_id_t client_order_id) ;
-    void on_login(session_t session_, error_id_t error_id);
+    u_int64_t qurry_xtp_id(order_id_t const& client_order_id) const;
+    void on_login(session_t const& session_, error_id_t const& error_id);
     bool setinstrument(order_id_t const& strategy_id,instrument_id_t const& instrument_id);
     std::condition_variable cv_established_;
     bool check_established() const {
         return established_channel_;
     }
-    void set_established(bool is_established) {
+    void set_established(bool const& is_established) {
         established_channel_ = is_established;
     };
     
@@ -85,21 +85,21 @@ protected:
     std::shared_ptr<spdlog::logger> p_logger_;
     std::unordered_map<order_id_t,UserOrderInfo> strategy_to_order_info;
     bool established_channel_;
-    
+    mutable std::mutex strategy_to_order_mutex_;
 };/* class AdaptedSpi */
 
 class AdaptedApi : public wct::api::WCApi
 {
 public:
     AdaptedApi();
-    AdaptedApi(AlgoLoginConfig const& algo_login_config, AlgoConfig const& algo_config,uint32_t client_id, std::string filepath, XTP_LOG_LEVEL log_level = XTP_LOG_LEVEL_INFO);
+    AdaptedApi(AlgoLoginConfig const& algo_login_config, AlgoConfig const& algo_config,uint32_t client_id, std::string filepath, ApiLogLevel log_level = XTP_LOG_LEVEL_INFO)
         :algo_config_(algo_config),
         algo_login_config_(algo_login_config),
         p_logger_(spdlog::get("AdaptedApi"))
     {
         p_broker_api_ = BrokerApi::CreateTraderApi(client_id, filepath.c_str(), log_level);
         p_spi_ = nullptr;
-    }
+    };
     virtual ~AdaptedApi(){
         p_logger_->debug("Releasing broker api...");
         p_broker_api_->Logout(session_id_);
@@ -111,7 +111,7 @@ public:
     virtual error_id_t login(WCLoginRequest const& request);
     int get_trading_day() ;
     ApiRequestID get_request_id() ;
-    uint64_t get_session_id();
+    uint64_t get_session_id() const;
     error_id_t register_spi(std::unique_ptr<WCSpi> p_spi) ;
     error_id_t place_order(WCOrderRequest const& request) ;
     error_id_t cancel_order(WCOrderCancelRequest const& request) ;
@@ -134,7 +134,7 @@ protected:
     std::shared_ptr<spdlog::logger> p_logger_;
     AlgoLoginConfig algo_login_config_;
     AlgoConfig algo_config_;
-    mutable std::mutex strategy_to_order_mutex;
+
 };  /* class AdaptedApi */
 
 } /* namespace wrapper */

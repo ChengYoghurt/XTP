@@ -154,10 +154,7 @@ int main(int argc,char* argv[]) {
     YAML_GET_FIELD(algo_trade_server_port, algo_trade_config, server_port  );
     YAML_GET_FIELD(algo_trade_password   , algo_trade_config, password     );
     YAML_GET_FIELD(algo_trade_local_ip   , algo_trade_config, algo_local_ip     );
-<<<<<<< HEAD
     YAML_GET_FIELD(log_level             , algo_trade_config, algo_log_level    );
-    YAML_GET_FIELD(algo_config           , algo_trade_config, algo_config_file  );
-=======
     YAML_GET_FIELD(algo_info_config_file , algo_trade_config, algo_config_file  );
 
     check_file_exist(algo_info_config_file);
@@ -168,7 +165,6 @@ int main(int argc,char* argv[]) {
     YAML_GET_FIELD(algo_expire_action    , algo_info_config, expire_action    );
     YAML_GET_FIELD(algo_paticipation_rate, algo_info_config, paticipation_rate);
     YAML_GET_FIELD(algo_style            , algo_info_config, style            );
->>>>>>> 35cceddf1042cdc6aa6ada0ce8bd8907e4347663
     #endif
 
     //order config
@@ -251,10 +247,8 @@ int main(int argc,char* argv[]) {
     p_algo_login_config.algo_username = trade_username;
     p_algo_login_config.algo_server_ip = algo_trade_server_ip;
     p_algo_login_config.algo_server_port = algo_trade_server_port;
-<<<<<<< HEAD
  
-    auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>(p_algo_login_config, p_algo_config, client_id, filepath, log_level);
-=======
+    auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>(p_algo_login_config, p_algo_config, client_id, filepath, (wct::api::ApiLogLevel)log_level);
     //TODO algo info should be readed from yaml
     p_algo_config.algo_name = algo_name;
     p_algo_config.algo_type = (wct::api::algo_type_t)algo_type;
@@ -263,8 +257,6 @@ int main(int argc,char* argv[]) {
     p_algo_config.paticipation_rate = algo_paticipation_rate;
     p_algo_config.style = algo_style;
     
-    auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>(p_algo_login_config, p_algo_config, client_id, filepath);
->>>>>>> 35cceddf1042cdc6aa6ada0ce8bd8907e4347663
     #else
     auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>(client_id, filepath);
 

@@ -108,14 +108,18 @@ namespace api     {
             p_logger_->error("InsertAlgoOrder,Failed,error_id={},error_msg={}",
             error_info->error_id,
             error_info->error_msg);
+            WCOrderResponse order_rsp;
+                order_rsp.client_order_id  = strategy_info->m_client_strategy_id;
+                order_rsp.order_status = order_status_t::rejected;
+                p_spi_->on_order_event(order_rsp);
         }
     }
 
     void AdaptedSpi::OnStrategyStateReport(ApiOrderReport* strategy_state, uint64_t session_id) {
-        strategy_to_order_mutex.lock();
+        strategy_to_order_mutex_.lock();
         if(strategy_to_order_info.find(strategy_state->m_strategy_info.m_client_strategy_id)==strategy_to_order_info.end()){
             p_logger_->warn("OnStrategyStateReport,not in records,perhaps placed by another client_id");
-            strategy_to_order_mutex.unlock();
+            strategy_to_order_mutex_.unlock();
             return;
         }
         WCOrderResponse order_rsp;
@@ -132,7 +136,7 @@ namespace api     {
         order_rsp.host_time        = timestamp_t::now();
 
         strategy_to_order_info[order_rsp.client_order_id].xtp_strategy_id = strategy_state->m_strategy_info.m_xtp_strategy_id;
-        strategy_to_order_mutex.unlock();
+        strategy_to_order_mutex_.unlock();
         p_logger_->debug("OnStrategyStateReport,Successfully");
         p_spi_->on_order_event(order_rsp);
     };
@@ -162,7 +166,7 @@ namespace api     {
         }
     }
 
-    void AdaptedSpi::on_login(session_t session_id, error_id_t error_id) {
+    void AdaptedSpi::on_login(session_t const& session_id, error_id_t const& error_id) {
         WCLoginResponse login_rsp;
         login_rsp.session_id = session_id;
         login_rsp.error_id = error_id;
@@ -176,25 +180,25 @@ namespace api     {
         p_spi_->on_login(login_rsp);
     }
 
-    bool AdaptedSpi::setinstrument(order_id_t const&client_order_id,instrument_id_t const&instrument_id){
-        strategy_to_order_mutex.lock();
+    bool AdaptedSpi::setinstrument(order_id_t const& client_order_id,instrument_id_t const& instrument_id){
+        strategy_to_order_mutex_.lock();
         strategy_to_order_info[client_order_id].instrument_id = instrument_id;
-        strategy_to_order_mutex.unlock();
+        strategy_to_order_mutex_.unlock();
         return true;
     }
 
-    u_int64_t AdaptedSpi::qurry_xtp_id(order_id_t client_order_id){
-        strategy_to_order_mutex.lock();
+    u_int64_t AdaptedSpi::qurry_xtp_id(order_id_t const& client_order_id) const{
+        strategy_to_order_mutex_.lock();
         auto order_info_item = strategy_to_order_info.find(client_order_id);
         if(order_info_item !=strategy_to_order_info.end()){
-            strategy_to_order_mutex.unlock();
+            strategy_to_order_mutex_.unlock();
             if(order_info_item->second.xtp_strategy_id == 0){
                 p_logger_->debug("place wait insert or callback");
                 return 0;
             }
             return order_info_item->second.xtp_strategy_id;
         }
-        strategy_to_order_mutex.unlock();
+        strategy_to_order_mutex_.unlock();
         p_logger_->error("not in allrecords");
         return 0;
     }
@@ -203,8 +207,7 @@ namespace api     {
         switch(order_status){
         case XTP_STRATEGY_STATE_CREATING  : 
         case XTP_STRATEGY_STATE_CREATED   :
-        case XTP_STRATEGY_STATE_STARTING  : local_order_status = order_status_t::created;
-        break;
+        case XTP_STRATEGY_STATE_STARTING  : 
         case XTP_STRATEGY_STATE_STARTED   : local_order_status = order_status_t::accepted;
         break;
         case XTP_STRATEGY_STATE_STOPPING  :
@@ -253,7 +256,7 @@ namespace api     {
         p_logger_->debug("Login oms Successfully");
         XTP_PROTOCOL_TYPE algo_sock_type = XTP_PROTOCOL_TCP                  ;
         //this is for test,need to modified
-        p_logger_->info("ip={},port={},name={},pw={}",
+        p_logger_->debug("LoginAlgo,ip={},port={},name={},pw={}",
                         algo_login_config_.algo_server_ip,
                         algo_login_config_.algo_server_port,
                         algo_login_config_.algo_username,
@@ -308,7 +311,7 @@ namespace api     {
         return ++request_id_;
     }
 
-    uint64_t AdaptedApi::get_session_id() {
+    uint64_t AdaptedApi::get_session_id() const{
         return session_id_;
     }
 
