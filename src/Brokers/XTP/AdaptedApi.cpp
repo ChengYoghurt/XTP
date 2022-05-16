@@ -17,7 +17,6 @@ namespace api     {
         case 10210000 : 
         case 10210003 : wctrader_error_id = error_id_t::not_login;
         break;
-        // TODO case ? : wctrader_error_id = error_id_t::login_timeout;
         break;
         case 10200006 : 
         case 10210006 : wctrader_error_id = error_id_t::not_connected_to_server;
@@ -45,7 +44,6 @@ namespace api     {
         // 11000108 Parameter market invalid
         case 11010562 : 
         case 11000108 : wctrader_error_id = error_id_t::wrong_market_id;
-        // TODO case ? : wctrader_error_id = error_id_t::wrong_request_id;   
         break;
         // 11000452 User query frequency limited
         case 11000452 : wctrader_error_id = error_id_t::too_freq_query;   
@@ -70,13 +68,16 @@ namespace api     {
             p_logger_->info("Login Successfully");
         }
         else {
-            p_logger_->error("Login Failed");
+            p_logger_->error("onLogin Failed,session_id={},error_id={}", session_id, error_id);
         }
         p_spi_->on_login(login_rsp);
     }
 
-    void AdaptedSpi::OnDisconnected(uint64_t session_id, int reason) {
-        p_logger_->error("Disconnected,session_id={},reason={}", session_id, reason);
+    void AdaptedSpi::OnDisconnected(uint64_t session_id, int reason) { 
+        switch(reason){
+            case 10200006: p_logger_->error("Disconnected from quote server,session_id={},reason={}", session_id, reason); 
+            case 10210006: p_logger_->error("Disconnected from trade server,session_id={},reason={}", session_id, reason); 
+        }
         p_spi_->on_disconnected(error_id_t::not_connected_to_server);
     }
 
@@ -107,17 +108,12 @@ namespace api     {
         p_spi_->on_order_event(order_rsp);
     }
 
-    AdaptedApi::AdaptedApi()
-        : p_logger_(spdlog::get("AdaptedApi"))
-        {
-            p_broker_api_ = BrokerApi::CreateTraderApi(1, "default.txt");
-            p_spi_ = nullptr;
-        }
 
-    AdaptedApi::AdaptedApi(uint32_t client_id, std::string filepath)
+
+    AdaptedApi::AdaptedApi(const uint32_t client_id, const std::string filepath, XTP_LOG_LEVEL log_level) 
         : p_logger_(spdlog::get("AdaptedApi"))    
         {
-            p_broker_api_ = BrokerApi::CreateTraderApi(client_id, filepath.c_str());
+            p_broker_api_ = BrokerApi::CreateTraderApi(client_id, filepath.c_str(), log_level);
             p_spi_ = nullptr;
         }
 
@@ -176,7 +172,7 @@ namespace api     {
         } 
         else  { 
             pos_rsp.error_id = map_error_id(error_info->error_id);
-            p_logger_->error("OnQueryPosition,error_id={}, error_msg={}",
+            p_logger_->error("OnQueryPosition,error_id={},error_msg={}",
             error_info->error_id,
             error_info->error_msg);
         }
@@ -193,7 +189,7 @@ namespace api     {
             asset_rsp.error_id = error_id_t::success;
         }  else {
             asset_rsp.error_id = map_error_id(error_info->error_id);
-            p_logger_->error("OnQueryPosition,error_id={}, error_msg={}",
+            p_logger_->error("OnQueryPosition,error_id={},error_msg={}",
             error_info->error_id,
             error_info->error_msg);
         }
@@ -277,7 +273,9 @@ namespace api     {
      // single_order.algo_parameters = nullptr; // not use algorithms trading
 
         uint64_t xtp_order_id = p_broker_api_->InsertOrder(&single_order,session_id_);
+        order_id_mutex.lock();
         order_id_wctoxtp[request.client_order_id] = xtp_order_id;
+        order_id_mutex.unlock();
         p_logger_->info("place_order,xtp_order_id={}", xtp_order_id);
         if (!xtp_order_id) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
@@ -288,8 +286,10 @@ namespace api     {
     }
 
     error_id_t AdaptedApi::cancel_order(WCOrderCancelRequest const& request) {
-        int ret = p_broker_api_->CancelOrder(order_id_wctoxtp[request.client_order_id],session_id_);//加锁
-        p_logger_->info("cancel_order,xtp_order_id = {}", order_id_wctoxtp[request.client_order_id]);
+        order_id_mutex.lock();
+        int ret = p_broker_api_->CancelOrder(order_id_wctoxtp[request.client_order_id],session_id_);
+        p_logger_->info("cancel_order,xtp_order_id={}", order_id_wctoxtp[request.client_order_id]);
+        order_id_mutex.unlock();
         if (!ret) {
             const  ApiText* error_info = p_broker_api_->GetApiLastError();
             if(error_info->error_id == 11100000)

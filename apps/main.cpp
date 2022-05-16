@@ -122,6 +122,7 @@ int main(int argc,char* argv[]) {
     YAML_GET_FIELD(trade_username   , trade_account, username   );
     YAML_GET_FIELD(trade_password   , trade_account, password   );
     YAML_GET_FIELD(filepath         , trade_account, path       );
+    YAML_GET_FIELD(log_level        , trade_account, log_level  );
     YAML_GET_FIELD(local_ip         , trade_account, local_ip   );
     YAML_GET_FIELD(tokenkey         , trade_account, tokenkey   );
     // yaml 初始化 additional
