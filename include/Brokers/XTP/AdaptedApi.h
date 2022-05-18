@@ -19,7 +19,7 @@ public:
         : p_logger_(spdlog::get("AdaptedSpi"))
         , p_spi_(std::move(p_spi))
     {}
-    void onLogin(session_t session_id, error_id_t error_id);
+    void onLogin(WCLoginResponse const& response) ;
     virtual ~AdaptedSpi() = default;
 protected:
     virtual void OnDisconnected(uint64_t session_id, int reason); 
@@ -34,14 +34,13 @@ protected:
     std::unique_ptr<WCSpi> p_spi_;
     std::shared_ptr<spdlog::logger> p_logger_;
     std::unordered_map<uint64_t,order_id_t> order_id_xtptowc;
-    mutable std::mutex order_id_mutex_spi;
 };
 
 class AdaptedApi : public wct::api::WCApi
 {
 public:
     AdaptedApi() ;
-    AdaptedApi(const uint32_t client_id, const std::string filepath, XTP_LOG_LEVEL log_level = XTP_LOG_LEVEL_INFO);
+    AdaptedApi(uint32_t client_id, std::string filepath);
     virtual ~AdaptedApi() ;
     virtual std::string version() const noexcept ;
     virtual error_id_t login(WCLoginRequest const& request);
@@ -67,9 +66,10 @@ protected:
     uint64_t session_id_;
     std::unique_ptr<AdaptedSpi> p_spi_;
     std::shared_ptr<spdlog::logger> p_logger_; 
+
     std::unordered_map<order_id_t,uint64_t> order_id_wctoxtp;
-    mutable std::mutex order_id_mutex_api;
 };  /* class AdaptedApi */
 
 } /* namespace wrapper */
 } /* namespace wct     */
+
