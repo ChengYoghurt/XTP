@@ -12,6 +12,7 @@ Test:
  client_id: 4
  path_linux: "/root/log/"
  path: "D:\\test\\"
+ log_level: 3 #<INFO
  exchange_id_sh: 1
  exchange_id_sz: 2
  order:

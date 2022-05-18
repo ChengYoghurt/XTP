@@ -1,0 +1,23 @@
+%YAML 1.2
+---
+not_enough_cash:  # reject order when account does not have enough cash
+  enable: false
+  account_minimum_cash          : 0
+
+too_many_orders:  # reject order
+  enable: false
+  count_threshold               : 1000   # orders
+  count_duration                : 1000   # ms
+
+too_large_orders:  # 拒绝过于快速的下
+  enable: true
+  max_STAR_limit_order_volume   : 100000     # 最大单个科创板688限价单volume, 默认10w股
+  max_second_limit_order_volume : 300000     # 最大单个创业板300限价单volume, 默认30w股
+  max_main_limit_order_volume   : 1000000    # 最大单个主板股票600，000限价单volume, 默认100w股
+
+too_large_untraded_limit_order:
+  enable: false
+  max_limit_order_amount        : 10000000   # 最大单个限价单金额, 默认1kw
+  max_limit_order_volume        : 1000000    # 最大单个现价单volume, 默认10000手
+  max_limit_order_participation : 0.3333      # 最大单个现价单参与率, 默认1/3
+  safe_untraded_duration        : 590000     # 最大单个现价单未成交时间ms, 默认10min
