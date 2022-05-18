@@ -20,7 +20,7 @@
 #include <signal.h>
 #include <thread>
 
-//#define _ALGO
+#define _ALGO
 
 std::atomic<bool> quit_flag = false;
 

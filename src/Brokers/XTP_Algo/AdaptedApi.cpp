@@ -223,6 +223,15 @@ namespace api     {
         return local_order_status;
     }
 
+    AdaptedApi::AdaptedApi(AlgoLoginConfig const& algo_login_config, AlgoConfig const& algo_config,
+    uint32_t client_id, std::string filepath, XTP_LOG_LEVEL log_level)
+        :algo_config_(algo_config),
+        algo_login_config_(algo_login_config),
+        p_logger_(spdlog::get("AdaptedApi"))
+    {
+        p_broker_api_ = BrokerApi::CreateTraderApi(client_id, filepath.c_str(), log_level);
+        p_spi_ = nullptr;
+    };
     
 
     error_id_t AdaptedApi::register_spi(std::unique_ptr<WCSpi> p_spi) {

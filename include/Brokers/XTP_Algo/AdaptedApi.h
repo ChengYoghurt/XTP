@@ -92,14 +92,7 @@ class AdaptedApi : public wct::api::WCApi
 {
 public:
     AdaptedApi();
-    AdaptedApi(AlgoLoginConfig const& algo_login_config, AlgoConfig const& algo_config,uint32_t client_id, std::string filepath, ApiLogLevel log_level = XTP_LOG_LEVEL_INFO)
-        :algo_config_(algo_config),
-        algo_login_config_(algo_login_config),
-        p_logger_(spdlog::get("AdaptedApi"))
-    {
-        p_broker_api_ = BrokerApi::CreateTraderApi(client_id, filepath.c_str(), log_level);
-        p_spi_ = nullptr;
-    };
+    AdaptedApi(AlgoLoginConfig const& algo_login_config, AlgoConfig const& algo_config,uint32_t client_id, std::string filepath, XTP_LOG_LEVEL log_level = XTP_LOG_LEVEL_INFO);
     virtual ~AdaptedApi(){
         p_logger_->debug("Releasing broker api...");
         p_broker_api_->Logout(session_id_);
