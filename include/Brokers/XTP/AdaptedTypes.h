@@ -39,7 +39,7 @@ using ApiBusiness                    = XTP_BUSINESS_TYPE                       ;
 //using ApiAlgoParameters              = com::tradex::api::TRXAlgoParameters             ;
 
 using ApiSingleOrder                 = XTPOrderInsertInfo                      ;
-
+using ApiLogLevel                    = XTP_LOG_LEVEL                           ;
 /*
 using ApiBasketOrder                 = com::tradex::api::TRXBasketOrder                ;
 using ApiBasketLeg                   = com::tradex::api::TRXBasketLeg                  ;

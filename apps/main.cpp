@@ -20,7 +20,7 @@
 #include <signal.h>
 #include <thread>
 
-#define _ALGO
+//#define _ALGO
 
 std::atomic<bool> quit_flag = false;
 
@@ -38,7 +38,7 @@ void usage(const char* call_name) {
 }
 
 int main(int argc,char* argv[]) {
-    // register signal function 
+    // Register signal function 
     struct sigaction act;
     struct sigaction oact;
     act.sa_handler = sig_int;
@@ -68,12 +68,12 @@ int main(int argc,char* argv[]) {
             std::cerr << "Error: unknown option -" << static_cast<char>(optopt) << ", ignore option." << std::endl;
             break;
         default:
-            // do nothing
+            // Do nothing
             return -1;
         }
     }
     if (optind < argc) {
-        // direct pass file name without -f
+        // Direct pass file name without -f
         config_file = argv[optind];
     }
 
@@ -90,7 +90,7 @@ int main(int argc,char* argv[]) {
     std::string algo_trade_config_file;
     std::string algo_info_config_file ;
 
-    // trade account config
+    // Trade account config
     std::string trade_server_ip;
     int trade_server_port      ;
     std::string trade_username ;
@@ -100,34 +100,34 @@ int main(int argc,char* argv[]) {
     std::string filepath       ; 
     int log_level              ;
 
+    // Trade account config for algo
     std::string algo_trade_server_ip;
     std::string algo_trade_password ;
     int algo_trade_server_port      ;
     std::string algo_trade_local_ip ;
+    int algo_type              ;
+    std::string algo_name      ;
+    bool algo_limit_action     ;
+    bool algo_expire_action    ;
+    int algo_paticipation_rate ;
+    int algo_style             ;
 
-    int algo_type             ;
-    std::string algo_name     ;
-    bool algo_limit_action    ;
-    bool algo_expire_action   ;
-    int algo_paticipation_rate;
-    int algo_style            ;
-    // trade account config addtional 
+    // Trade account config addtional 
     uint32_t client_id         ;
     uint32_t heat_beat_interval;
     uint32_t trade_protocol    ;
-    bool use_yaml = true       ;
 
     check_file_exist(config_file);
     YAML::Node config = YAML::LoadFile(config_file);
 
-    // trade Config
+    // Trade Config
     YAML_GET_FIELD(trade_config_file      , config, TradeConfig         );
     YAML_GET_FIELD(trade_account_name     , config, TradeAccount        );
-    //#define _ALGO
     #ifdef _ALGO
     YAML_GET_FIELD(algo_trade_config_file , config, AlgoTradeConfig     );
     #endif
-    // config trade account
+
+    // Config trade account
     check_file_exist(trade_config_file);
     YAML::Node trade_config     = YAML::LoadFile(trade_config_file);
     YAML::Node trade_account    = trade_config[trade_account_name] ;
@@ -142,11 +142,11 @@ int main(int argc,char* argv[]) {
     YAML_GET_FIELD(trade_local_ip   , trade_account, local_ip   );
     YAML_GET_FIELD(trade_token      , trade_account, token      );
     YAML_GET_FIELD(filepath         , trade_account, path       );
-    // yaml initiate additional
+    // Yaml initiation additional
     YAML_GET_FIELD(client_id         , trade_account, client_id        );   
     YAML_GET_FIELD(heat_beat_interval, trade_account, hb_interval      );
 
-    // algo config trade additional
+    // Algo trade config additional
     #ifdef _ALGO
     check_file_exist(algo_trade_config_file);
     YAML::Node algo_trade_config     = YAML::LoadFile(algo_trade_config_file);
@@ -167,11 +167,10 @@ int main(int argc,char* argv[]) {
     YAML_GET_FIELD(algo_style            , algo_info_config, style            );
     #endif
 
-    //order config
-    YAML::Node node_orders   = trade_account["order"];        
-    uint32_t order_count     = node_orders.size();
-    std::vector<wct::WCOrderRequest> vec_wcorderrequest;
-
+    // Order config     
+    YAML::Node node_orders = trade_account["order"];   
+    uint32_t order_count   = node_orders.size();  
+    std::vector<wct::WCOrderRequest> vec_wcorderrequest;   
     for (uint32_t i = 0 ; i < order_count ; i++) {
         wct::WCOrderRequest wcorderrequest;
         wcorderrequest.instrument       = node_orders[i]["instrument_id"].as<wct::instrument_id_t>();
@@ -186,17 +185,17 @@ int main(int argc,char* argv[]) {
     #ifdef _ALGO
     std::string algo_end_time_str  ; YAML_GET_FIELD(algo_end_time_str     , algo_info_config, end_time );
     #endif
-    //concel order config
-    YAML::Node node_cancel_orders  ;// = trade_account["cancel_order_id"];        ;
-    uint32_t cancel_order_count     = node_cancel_orders.size();
-    std::vector<wct::WCOrderCancelRequest> vec_wccancelreq;
+    // Concel order config
+    YAML::Node node_cancel_orders  ;
+    uint32_t cancel_order_count = node_cancel_orders.size();
+    std::vector <wct::WCOrderCancelRequest> vec_wccancelreq;
 
     for (uint32_t i = 0 ; i < cancel_order_count ; i++) {
         wct::WCOrderCancelRequest wccancelreq;
         wccancelreq.client_order_id = wct::order_id_t(node_cancel_orders[i].as<uint32_t>());
         vec_wccancelreq.emplace_back(wccancelreq);
     }
-    //query config
+    // Query config
     bool query_balance_is_true_account;
     bool query_balance_is_true_broker;
     bool query_position_is_true;
@@ -223,7 +222,7 @@ int main(int argc,char* argv[]) {
     config_log(log_config_file);
     auto p_logger = spdlog::get("main");
 
-    // show all parameters
+    // Show all parameters
     p_logger->info("Parameters Summary:");
     p_logger->info("TradingDay           = {}", today_str                 );
     p_logger->info("KuafuVersion         = {}", KUAFU_VERSION             );
@@ -259,7 +258,7 @@ int main(int argc,char* argv[]) {
     auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>(p_algo_login_config, p_algo_config, client_id, filepath, (wct::api::ApiLogLevel)log_level);
 
     #else
-    auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>(client_id, filepath);
+    auto p_adapted_api = std::make_unique<wct::api::AdaptedApi>(client_id, filepath, (wct::api::ApiLogLevel)log_level);
 
     #endif
     auto p_wc_trader_config = std::make_unique<wct::WCTraderConfig>();
@@ -269,6 +268,7 @@ int main(int argc,char* argv[]) {
         std::move(p_adapted_api)
     ); 
 
+    wc_trader.load_risk_config("Config/RiskManagement.yaml");
     std::thread wc_trader_th = std::thread(&wct::WCTrader::run, &wc_trader);
 
     wct::WCLoginRequest wcloginrequest     ;
@@ -284,12 +284,11 @@ int main(int argc,char* argv[]) {
     wcloginrequest.agent_fingerprint.token      = trade_token         ;
     p_logger->info("User {} begin to login.", trade_username) ;
     wc_trader.login(wcloginrequest);
-    // wct::WCLoginResponse response; 
-    // response.session_id = p_adapted_api->get_session_id();
-    // response.error_id = wct::error_id_t::success;
     wct::price_t account_avail = 5000000.0; 
-    wc_trader.init_account_avail(account_avail); 
-    
+    wc_trader.init_account_avail(account_avail);
+
+    std::ofstream querylog;
+    querylog.open(query_data, std::ios::app);
     std::vector<wct::order_id_t> vec_orderid;
     for (uint32_t i = 0 ; i < order_count ; i++) {
         
@@ -298,7 +297,7 @@ int main(int argc,char* argv[]) {
         wct::side_t side            = vec_wcorderrequest[i].side        ;
         wct::volume_t vol           = vec_wcorderrequest[i].volume      ;
         wct::price_t limit_price    = vec_wcorderrequest[i].price       ;
-        wct::millisec_t expire_ms   = 100                               ;
+        wct::millisec_t expire_ms   = 0                                 ;
         #ifdef _ALGO
         wc_trader.add_algo_leg(stock, vol, side);
         #else
@@ -311,10 +310,8 @@ int main(int argc,char* argv[]) {
     
     #ifdef _ALGO 
     // Place basket order
-    //TODO:Remaing param needs to fill in
     wct::timestamp_t algo_start_time = wcdb::NumericTime::now();
     wct::timestamp_t algo_end_time(algo_end_time_str);
-    //TODO:Need to update the order map?
     // place_order returns last order_id of sibling
     wct::order_id_t algo_basket_order_id = wc_trader.place_algo_basket(algo_end_time, algo_start_time);
     wc_trader.manual_stop_waiting_orders();
@@ -326,32 +323,35 @@ int main(int argc,char* argv[]) {
     //wc_trader.execute_cancel_order(algo_basket_order_id);
     // End of cancel orders
     #else
+    /*
     for (size_t i = 0 ; i < vec_orderid.size() ; i++) {
         wct::order_id_t last_order_id = vec_orderid[i];
         wc_trader.cancel_order(last_order_id);
     }
+    */
 
+   /*
     for (size_t i = 0 ; i < vec_orderid.size() ; i++) {
         wct::order_id_t last_order_id = vec_orderid[i];
         wc_trader.execute_cancel_order(last_order_id);
     }
+    */
 
     // Query_holdings
-    std::ofstream querylog;
-    querylog.open(query_data, std::ios::app);
     if (query_position_is_true) {
         instrument_holdings = wc_trader.query_holdings(query_position_instrument);
         querylog << "query_position: " << query_position_instrument << std::endl;
-        querylog << "holding: "        << instrument_holdings.holding
+        querylog << "holding: "        << instrument_holdings.holding << "\t" 
                  << "available: "      << instrument_holdings.available
-                 << std::endl;
+                 << std::endl << std::endl;
     }
 
-    if (query_position_is_all) {
+    /*if (query_position_is_all) {
         positioninfo = wc_trader.query_holdings();
-    }
+    }*/
     // End of Query_holdings
 
+    // Query balance
     if (query_balance_is_true_account) {
         balanceinfo = wc_trader.query_balance_from_account();
         querylog << "query_balance_account" <<std::endl; 
@@ -388,7 +388,6 @@ int main(int argc,char* argv[]) {
     wc_trader_th.join();
 
     // Save stream data
-    
     std::string dumplogpath;
     #ifdef _ALGO
     YAML_GET_FIELD(dumplogpath, config, Dump_log_output_algo);
@@ -397,6 +396,7 @@ int main(int argc,char* argv[]) {
     #endif
     std::cout << "get_today_str(): " << get_today_str() << std::endl;
     std::ofstream dumplogfile;
+    // Unused dumplogfile
     dumplogfile.open(dumplogpath, std::ios::app);
     p_logger->info("Dumping data to log...");
     dumplogfile.close();
